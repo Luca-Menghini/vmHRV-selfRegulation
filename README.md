@@ -8,7 +8,7 @@ Menghini, L., Fuochi, G., Sarlo, M. Inter- and intraindividual relationships bet
 
 2. `2preProcessing`: R code and generated report with full outputs of the pre-processing procedures applied to the raw data (available upon request to the corresponding author). The **data pre-processing report** is [depicted at this page](https://Luca-Menghini/vmHRV-selfRegulation/)
 
-3. `3data`: datasets (in both .RData and .csv format) generated with the data pre-processing script, and used to generate the following reports: 
+3. `3data`: datasets (in both .RData and .csv format) generated with the data pre-processing script: 
     - `long`: long-form dataset with time-varying variables and repeatedly recorded time-invariant variables
     - `wide`: wide-form dataset with demographic variables and individual averages of time-varying variables
 
