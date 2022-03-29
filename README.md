@@ -1,7 +1,9 @@
 # Inter- and intraindividual relationships between vagally-mediated heart rate variability and self-regulatory processes: An ecological momentary assessment
-This respository includes the supplementary materials of the article (\color{red}**CAUTION: WORK IN PROGRESS**):
+This respository includes the supplementary materials of the article:
 
 Menghini, L., Fuochi, G., Sarlo, M. Inter- and intraindividual relationships between vagally-mediated heart rate variability and self-regulatory processes: An ecological momentary assessment
+
+# CAUTION: WORK IN PROGRESS
 
 ## Supplementary materials
 The repository includes the following materials:
