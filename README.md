@@ -10,7 +10,7 @@ The repository includes the following materials:
 
 1. `1ESMeasures`: Experience sampling measures used in the study (screenshots in Italian and English translations).
 
-2. `2preProcessing`: R code and generated report with full outputs of the pre-processing procedures applied to the raw data (available upon request to the corresponding author). The **data pre-processing report** is [depicted at this page](https://Luca-Menghini/vmHRV-selfRegulation/).
+2. `2preProcessing`: R code and generated report with full outputs of the pre-processing procedures applied to the raw data (available upon request to the corresponding author). The **data pre-processing report** is [depicted at this page](https://Luca-Menghini.github.io/vmHRV-selfRegulation/2preProcessing/preProcessing.html).
 
 3. `3data`: datasets (in both .RData and .csv format) generated with the data pre-processing script: 
     - `long`: long-form dataset with time-varying variables and repeatedly recorded time-invariant variables
