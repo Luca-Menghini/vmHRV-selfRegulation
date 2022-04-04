@@ -1,0 +1,2114 @@
+{
+  "$id": "1",
+  "$type": "Sensus.Probes.User.Scripts.ScriptProbe, SensusAndroid",
+  "ScriptRunners": {
+    "$type": "System.Collections.ObjectModel.ObservableCollection`1[[Sensus.Probes.User.Scripts.ScriptRunner, SensusAndroid]], System",
+    "$values": [
+      {
+        "$id": "2",
+        "$type": "Sensus.Probes.User.Scripts.ScriptRunner, SensusAndroid",
+        "Probe": {
+          "$ref": "1"
+        },
+        "Script": {
+          "$id": "3",
+          "$type": "Sensus.Probes.User.Scripts.Script, SensusAndroid",
+          "Id": "1f1d97e7-d6d0-4728-8629-703e73e1bcc3",
+          "Runner": {
+            "$ref": "2"
+          },
+          "InputGroups": {
+            "$type": "System.Collections.ObjectModel.ObservableCollection`1[[Sensus.UI.Inputs.InputGroup, SensusAndroid]], System",
+            "$values": [
+              {
+                "$id": "4",
+                "$type": "Sensus.UI.Inputs.InputGroup, SensusAndroid",
+                "Id": "f9c0b95b-b4c2-4306-800d-ba97fdfec039",
+                "Inputs": {
+                  "$type": "System.Collections.ObjectModel.ObservableCollection`1[[Sensus.UI.Inputs.Input, SensusAndroid]], System",
+                  "$values": [
+                    {
+                      "$id": "5",
+                      "$type": "Sensus.UI.Inputs.LabelOnlyInput, SensusAndroid",
+                      "Name": "ISTRUZIONI",
+                      "Id": "3c4f20a1-8bb5-4021-8b90-076063642017",
+                      "GroupId": "f9c0b95b-b4c2-4306-800d-ba97fdfec039",
+                      "LabelText": "PRIMA DI RISPONDERE: cerca un posto tranquillo, mettiti seduta e premi il tasto sul bracciale (deve fare una luce rossa). Resta per 3 minuti calma e rilassata, cercando di non muoverti. Dopo 3 minuti, premi ancora il pulsante e rispondi alle domande di seguito. ",
+                      "LabelFontSize": 20,
+                      "DisplayNumber": false,
+                      "NeedsToBeStored": false,
+                      "Latitude": null,
+                      "Longitude": null,
+                      "LocationUpdateTimestamp": null,
+                      "Required": true,
+                      "Viewed": false,
+                      "DisplayConditions": {
+                        "$type": "System.Collections.Generic.List`1[[Sensus.UI.Inputs.InputDisplayCondition, SensusAndroid]], mscorlib",
+                        "$values": []
+                      },
+                      "BackgroundColor": null,
+                      "Padding": null,
+                      "Frame": false,
+                      "CompletionRecords": {
+                        "$type": "System.Collections.Generic.List`1[[Sensus.UI.Inputs.InputCompletionRecord, SensusAndroid]], mscorlib",
+                        "$values": []
+                      },
+                      "StoreCompletionRecords": false,
+                      "SubmissionTimestamp": null
+                    },
+                    {
+                      "$id": "6",
+                      "$type": "Sensus.UI.Inputs.LabelOnlyInput, SensusAndroid",
+                      "Name": "COMETISENTI",
+                      "Id": "aba56601-11cb-4f35-b73a-cac2a0f8da45",
+                      "GroupId": "f9c0b95b-b4c2-4306-800d-ba97fdfec039",
+                      "LabelText": "Come ti senti in questo momento?",
+                      "LabelFontSize": 20,
+                      "DisplayNumber": false,
+                      "NeedsToBeStored": false,
+                      "Latitude": null,
+                      "Longitude": null,
+                      "LocationUpdateTimestamp": null,
+                      "Required": true,
+                      "Viewed": false,
+                      "DisplayConditions": {
+                        "$type": "System.Collections.Generic.List`1[[Sensus.UI.Inputs.InputDisplayCondition, SensusAndroid]], mscorlib",
+                        "$values": []
+                      },
+                      "BackgroundColor": null,
+                      "Padding": null,
+                      "Frame": false,
+                      "CompletionRecords": {
+                        "$type": "System.Collections.Generic.List`1[[Sensus.UI.Inputs.InputCompletionRecord, SensusAndroid]], mscorlib",
+                        "$values": []
+                      },
+                      "StoreCompletionRecords": false,
+                      "SubmissionTimestamp": null
+                    },
+                    {
+                      "$id": "7",
+                      "$type": "Sensus.UI.Inputs.SliderInput, SensusAndroid",
+                      "TipText": "",
+                      "Minimum": 1.0,
+                      "Maximum": 7.0,
+                      "Increment": 1.0,
+                      "LeftLabel": "Molto male",
+                      "RightLabel": "Molto bene",
+                      "DisplaySliderValue": true,
+                      "DisplayMinMax": true,
+                      "DefinedVariable": "",
+                      "Name": "v1-male-bene",
+                      "Id": "736fe57d-6095-4d17-9246-a4c31f8e4ce0",
+                      "GroupId": "f9c0b95b-b4c2-4306-800d-ba97fdfec039",
+                      "LabelText": null,
+                      "LabelFontSize": 20,
+                      "DisplayNumber": true,
+                      "NeedsToBeStored": true,
+                      "Latitude": null,
+                      "Longitude": null,
+                      "LocationUpdateTimestamp": null,
+                      "Required": true,
+                      "Viewed": false,
+                      "DisplayConditions": {
+                        "$type": "System.Collections.Generic.List`1[[Sensus.UI.Inputs.InputDisplayCondition, SensusAndroid]], mscorlib",
+                        "$values": []
+                      },
+                      "BackgroundColor": null,
+                      "Padding": null,
+                      "Frame": true,
+                      "CompletionRecords": {
+                        "$type": "System.Collections.Generic.List`1[[Sensus.UI.Inputs.InputCompletionRecord, SensusAndroid]], mscorlib",
+                        "$values": []
+                      },
+                      "StoreCompletionRecords": true,
+                      "SubmissionTimestamp": null
+                    },
+                    {
+                      "$id": "8",
+                      "$type": "Sensus.UI.Inputs.SliderInput, SensusAndroid",
+                      "TipText": "",
+                      "Minimum": 1.0,
+                      "Maximum": 7.0,
+                      "Increment": 1.0,
+                      "LeftLabel": "Molto rilassata",
+                      "RightLabel": "Molto tesa",
+                      "DisplaySliderValue": true,
+                      "DisplayMinMax": true,
+                      "DefinedVariable": null,
+                      "Name": "t1-rilassato-teso",
+                      "Id": "66316e92-9729-4e67-9124-b837295ae4ef",
+                      "GroupId": "f9c0b95b-b4c2-4306-800d-ba97fdfec039",
+                      "LabelText": null,
+                      "LabelFontSize": 20,
+                      "DisplayNumber": true,
+                      "NeedsToBeStored": true,
+                      "Latitude": null,
+                      "Longitude": null,
+                      "LocationUpdateTimestamp": null,
+                      "Required": true,
+                      "Viewed": false,
+                      "DisplayConditions": {
+                        "$type": "System.Collections.Generic.List`1[[Sensus.UI.Inputs.InputDisplayCondition, SensusAndroid]], mscorlib",
+                        "$values": []
+                      },
+                      "BackgroundColor": null,
+                      "Padding": null,
+                      "Frame": true,
+                      "CompletionRecords": {
+                        "$type": "System.Collections.Generic.List`1[[Sensus.UI.Inputs.InputCompletionRecord, SensusAndroid]], mscorlib",
+                        "$values": []
+                      },
+                      "StoreCompletionRecords": true,
+                      "SubmissionTimestamp": null
+                    },
+                    {
+                      "$id": "9",
+                      "$type": "Sensus.UI.Inputs.SliderInput, SensusAndroid",
+                      "TipText": "",
+                      "Minimum": 1.0,
+                      "Maximum": 7.0,
+                      "Increment": 1.0,
+                      "LeftLabel": "Molto stanca",
+                      "RightLabel": "Molto sveglia",
+                      "DisplaySliderValue": true,
+                      "DisplayMinMax": true,
+                      "DefinedVariable": null,
+                      "Name": "e1-stanco-sveglio",
+                      "Id": "60035444-a22b-425b-bc6e-941c22be5c91",
+                      "GroupId": "f9c0b95b-b4c2-4306-800d-ba97fdfec039",
+                      "LabelText": null,
+                      "LabelFontSize": 20,
+                      "DisplayNumber": true,
+                      "NeedsToBeStored": true,
+                      "Latitude": null,
+                      "Longitude": null,
+                      "LocationUpdateTimestamp": null,
+                      "Required": true,
+                      "Viewed": false,
+                      "DisplayConditions": {
+                        "$type": "System.Collections.Generic.List`1[[Sensus.UI.Inputs.InputDisplayCondition, SensusAndroid]], mscorlib",
+                        "$values": []
+                      },
+                      "BackgroundColor": null,
+                      "Padding": null,
+                      "Frame": true,
+                      "CompletionRecords": {
+                        "$type": "System.Collections.Generic.List`1[[Sensus.UI.Inputs.InputCompletionRecord, SensusAndroid]], mscorlib",
+                        "$values": []
+                      },
+                      "StoreCompletionRecords": true,
+                      "SubmissionTimestamp": null
+                    },
+                    {
+                      "$id": "10",
+                      "$type": "Sensus.UI.Inputs.SliderInput, SensusAndroid",
+                      "TipText": "",
+                      "Minimum": 1.0,
+                      "Maximum": 7.0,
+                      "Increment": 1.0,
+                      "LeftLabel": "Molto insoddisfatta",
+                      "RightLabel": "Molto soddisfatta",
+                      "DisplaySliderValue": true,
+                      "DisplayMinMax": true,
+                      "DefinedVariable": null,
+                      "Name": "v2-soddisfatto-insoddisfatto",
+                      "Id": "5b8578f1-f53b-4a11-8e13-a73c6581161f",
+                      "GroupId": "f9c0b95b-b4c2-4306-800d-ba97fdfec039",
+                      "LabelText": null,
+                      "LabelFontSize": 20,
+                      "DisplayNumber": true,
+                      "NeedsToBeStored": true,
+                      "Latitude": null,
+                      "Longitude": null,
+                      "LocationUpdateTimestamp": null,
+                      "Required": true,
+                      "Viewed": false,
+                      "DisplayConditions": {
+                        "$type": "System.Collections.Generic.List`1[[Sensus.UI.Inputs.InputDisplayCondition, SensusAndroid]], mscorlib",
+                        "$values": []
+                      },
+                      "BackgroundColor": null,
+                      "Padding": null,
+                      "Frame": true,
+                      "CompletionRecords": {
+                        "$type": "System.Collections.Generic.List`1[[Sensus.UI.Inputs.InputCompletionRecord, SensusAndroid]], mscorlib",
+                        "$values": []
+                      },
+                      "StoreCompletionRecords": true,
+                      "SubmissionTimestamp": null
+                    },
+                    {
+                      "$id": "11",
+                      "$type": "Sensus.UI.Inputs.SliderInput, SensusAndroid",
+                      "TipText": "",
+                      "Minimum": 1.0,
+                      "Maximum": 7.0,
+                      "Increment": 1.0,
+                      "LeftLabel": "Molto agitata",
+                      "RightLabel": "Molto calma",
+                      "DisplaySliderValue": true,
+                      "DisplayMinMax": true,
+                      "DefinedVariable": null,
+                      "Name": "t2-agitato-calmo",
+                      "Id": "05fd2071-b6eb-4558-a331-5520aa363649",
+                      "GroupId": "f9c0b95b-b4c2-4306-800d-ba97fdfec039",
+                      "LabelText": null,
+                      "LabelFontSize": 20,
+                      "DisplayNumber": true,
+                      "NeedsToBeStored": true,
+                      "Latitude": null,
+                      "Longitude": null,
+                      "LocationUpdateTimestamp": null,
+                      "Required": true,
+                      "Viewed": false,
+                      "DisplayConditions": {
+                        "$type": "System.Collections.Generic.List`1[[Sensus.UI.Inputs.InputDisplayCondition, SensusAndroid]], mscorlib",
+                        "$values": []
+                      },
+                      "BackgroundColor": null,
+                      "Padding": null,
+                      "Frame": true,
+                      "CompletionRecords": {
+                        "$type": "System.Collections.Generic.List`1[[Sensus.UI.Inputs.InputCompletionRecord, SensusAndroid]], mscorlib",
+                        "$values": []
+                      },
+                      "StoreCompletionRecords": true,
+                      "SubmissionTimestamp": null
+                    },
+                    {
+                      "$id": "12",
+                      "$type": "Sensus.UI.Inputs.SliderInput, SensusAndroid",
+                      "TipText": "",
+                      "Minimum": 1.0,
+                      "Maximum": 7.0,
+                      "Increment": 1.0,
+                      "LeftLabel": "Molto piena di energia",
+                      "RightLabel": "Molto priva di energia",
+                      "DisplaySliderValue": true,
+                      "DisplayMinMax": true,
+                      "DefinedVariable": null,
+                      "Name": "e2-pieno-privodenergia",
+                      "Id": "9f846298-4b61-4d16-b51b-45dd98c9c7a1",
+                      "GroupId": "f9c0b95b-b4c2-4306-800d-ba97fdfec039",
+                      "LabelText": null,
+                      "LabelFontSize": 20,
+                      "DisplayNumber": true,
+                      "NeedsToBeStored": true,
+                      "Latitude": null,
+                      "Longitude": null,
+                      "LocationUpdateTimestamp": null,
+                      "Required": true,
+                      "Viewed": false,
+                      "DisplayConditions": {
+                        "$type": "System.Collections.Generic.List`1[[Sensus.UI.Inputs.InputDisplayCondition, SensusAndroid]], mscorlib",
+                        "$values": []
+                      },
+                      "BackgroundColor": null,
+                      "Padding": null,
+                      "Frame": true,
+                      "CompletionRecords": {
+                        "$type": "System.Collections.Generic.List`1[[Sensus.UI.Inputs.InputCompletionRecord, SensusAndroid]], mscorlib",
+                        "$values": []
+                      },
+                      "StoreCompletionRecords": true,
+                      "SubmissionTimestamp": null
+                    },
+                    {
+                      "$id": "13",
+                      "$type": "Sensus.UI.Inputs.SliderInput, SensusAndroid",
+                      "TipText": "",
+                      "Minimum": 1.0,
+                      "Maximum": 7.0,
+                      "Increment": 1.0,
+                      "LeftLabel": "In uno stato molto positivo",
+                      "RightLabel": "In uno stato molto negativo",
+                      "DisplaySliderValue": true,
+                      "DisplayMinMax": true,
+                      "DefinedVariable": null,
+                      "Name": "v3-positivo-negativo",
+                      "Id": "09262a8e-34a8-4948-8695-e1be132de908",
+                      "GroupId": "f9c0b95b-b4c2-4306-800d-ba97fdfec039",
+                      "LabelText": null,
+                      "LabelFontSize": 20,
+                      "DisplayNumber": true,
+                      "NeedsToBeStored": true,
+                      "Latitude": null,
+                      "Longitude": null,
+                      "LocationUpdateTimestamp": null,
+                      "Required": true,
+                      "Viewed": false,
+                      "DisplayConditions": {
+                        "$type": "System.Collections.Generic.List`1[[Sensus.UI.Inputs.InputDisplayCondition, SensusAndroid]], mscorlib",
+                        "$values": []
+                      },
+                      "BackgroundColor": null,
+                      "Padding": null,
+                      "Frame": true,
+                      "CompletionRecords": {
+                        "$type": "System.Collections.Generic.List`1[[Sensus.UI.Inputs.InputCompletionRecord, SensusAndroid]], mscorlib",
+                        "$values": []
+                      },
+                      "StoreCompletionRecords": true,
+                      "SubmissionTimestamp": null
+                    },
+                    {
+                      "$id": "14",
+                      "$type": "Sensus.UI.Inputs.SliderInput, SensusAndroid",
+                      "TipText": "",
+                      "Minimum": 1.0,
+                      "Maximum": 7.0,
+                      "Increment": 1.0,
+                      "LeftLabel": "Molto nervosa",
+                      "RightLabel": "Molto tranquilla",
+                      "DisplaySliderValue": true,
+                      "DisplayMinMax": true,
+                      "DefinedVariable": null,
+                      "Name": "t3-nervoso-tranquillo",
+                      "Id": "a96e28b0-a485-468d-ab2e-5893b3c7eeb9",
+                      "GroupId": "f9c0b95b-b4c2-4306-800d-ba97fdfec039",
+                      "LabelText": "",
+                      "LabelFontSize": 20,
+                      "DisplayNumber": true,
+                      "NeedsToBeStored": true,
+                      "Latitude": null,
+                      "Longitude": null,
+                      "LocationUpdateTimestamp": null,
+                      "Required": true,
+                      "Viewed": false,
+                      "DisplayConditions": {
+                        "$type": "System.Collections.Generic.List`1[[Sensus.UI.Inputs.InputDisplayCondition, SensusAndroid]], mscorlib",
+                        "$values": []
+                      },
+                      "BackgroundColor": null,
+                      "Padding": null,
+                      "Frame": true,
+                      "CompletionRecords": {
+                        "$type": "System.Collections.Generic.List`1[[Sensus.UI.Inputs.InputCompletionRecord, SensusAndroid]], mscorlib",
+                        "$values": []
+                      },
+                      "StoreCompletionRecords": true,
+                      "SubmissionTimestamp": null
+                    },
+                    {
+                      "$id": "15",
+                      "$type": "Sensus.UI.Inputs.SliderInput, SensusAndroid",
+                      "TipText": "",
+                      "Minimum": 1.0,
+                      "Maximum": 7.0,
+                      "Increment": 1.0,
+                      "LeftLabel": "Molto affaticata",
+                      "RightLabel": "Molto fresca",
+                      "DisplaySliderValue": true,
+                      "DisplayMinMax": true,
+                      "DefinedVariable": null,
+                      "Name": "e3-affaticato-fresco",
+                      "Id": "91d8e68b-d221-46a0-b827-9a4342b88a1b",
+                      "GroupId": "f9c0b95b-b4c2-4306-800d-ba97fdfec039",
+                      "LabelText": null,
+                      "LabelFontSize": 20,
+                      "DisplayNumber": true,
+                      "NeedsToBeStored": true,
+                      "Latitude": null,
+                      "Longitude": null,
+                      "LocationUpdateTimestamp": null,
+                      "Required": true,
+                      "Viewed": false,
+                      "DisplayConditions": {
+                        "$type": "System.Collections.Generic.List`1[[Sensus.UI.Inputs.InputDisplayCondition, SensusAndroid]], mscorlib",
+                        "$values": []
+                      },
+                      "BackgroundColor": null,
+                      "Padding": null,
+                      "Frame": true,
+                      "CompletionRecords": {
+                        "$type": "System.Collections.Generic.List`1[[Sensus.UI.Inputs.InputCompletionRecord, SensusAndroid]], mscorlib",
+                        "$values": []
+                      },
+                      "StoreCompletionRecords": true,
+                      "SubmissionTimestamp": null
+                    },
+                    {
+                      "$id": "16",
+                      "$type": "Sensus.UI.Inputs.LabelOnlyInput, SensusAndroid",
+                      "Name": "EVENTS",
+                      "Id": "a449787b-29ff-4368-a871-2b10f14f2d4f",
+                      "GroupId": "f9c0b95b-b4c2-4306-800d-ba97fdfec039",
+                      "LabelText": "Il periodo passato dall'ultima notifica a questa é stato caratterizzato da eventi...",
+                      "LabelFontSize": 20,
+                      "DisplayNumber": false,
+                      "NeedsToBeStored": false,
+                      "Latitude": null,
+                      "Longitude": null,
+                      "LocationUpdateTimestamp": null,
+                      "Required": true,
+                      "Viewed": false,
+                      "DisplayConditions": {
+                        "$type": "System.Collections.Generic.List`1[[Sensus.UI.Inputs.InputDisplayCondition, SensusAndroid]], mscorlib",
+                        "$values": []
+                      },
+                      "BackgroundColor": null,
+                      "Padding": null,
+                      "Frame": false,
+                      "CompletionRecords": {
+                        "$type": "System.Collections.Generic.List`1[[Sensus.UI.Inputs.InputCompletionRecord, SensusAndroid]], mscorlib",
+                        "$values": []
+                      },
+                      "StoreCompletionRecords": false,
+                      "SubmissionTimestamp": null
+                    },
+                    {
+                      "$id": "17",
+                      "$type": "Sensus.UI.Inputs.SliderInput, SensusAndroid",
+                      "TipText": "",
+                      "Minimum": 1.0,
+                      "Maximum": 7.0,
+                      "Increment": 1.0,
+                      "LeftLabel": "Per niente",
+                      "RightLabel": "Moltissimo",
+                      "DisplaySliderValue": true,
+                      "DisplayMinMax": true,
+                      "DefinedVariable": null,
+                      "Name": "PE",
+                      "Id": "d7c760b4-490a-41be-8987-c114f5b0faf1",
+                      "GroupId": "f9c0b95b-b4c2-4306-800d-ba97fdfec039",
+                      "LabelText": "... Positivi",
+                      "LabelFontSize": 20,
+                      "DisplayNumber": true,
+                      "NeedsToBeStored": true,
+                      "Latitude": null,
+                      "Longitude": null,
+                      "LocationUpdateTimestamp": null,
+                      "Required": true,
+                      "Viewed": false,
+                      "DisplayConditions": {
+                        "$type": "System.Collections.Generic.List`1[[Sensus.UI.Inputs.InputDisplayCondition, SensusAndroid]], mscorlib",
+                        "$values": []
+                      },
+                      "BackgroundColor": null,
+                      "Padding": null,
+                      "Frame": true,
+                      "CompletionRecords": {
+                        "$type": "System.Collections.Generic.List`1[[Sensus.UI.Inputs.InputCompletionRecord, SensusAndroid]], mscorlib",
+                        "$values": []
+                      },
+                      "StoreCompletionRecords": true,
+                      "SubmissionTimestamp": null
+                    },
+                    {
+                      "$id": "18",
+                      "$type": "Sensus.UI.Inputs.SliderInput, SensusAndroid",
+                      "TipText": "",
+                      "Minimum": 1.0,
+                      "Maximum": 7.0,
+                      "Increment": 1.0,
+                      "LeftLabel": "Nessun evento",
+                      "RightLabel": "Molto intensi",
+                      "DisplaySliderValue": true,
+                      "DisplayMinMax": true,
+                      "DefinedVariable": null,
+                      "Name": "intensity-PE",
+                      "Id": "b424f9bb-1a35-4daf-ad73-90515de7df5a",
+                      "GroupId": "f9c0b95b-b4c2-4306-800d-ba97fdfec039",
+                      "LabelText": "Quanto sono stati intensi questi eventi positivi?",
+                      "LabelFontSize": 20,
+                      "DisplayNumber": true,
+                      "NeedsToBeStored": true,
+                      "Latitude": null,
+                      "Longitude": null,
+                      "LocationUpdateTimestamp": null,
+                      "Required": true,
+                      "Viewed": false,
+                      "DisplayConditions": {
+                        "$type": "System.Collections.Generic.List`1[[Sensus.UI.Inputs.InputDisplayCondition, SensusAndroid]], mscorlib",
+                        "$values": []
+                      },
+                      "BackgroundColor": null,
+                      "Padding": null,
+                      "Frame": true,
+                      "CompletionRecords": {
+                        "$type": "System.Collections.Generic.List`1[[Sensus.UI.Inputs.InputCompletionRecord, SensusAndroid]], mscorlib",
+                        "$values": []
+                      },
+                      "StoreCompletionRecords": true,
+                      "SubmissionTimestamp": null
+                    },
+                    {
+                      "$id": "19",
+                      "$type": "Sensus.UI.Inputs.SliderInput, SensusAndroid",
+                      "TipText": "",
+                      "Minimum": 1.0,
+                      "Maximum": 7.0,
+                      "Increment": 1.0,
+                      "LeftLabel": "Per niente",
+                      "RightLabel": "Moltissimo",
+                      "DisplaySliderValue": true,
+                      "DisplayMinMax": true,
+                      "DefinedVariable": null,
+                      "Name": "NE",
+                      "Id": "c1cb5a3c-914b-4882-8978-74ce24898c0e",
+                      "GroupId": "f9c0b95b-b4c2-4306-800d-ba97fdfec039",
+                      "LabelText": "... Negativi",
+                      "LabelFontSize": 20,
+                      "DisplayNumber": true,
+                      "NeedsToBeStored": true,
+                      "Latitude": null,
+                      "Longitude": null,
+                      "LocationUpdateTimestamp": null,
+                      "Required": true,
+                      "Viewed": false,
+                      "DisplayConditions": {
+                        "$type": "System.Collections.Generic.List`1[[Sensus.UI.Inputs.InputDisplayCondition, SensusAndroid]], mscorlib",
+                        "$values": []
+                      },
+                      "BackgroundColor": null,
+                      "Padding": null,
+                      "Frame": true,
+                      "CompletionRecords": {
+                        "$type": "System.Collections.Generic.List`1[[Sensus.UI.Inputs.InputCompletionRecord, SensusAndroid]], mscorlib",
+                        "$values": []
+                      },
+                      "StoreCompletionRecords": true,
+                      "SubmissionTimestamp": null
+                    },
+                    {
+                      "$id": "20",
+                      "$type": "Sensus.UI.Inputs.SliderInput, SensusAndroid",
+                      "TipText": "",
+                      "Minimum": 1.0,
+                      "Maximum": 7.0,
+                      "Increment": 1.0,
+                      "LeftLabel": "Nessun evento",
+                      "RightLabel": "Molto intensi",
+                      "DisplaySliderValue": true,
+                      "DisplayMinMax": true,
+                      "DefinedVariable": null,
+                      "Name": "intensity-NE",
+                      "Id": "891d2c51-c6d4-4996-9897-00cde544f37b",
+                      "GroupId": "f9c0b95b-b4c2-4306-800d-ba97fdfec039",
+                      "LabelText": "Quanto sono stati intensi questi eventi negativi?",
+                      "LabelFontSize": 20,
+                      "DisplayNumber": true,
+                      "NeedsToBeStored": true,
+                      "Latitude": null,
+                      "Longitude": null,
+                      "LocationUpdateTimestamp": null,
+                      "Required": true,
+                      "Viewed": false,
+                      "DisplayConditions": {
+                        "$type": "System.Collections.Generic.List`1[[Sensus.UI.Inputs.InputDisplayCondition, SensusAndroid]], mscorlib",
+                        "$values": []
+                      },
+                      "BackgroundColor": null,
+                      "Padding": null,
+                      "Frame": true,
+                      "CompletionRecords": {
+                        "$type": "System.Collections.Generic.List`1[[Sensus.UI.Inputs.InputCompletionRecord, SensusAndroid]], mscorlib",
+                        "$values": []
+                      },
+                      "StoreCompletionRecords": true,
+                      "SubmissionTimestamp": null
+                    },
+                    {
+                      "$id": "21",
+                      "$type": "Sensus.UI.Inputs.NumberEntryInput, SensusAndroid",
+                      "DefinedVariable": null,
+                      "Name": "smoke",
+                      "Id": "7a9cf119-de43-4d29-afae-06550ac8927e",
+                      "GroupId": "f9c0b95b-b4c2-4306-800d-ba97fdfec039",
+                      "LabelText": "Quante sigarette hai fumato negli ultimi 20 minuti?",
+                      "LabelFontSize": 20,
+                      "DisplayNumber": true,
+                      "NeedsToBeStored": true,
+                      "Latitude": null,
+                      "Longitude": null,
+                      "LocationUpdateTimestamp": null,
+                      "Required": true,
+                      "Viewed": false,
+                      "DisplayConditions": {
+                        "$type": "System.Collections.Generic.List`1[[Sensus.UI.Inputs.InputDisplayCondition, SensusAndroid]], mscorlib",
+                        "$values": []
+                      },
+                      "BackgroundColor": null,
+                      "Padding": null,
+                      "Frame": true,
+                      "CompletionRecords": {
+                        "$type": "System.Collections.Generic.List`1[[Sensus.UI.Inputs.InputCompletionRecord, SensusAndroid]], mscorlib",
+                        "$values": []
+                      },
+                      "StoreCompletionRecords": true,
+                      "SubmissionTimestamp": null
+                    },
+                    {
+                      "$id": "22",
+                      "$type": "Sensus.UI.Inputs.NumberEntryInput, SensusAndroid",
+                      "DefinedVariable": null,
+                      "Name": "coffe",
+                      "Id": "8d09f966-3806-4173-9d54-170a6c30a6ab",
+                      "GroupId": "f9c0b95b-b4c2-4306-800d-ba97fdfec039",
+                      "LabelText": "Quanti caffè hai bevuto nell'ultima ora?",
+                      "LabelFontSize": 20,
+                      "DisplayNumber": true,
+                      "NeedsToBeStored": true,
+                      "Latitude": null,
+                      "Longitude": null,
+                      "LocationUpdateTimestamp": null,
+                      "Required": true,
+                      "Viewed": false,
+                      "DisplayConditions": {
+                        "$type": "System.Collections.Generic.List`1[[Sensus.UI.Inputs.InputDisplayCondition, SensusAndroid]], mscorlib",
+                        "$values": []
+                      },
+                      "BackgroundColor": null,
+                      "Padding": null,
+                      "Frame": true,
+                      "CompletionRecords": {
+                        "$type": "System.Collections.Generic.List`1[[Sensus.UI.Inputs.InputCompletionRecord, SensusAndroid]], mscorlib",
+                        "$values": []
+                      },
+                      "StoreCompletionRecords": true,
+                      "SubmissionTimestamp": null
+                    },
+                    {
+                      "$id": "23",
+                      "$type": "Sensus.UI.Inputs.ItemPickerPageInput, SensusAndroid",
+                      "Items": {
+                        "$type": "System.Collections.Generic.List`1[[System.Object, mscorlib]], mscorlib",
+                        "$values": [
+                          "Sì",
+                          "No"
+                        ]
+                      },
+                      "TextBindingPropertyPath": ".",
+                      "Multiselect": false,
+                      "RandomizeItemOrder": false,
+                      "IncludeOtherOption": false,
+                      "OtherOptionText": "Other",
+                      "Name": "alcohol",
+                      "Id": "3e5adc8d-65cd-4ac9-9861-9a98b4b38f7d",
+                      "GroupId": "f9c0b95b-b4c2-4306-800d-ba97fdfec039",
+                      "LabelText": "Hai bevuto sostanze alcoliche nell'ultima ora?",
+                      "LabelFontSize": 20,
+                      "DisplayNumber": true,
+                      "NeedsToBeStored": true,
+                      "Latitude": null,
+                      "Longitude": null,
+                      "LocationUpdateTimestamp": null,
+                      "Required": true,
+                      "Viewed": false,
+                      "DisplayConditions": {
+                        "$type": "System.Collections.Generic.List`1[[Sensus.UI.Inputs.InputDisplayCondition, SensusAndroid]], mscorlib",
+                        "$values": []
+                      },
+                      "BackgroundColor": null,
+                      "Padding": null,
+                      "Frame": true,
+                      "CompletionRecords": {
+                        "$type": "System.Collections.Generic.List`1[[Sensus.UI.Inputs.InputCompletionRecord, SensusAndroid]], mscorlib",
+                        "$values": []
+                      },
+                      "StoreCompletionRecords": true,
+                      "SubmissionTimestamp": null
+                    },
+                    {
+                      "$id": "24",
+                      "$type": "Sensus.UI.Inputs.ItemPickerPageInput, SensusAndroid",
+                      "Items": {
+                        "$type": "System.Collections.Generic.List`1[[System.Object, mscorlib]], mscorlib",
+                        "$values": [
+                          "Intensa (attività sportiva, palestra, corsa o diverse rampe di scale) ",
+                          "Moderata (camminata, fare le scale) ",
+                          "Leggera (seduti o coricati per la maggior parte del tempo) "
+                        ]
+                      },
+                      "TextBindingPropertyPath": ".",
+                      "Multiselect": false,
+                      "RandomizeItemOrder": false,
+                      "IncludeOtherOption": false,
+                      "OtherOptionText": "",
+                      "Name": "Activity",
+                      "Id": "fc72fa03-0041-48de-aad0-6a17159ab303",
+                      "GroupId": "f9c0b95b-b4c2-4306-800d-ba97fdfec039",
+                      "LabelText": "Che tipo di attività fisica hai fatto prima della registrazione? ",
+                      "LabelFontSize": 20,
+                      "DisplayNumber": true,
+                      "NeedsToBeStored": true,
+                      "Latitude": null,
+                      "Longitude": null,
+                      "LocationUpdateTimestamp": null,
+                      "Required": true,
+                      "Viewed": false,
+                      "DisplayConditions": {
+                        "$type": "System.Collections.Generic.List`1[[Sensus.UI.Inputs.InputDisplayCondition, SensusAndroid]], mscorlib",
+                        "$values": []
+                      },
+                      "BackgroundColor": null,
+                      "Padding": null,
+                      "Frame": true,
+                      "CompletionRecords": {
+                        "$type": "System.Collections.Generic.List`1[[Sensus.UI.Inputs.InputCompletionRecord, SensusAndroid]], mscorlib",
+                        "$values": []
+                      },
+                      "StoreCompletionRecords": true,
+                      "SubmissionTimestamp": null
+                    },
+                    {
+                      "$id": "25",
+                      "$type": "Sensus.UI.Inputs.ItemPickerPageInput, SensusAndroid",
+                      "Items": {
+                        "$type": "System.Collections.Generic.List`1[[System.Object, mscorlib]], mscorlib",
+                        "$values": [
+                          "No, ero da sola",
+                          "Sì, ma non sono stata disturbata",
+                          "Sì, e sono stata un po' disturbata",
+                          "Sì, e sono stata interrotta"
+                        ]
+                      },
+                      "TextBindingPropertyPath": ".",
+                      "Multiselect": true,
+                      "RandomizeItemOrder": false,
+                      "IncludeOtherOption": false,
+                      "OtherOptionText": "",
+                      "Name": "People.rec",
+                      "Id": "882f1129-396f-413e-9a54-0bb28fbca547",
+                      "GroupId": "f9c0b95b-b4c2-4306-800d-ba97fdfec039",
+                      "LabelText": "Durante la registrazione c'era qualcun altro? ",
+                      "LabelFontSize": 20,
+                      "DisplayNumber": true,
+                      "NeedsToBeStored": true,
+                      "Latitude": null,
+                      "Longitude": null,
+                      "LocationUpdateTimestamp": null,
+                      "Required": true,
+                      "Viewed": false,
+                      "DisplayConditions": {
+                        "$type": "System.Collections.Generic.List`1[[Sensus.UI.Inputs.InputDisplayCondition, SensusAndroid]], mscorlib",
+                        "$values": []
+                      },
+                      "BackgroundColor": null,
+                      "Padding": null,
+                      "Frame": true,
+                      "CompletionRecords": {
+                        "$type": "System.Collections.Generic.List`1[[Sensus.UI.Inputs.InputCompletionRecord, SensusAndroid]], mscorlib",
+                        "$values": []
+                      },
+                      "StoreCompletionRecords": true,
+                      "SubmissionTimestamp": null
+                    },
+                    {
+                      "$id": "26",
+                      "$type": "Sensus.UI.Inputs.LabelOnlyInput, SensusAndroid",
+                      "Name": "END",
+                      "Id": "a8bf188c-d376-4c1a-9152-3e15acaef639",
+                      "GroupId": "f9c0b95b-b4c2-4306-800d-ba97fdfec039",
+                      "LabelText": "Grazie per le tue risposte! Per favore, non spegnere il telefono e NON CHIUDERE MAI L'APPLICAZIONE. Se possibile, attiva la suoneria o metti il telefono in tasca con la vibrazione attivata. Clicca su Submit per inviare le tue domande.",
+                      "LabelFontSize": 20,
+                      "DisplayNumber": false,
+                      "NeedsToBeStored": false,
+                      "Latitude": null,
+                      "Longitude": null,
+                      "LocationUpdateTimestamp": null,
+                      "Required": true,
+                      "Viewed": false,
+                      "DisplayConditions": {
+                        "$type": "System.Collections.Generic.List`1[[Sensus.UI.Inputs.InputDisplayCondition, SensusAndroid]], mscorlib",
+                        "$values": []
+                      },
+                      "BackgroundColor": null,
+                      "Padding": null,
+                      "Frame": false,
+                      "CompletionRecords": {
+                        "$type": "System.Collections.Generic.List`1[[Sensus.UI.Inputs.InputCompletionRecord, SensusAndroid]], mscorlib",
+                        "$values": []
+                      },
+                      "StoreCompletionRecords": false,
+                      "SubmissionTimestamp": null
+                    }
+                  ]
+                },
+                "Name": "SurveyFf",
+                "Geotag": false,
+                "ForceValidInputs": true,
+                "ShuffleInputs": false
+              }
+            ]
+          },
+          "ScheduledRunTime": null,
+          "RunTime": null,
+          "PreviousDatum": null,
+          "ExpirationDate": null,
+          "CurrentDatum": null
+        },
+        "Name": "SurveyF",
+        "Enabled": true,
+        "AllowCancel": true,
+        "Triggers": {
+          "$type": "Sensus.Concurrent.ConcurrentObservableCollection`1[[Sensus.Probes.User.Scripts.Trigger, SensusAndroid]], SensusAndroid",
+          "$values": []
+        },
+        "MaxAgeMinutes": 20.0,
+        "WindowExpiration": false,
+        "TriggerWindowsString": "11:20-11:40, 12:30-12:50, 13:40-14:00, 14:50-15:10, 16:00-16:20",
+        "NonDowTriggerIntervalDays": 1,
+        "RunTimes": {
+          "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+          "$values": []
+        },
+        "CompletionTimes": {
+          "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+          "$values": []
+        },
+        "OneShot": false,
+        "RunOnStart": false,
+        "DisplayProgress": false,
+        "RunMode": 2,
+        "IncompleteSubmissionConfirmation": "Non hai completato tutti i campi. ",
+        "ShuffleInputGroups": false,
+        "UseTriggerDatumTimestampInSubcaption": false,
+        "ForceRemoteStorageOnSurveySubmission": true
+      }
+    ]
+  },
+  "MaxDataStoresPerSecond": null,
+  "Enabled": true,
+  "OriginallyEnabled": true,
+  "Protocol": {
+    "$id": "27",
+    "$type": "Sensus.Protocol, SensusAndroid",
+    "Id": "ProtocolStudentF",
+    "Name": "ProtocolloSudioF",
+    "Probes": {
+      "$type": "System.Collections.Generic.List`1[[Sensus.Probes.Probe, SensusAndroid]], mscorlib",
+      "$values": [
+        {
+          "$id": "28",
+          "$type": "Sensus.Android.Probes.Movement.AndroidAccelerometerProbe, SensusAndroid",
+          "MaxDataStoresPerSecond": null,
+          "KeepDeviceAwake": true,
+          "Enabled": false,
+          "OriginallyEnabled": false,
+          "Protocol": {
+            "$ref": "27"
+          },
+          "StoreData": true,
+          "StartStopTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.Tuple`2[[System.Boolean, mscorlib],[System.DateTime, mscorlib]], mscorlib]], mscorlib",
+            "$values": []
+          },
+          "SuccessfulHealthTestTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "MaxChartDataCount": 10
+        },
+        {
+          "$id": "29",
+          "$type": "Sensus.Android.Probes.Movement.AndroidActivityProbe, SensusAndroid",
+          "MaxDataStoresPerSecond": null,
+          "KeepDeviceAwake": false,
+          "Enabled": false,
+          "OriginallyEnabled": false,
+          "Protocol": {
+            "$ref": "27"
+          },
+          "StoreData": true,
+          "StartStopTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.Tuple`2[[System.Boolean, mscorlib],[System.DateTime, mscorlib]], mscorlib]], mscorlib",
+            "$values": []
+          },
+          "SuccessfulHealthTestTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "MaxChartDataCount": 10
+        },
+        {
+          "$id": "30",
+          "$type": "Sensus.Android.Probes.Location.AndroidAltitudeProbe, SensusAndroid",
+          "MaxDataStoresPerSecond": null,
+          "KeepDeviceAwake": true,
+          "Enabled": false,
+          "OriginallyEnabled": false,
+          "Protocol": {
+            "$ref": "27"
+          },
+          "StoreData": true,
+          "StartStopTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.Tuple`2[[System.Boolean, mscorlib],[System.DateTime, mscorlib]], mscorlib]], mscorlib",
+            "$values": []
+          },
+          "SuccessfulHealthTestTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "MaxChartDataCount": 10
+        },
+        {
+          "$id": "31",
+          "$type": "Sensus.Probes.Device.BatteryProbe, SensusAndroid",
+          "PollingSleepDurationMS": 900000,
+          "PollingTimeoutMinutes": 5,
+          "MaxDataStoresPerSecond": null,
+          "PollTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "AcPowerConnectPoll": false,
+          "AcPowerConnectPollOverridesScheduledPolls": false,
+          "Enabled": false,
+          "OriginallyEnabled": false,
+          "Protocol": {
+            "$ref": "27"
+          },
+          "StoreData": true,
+          "StartStopTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.Tuple`2[[System.Boolean, mscorlib],[System.DateTime, mscorlib]], mscorlib]], mscorlib",
+            "$values": []
+          },
+          "SuccessfulHealthTestTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "MaxChartDataCount": 10
+        },
+        {
+          "$id": "32",
+          "$type": "Sensus.Android.Probes.Context.AndroidBluetoothDeviceProximityProbe, SensusAndroid",
+          "ScanDurationMS": 15000,
+          "PollingSleepDurationMS": 60000,
+          "PollingTimeoutMinutes": 5,
+          "MaxDataStoresPerSecond": null,
+          "PollTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "AcPowerConnectPoll": false,
+          "AcPowerConnectPollOverridesScheduledPolls": false,
+          "Enabled": false,
+          "OriginallyEnabled": false,
+          "Protocol": {
+            "$ref": "27"
+          },
+          "StoreData": true,
+          "StartStopTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.Tuple`2[[System.Boolean, mscorlib],[System.DateTime, mscorlib]], mscorlib]], mscorlib",
+            "$values": []
+          },
+          "SuccessfulHealthTestTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "MaxChartDataCount": 10
+        },
+        {
+          "$id": "33",
+          "$type": "Sensus.Android.Probes.Network.AndroidCellTowerProbe, SensusAndroid",
+          "MaxDataStoresPerSecond": null,
+          "KeepDeviceAwake": false,
+          "Enabled": false,
+          "OriginallyEnabled": false,
+          "Protocol": {
+            "$ref": "27"
+          },
+          "StoreData": true,
+          "StartStopTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.Tuple`2[[System.Boolean, mscorlib],[System.DateTime, mscorlib]], mscorlib]], mscorlib",
+            "$values": []
+          },
+          "SuccessfulHealthTestTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "MaxChartDataCount": 10
+        },
+        {
+          "$id": "34",
+          "$type": "Sensus.Android.Probes.Location.AndroidCompassProbe, SensusAndroid",
+          "MaxDataStoresPerSecond": null,
+          "KeepDeviceAwake": true,
+          "Enabled": false,
+          "OriginallyEnabled": false,
+          "Protocol": {
+            "$ref": "27"
+          },
+          "StoreData": true,
+          "StartStopTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.Tuple`2[[System.Boolean, mscorlib],[System.DateTime, mscorlib]], mscorlib]], mscorlib",
+            "$values": []
+          },
+          "SuccessfulHealthTestTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "MaxChartDataCount": 10
+        },
+        {
+          "$id": "35",
+          "$type": "Sensus.Android.Probes.Location.AndroidEstimoteBeaconProbe, SensusAndroid",
+          "Beacons": {
+            "$type": "Sensus.Concurrent.ConcurrentObservableCollection`1[[Sensus.Probes.Location.EstimoteBeacon, SensusAndroid]], SensusAndroid",
+            "$values": []
+          },
+          "EstimoteCloudAppId": null,
+          "EstimoteCloudAppToken": null,
+          "MaxDataStoresPerSecond": null,
+          "KeepDeviceAwake": false,
+          "Enabled": false,
+          "OriginallyEnabled": false,
+          "Protocol": {
+            "$ref": "27"
+          },
+          "StoreData": true,
+          "StartStopTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.Tuple`2[[System.Boolean, mscorlib],[System.DateTime, mscorlib]], mscorlib]], mscorlib",
+            "$values": []
+          },
+          "SuccessfulHealthTestTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "MaxChartDataCount": 10
+        },
+        {
+          "$id": "36",
+          "$type": "Sensus.Android.Probes.Apps.AndroidFacebookProbe, SensusAndroid",
+          "PollingSleepDurationMS": 86400000,
+          "PollingTimeoutMinutes": 5,
+          "MaxDataStoresPerSecond": null,
+          "PollTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "AcPowerConnectPoll": false,
+          "AcPowerConnectPollOverridesScheduledPolls": false,
+          "Enabled": false,
+          "OriginallyEnabled": false,
+          "Protocol": {
+            "$ref": "27"
+          },
+          "StoreData": true,
+          "StartStopTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.Tuple`2[[System.Boolean, mscorlib],[System.DateTime, mscorlib]], mscorlib]], mscorlib",
+            "$values": []
+          },
+          "SuccessfulHealthTestTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "MaxChartDataCount": 10
+        },
+        {
+          "$id": "37",
+          "$type": "Sensus.Probes.Location.ListeningLocationProbe, SensusAndroid",
+          "MaxDataStoresPerSecond": null,
+          "KeepDeviceAwake": true,
+          "Enabled": false,
+          "OriginallyEnabled": false,
+          "Protocol": {
+            "$ref": "27"
+          },
+          "StoreData": true,
+          "StartStopTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.Tuple`2[[System.Boolean, mscorlib],[System.DateTime, mscorlib]], mscorlib]], mscorlib",
+            "$values": []
+          },
+          "SuccessfulHealthTestTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "MaxChartDataCount": 10
+        },
+        {
+          "$id": "38",
+          "$type": "Sensus.Probes.Location.PollingLocationProbe, SensusAndroid",
+          "PollingSleepDurationMS": 15000,
+          "PollingTimeoutMinutes": 5,
+          "MaxDataStoresPerSecond": null,
+          "PollTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "AcPowerConnectPoll": false,
+          "AcPowerConnectPollOverridesScheduledPolls": false,
+          "Enabled": false,
+          "OriginallyEnabled": false,
+          "Protocol": {
+            "$ref": "27"
+          },
+          "StoreData": true,
+          "StartStopTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.Tuple`2[[System.Boolean, mscorlib],[System.DateTime, mscorlib]], mscorlib]], mscorlib",
+            "$values": []
+          },
+          "SuccessfulHealthTestTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "MaxChartDataCount": 10
+        },
+        {
+          "$id": "39",
+          "$type": "Sensus.Android.Probes.Context.AndroidHumidityProbe, SensusAndroid",
+          "MaxDataStoresPerSecond": null,
+          "KeepDeviceAwake": true,
+          "Enabled": false,
+          "OriginallyEnabled": false,
+          "Protocol": {
+            "$ref": "27"
+          },
+          "StoreData": true,
+          "StartStopTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.Tuple`2[[System.Boolean, mscorlib],[System.DateTime, mscorlib]], mscorlib]], mscorlib",
+            "$values": []
+          },
+          "SuccessfulHealthTestTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "MaxChartDataCount": 10
+        },
+        {
+          "$id": "40",
+          "$type": "Sensus.Android.Probes.Context.AndroidLightProbe, SensusAndroid",
+          "MaxDataStoresPerSecond": null,
+          "KeepDeviceAwake": true,
+          "Enabled": false,
+          "OriginallyEnabled": false,
+          "Protocol": {
+            "$ref": "27"
+          },
+          "StoreData": true,
+          "StartStopTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.Tuple`2[[System.Boolean, mscorlib],[System.DateTime, mscorlib]], mscorlib]], mscorlib",
+            "$values": []
+          },
+          "SuccessfulHealthTestTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "MaxChartDataCount": 10
+        },
+        {
+          "$id": "41",
+          "$type": "Sensus.Android.Probes.Movement.AndroidLocationFenceProbe, SensusAndroid",
+          "LocationChangeRadiusMeters": 100,
+          "MaxDataStoresPerSecond": null,
+          "KeepDeviceAwake": false,
+          "Enabled": false,
+          "OriginallyEnabled": false,
+          "Protocol": {
+            "$ref": "27"
+          },
+          "StoreData": true,
+          "StartStopTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.Tuple`2[[System.Boolean, mscorlib],[System.DateTime, mscorlib]], mscorlib]], mscorlib",
+            "$values": []
+          },
+          "SuccessfulHealthTestTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "MaxChartDataCount": 10
+        },
+        {
+          "$id": "42",
+          "$type": "Sensus.Probes.User.MicrosoftBand.MicrosoftBandAccelerometerProbe, SensusAndroid",
+          "SamplingRate": 0,
+          "StopWhenNotWorn": true,
+          "MaxDataStoresPerSecond": null,
+          "KeepDeviceAwake": false,
+          "Enabled": false,
+          "OriginallyEnabled": false,
+          "Protocol": {
+            "$ref": "27"
+          },
+          "StoreData": true,
+          "StartStopTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.Tuple`2[[System.Boolean, mscorlib],[System.DateTime, mscorlib]], mscorlib]], mscorlib",
+            "$values": []
+          },
+          "SuccessfulHealthTestTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "MaxChartDataCount": 10
+        },
+        {
+          "$id": "43",
+          "$type": "Sensus.Probes.User.MicrosoftBand.MicrosoftBandAirPressureProbe, SensusAndroid",
+          "SamplingRate": 0,
+          "StopWhenNotWorn": true,
+          "MaxDataStoresPerSecond": null,
+          "KeepDeviceAwake": false,
+          "Enabled": false,
+          "OriginallyEnabled": false,
+          "Protocol": {
+            "$ref": "27"
+          },
+          "StoreData": true,
+          "StartStopTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.Tuple`2[[System.Boolean, mscorlib],[System.DateTime, mscorlib]], mscorlib]], mscorlib",
+            "$values": []
+          },
+          "SuccessfulHealthTestTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "MaxChartDataCount": 10
+        },
+        {
+          "$id": "44",
+          "$type": "Sensus.Probes.User.MicrosoftBand.MicrosoftBandAirTemperatureProbe, SensusAndroid",
+          "SamplingRate": 0,
+          "StopWhenNotWorn": true,
+          "MaxDataStoresPerSecond": null,
+          "KeepDeviceAwake": false,
+          "Enabled": false,
+          "OriginallyEnabled": false,
+          "Protocol": {
+            "$ref": "27"
+          },
+          "StoreData": true,
+          "StartStopTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.Tuple`2[[System.Boolean, mscorlib],[System.DateTime, mscorlib]], mscorlib]], mscorlib",
+            "$values": []
+          },
+          "SuccessfulHealthTestTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "MaxChartDataCount": 10
+        },
+        {
+          "$id": "45",
+          "$type": "Sensus.Probes.User.MicrosoftBand.MicrosoftBandCaloriesProbe, SensusAndroid",
+          "SamplingRate": 0,
+          "StopWhenNotWorn": true,
+          "MaxDataStoresPerSecond": null,
+          "KeepDeviceAwake": false,
+          "Enabled": false,
+          "OriginallyEnabled": false,
+          "Protocol": {
+            "$ref": "27"
+          },
+          "StoreData": true,
+          "StartStopTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.Tuple`2[[System.Boolean, mscorlib],[System.DateTime, mscorlib]], mscorlib]], mscorlib",
+            "$values": []
+          },
+          "SuccessfulHealthTestTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "MaxChartDataCount": 10
+        },
+        {
+          "$id": "46",
+          "$type": "Sensus.Probes.User.MicrosoftBand.MicrosoftBandContactProbe, SensusAndroid",
+          "SamplingRate": 0,
+          "StopWhenNotWorn": false,
+          "MaxDataStoresPerSecond": null,
+          "KeepDeviceAwake": false,
+          "Enabled": false,
+          "OriginallyEnabled": false,
+          "Protocol": {
+            "$ref": "27"
+          },
+          "StoreData": true,
+          "StartStopTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.Tuple`2[[System.Boolean, mscorlib],[System.DateTime, mscorlib]], mscorlib]], mscorlib",
+            "$values": []
+          },
+          "SuccessfulHealthTestTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "MaxChartDataCount": 10
+        },
+        {
+          "$id": "47",
+          "$type": "Sensus.Probes.User.MicrosoftBand.MicrosoftBandDistanceProbe, SensusAndroid",
+          "SamplingRate": 0,
+          "StopWhenNotWorn": true,
+          "MaxDataStoresPerSecond": null,
+          "KeepDeviceAwake": false,
+          "Enabled": false,
+          "OriginallyEnabled": false,
+          "Protocol": {
+            "$ref": "27"
+          },
+          "StoreData": true,
+          "StartStopTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.Tuple`2[[System.Boolean, mscorlib],[System.DateTime, mscorlib]], mscorlib]], mscorlib",
+            "$values": []
+          },
+          "SuccessfulHealthTestTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "MaxChartDataCount": 10
+        },
+        {
+          "$id": "48",
+          "$type": "Sensus.Probes.User.MicrosoftBand.MicrosoftBandGsrProbe, SensusAndroid",
+          "SamplingRate": 0,
+          "StopWhenNotWorn": true,
+          "MaxDataStoresPerSecond": null,
+          "KeepDeviceAwake": false,
+          "Enabled": false,
+          "OriginallyEnabled": false,
+          "Protocol": {
+            "$ref": "27"
+          },
+          "StoreData": true,
+          "StartStopTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.Tuple`2[[System.Boolean, mscorlib],[System.DateTime, mscorlib]], mscorlib]], mscorlib",
+            "$values": []
+          },
+          "SuccessfulHealthTestTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "MaxChartDataCount": 10
+        },
+        {
+          "$id": "49",
+          "$type": "Sensus.Probes.User.MicrosoftBand.MicrosoftBandGyroscopeProbe, SensusAndroid",
+          "SamplingRate": 0,
+          "StopWhenNotWorn": true,
+          "MaxDataStoresPerSecond": null,
+          "KeepDeviceAwake": false,
+          "Enabled": false,
+          "OriginallyEnabled": false,
+          "Protocol": {
+            "$ref": "27"
+          },
+          "StoreData": true,
+          "StartStopTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.Tuple`2[[System.Boolean, mscorlib],[System.DateTime, mscorlib]], mscorlib]], mscorlib",
+            "$values": []
+          },
+          "SuccessfulHealthTestTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "MaxChartDataCount": 10
+        },
+        {
+          "$id": "50",
+          "$type": "Sensus.Probes.User.MicrosoftBand.MicrosoftBandHeartRateProbe, SensusAndroid",
+          "SamplingRate": 0,
+          "StopWhenNotWorn": true,
+          "MaxDataStoresPerSecond": null,
+          "KeepDeviceAwake": false,
+          "Enabled": false,
+          "OriginallyEnabled": false,
+          "Protocol": {
+            "$ref": "27"
+          },
+          "StoreData": true,
+          "StartStopTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.Tuple`2[[System.Boolean, mscorlib],[System.DateTime, mscorlib]], mscorlib]], mscorlib",
+            "$values": []
+          },
+          "SuccessfulHealthTestTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "MaxChartDataCount": 10
+        },
+        {
+          "$id": "51",
+          "$type": "Sensus.Probes.User.MicrosoftBand.MicrosoftBandLightProbe, SensusAndroid",
+          "SamplingRate": 0,
+          "StopWhenNotWorn": true,
+          "MaxDataStoresPerSecond": null,
+          "KeepDeviceAwake": false,
+          "Enabled": false,
+          "OriginallyEnabled": false,
+          "Protocol": {
+            "$ref": "27"
+          },
+          "StoreData": true,
+          "StartStopTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.Tuple`2[[System.Boolean, mscorlib],[System.DateTime, mscorlib]], mscorlib]], mscorlib",
+            "$values": []
+          },
+          "SuccessfulHealthTestTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "MaxChartDataCount": 10
+        },
+        {
+          "$id": "52",
+          "$type": "Sensus.Probes.User.MicrosoftBand.MicrosoftBandPedometerProbe, SensusAndroid",
+          "SamplingRate": 0,
+          "StopWhenNotWorn": true,
+          "MaxDataStoresPerSecond": null,
+          "KeepDeviceAwake": false,
+          "Enabled": false,
+          "OriginallyEnabled": false,
+          "Protocol": {
+            "$ref": "27"
+          },
+          "StoreData": true,
+          "StartStopTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.Tuple`2[[System.Boolean, mscorlib],[System.DateTime, mscorlib]], mscorlib]], mscorlib",
+            "$values": []
+          },
+          "SuccessfulHealthTestTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "MaxChartDataCount": 10
+        },
+        {
+          "$id": "53",
+          "$type": "Sensus.Probes.User.MicrosoftBand.MicrosoftBandRRIntervalProbe, SensusAndroid",
+          "SamplingRate": 0,
+          "StopWhenNotWorn": true,
+          "MaxDataStoresPerSecond": null,
+          "KeepDeviceAwake": false,
+          "Enabled": false,
+          "OriginallyEnabled": false,
+          "Protocol": {
+            "$ref": "27"
+          },
+          "StoreData": true,
+          "StartStopTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.Tuple`2[[System.Boolean, mscorlib],[System.DateTime, mscorlib]], mscorlib]], mscorlib",
+            "$values": []
+          },
+          "SuccessfulHealthTestTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "MaxChartDataCount": 10
+        },
+        {
+          "$id": "54",
+          "$type": "Sensus.Probes.User.MicrosoftBand.MicrosoftBandSkinTemperatureProbe, SensusAndroid",
+          "SamplingRate": 0,
+          "StopWhenNotWorn": true,
+          "MaxDataStoresPerSecond": null,
+          "KeepDeviceAwake": false,
+          "Enabled": false,
+          "OriginallyEnabled": false,
+          "Protocol": {
+            "$ref": "27"
+          },
+          "StoreData": true,
+          "StartStopTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.Tuple`2[[System.Boolean, mscorlib],[System.DateTime, mscorlib]], mscorlib]], mscorlib",
+            "$values": []
+          },
+          "SuccessfulHealthTestTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "MaxChartDataCount": 10
+        },
+        {
+          "$id": "55",
+          "$type": "Sensus.Probes.User.MicrosoftBand.MicrosoftBandStepProbe, SensusAndroid",
+          "SamplingRate": 0,
+          "StopWhenNotWorn": true,
+          "MaxDataStoresPerSecond": null,
+          "KeepDeviceAwake": false,
+          "Enabled": false,
+          "OriginallyEnabled": false,
+          "Protocol": {
+            "$ref": "27"
+          },
+          "StoreData": true,
+          "StartStopTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.Tuple`2[[System.Boolean, mscorlib],[System.DateTime, mscorlib]], mscorlib]], mscorlib",
+            "$values": []
+          },
+          "SuccessfulHealthTestTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "MaxChartDataCount": 10
+        },
+        {
+          "$id": "56",
+          "$type": "Sensus.Probes.User.MicrosoftBand.MicrosoftBandUltravioletLightProbe, SensusAndroid",
+          "SamplingRate": 0,
+          "StopWhenNotWorn": true,
+          "MaxDataStoresPerSecond": null,
+          "KeepDeviceAwake": false,
+          "Enabled": false,
+          "OriginallyEnabled": false,
+          "Protocol": {
+            "$ref": "27"
+          },
+          "StoreData": true,
+          "StartStopTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.Tuple`2[[System.Boolean, mscorlib],[System.DateTime, mscorlib]], mscorlib]], mscorlib",
+            "$values": []
+          },
+          "SuccessfulHealthTestTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "MaxChartDataCount": 10
+        },
+        {
+          "$id": "57",
+          "$type": "Sensus.Android.Probes.Communication.AndroidTelephonyProbe, SensusAndroid",
+          "MaxDataStoresPerSecond": null,
+          "KeepDeviceAwake": false,
+          "Enabled": false,
+          "OriginallyEnabled": false,
+          "Protocol": {
+            "$ref": "27"
+          },
+          "StoreData": true,
+          "StartStopTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.Tuple`2[[System.Boolean, mscorlib],[System.DateTime, mscorlib]], mscorlib]], mscorlib",
+            "$values": []
+          },
+          "SuccessfulHealthTestTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "MaxChartDataCount": 10
+        },
+        {
+          "$id": "58",
+          "$type": "Sensus.Probes.Location.PollingPointsOfInterestProximityProbe, SensusAndroid",
+          "Triggers": {
+            "$type": "System.Collections.ObjectModel.ObservableCollection`1[[Sensus.Probes.Location.PointOfInterestProximityTrigger, SensusAndroid]], System",
+            "$values": []
+          },
+          "PollingSleepDurationMS": 30000,
+          "PollingTimeoutMinutes": 5,
+          "MaxDataStoresPerSecond": null,
+          "PollTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "AcPowerConnectPoll": false,
+          "AcPowerConnectPollOverridesScheduledPolls": false,
+          "Enabled": false,
+          "OriginallyEnabled": false,
+          "Protocol": {
+            "$ref": "27"
+          },
+          "StoreData": true,
+          "StartStopTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.Tuple`2[[System.Boolean, mscorlib],[System.DateTime, mscorlib]], mscorlib]], mscorlib",
+            "$values": []
+          },
+          "SuccessfulHealthTestTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "MaxChartDataCount": 10
+        },
+        {
+          "$id": "59",
+          "$type": "Sensus.Probes.Location.ListeningPointsOfInterestProximityProbe, SensusAndroid",
+          "Triggers": {
+            "$type": "System.Collections.ObjectModel.ObservableCollection`1[[Sensus.Probes.Location.PointOfInterestProximityTrigger, SensusAndroid]], System",
+            "$values": []
+          },
+          "MaxDataStoresPerSecond": null,
+          "KeepDeviceAwake": true,
+          "Enabled": false,
+          "OriginallyEnabled": false,
+          "Protocol": {
+            "$ref": "27"
+          },
+          "StoreData": true,
+          "StartStopTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.Tuple`2[[System.Boolean, mscorlib],[System.DateTime, mscorlib]], mscorlib]], mscorlib",
+            "$values": []
+          },
+          "SuccessfulHealthTestTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "MaxChartDataCount": 10
+        },
+        {
+          "$id": "60",
+          "$type": "Sensus.Android.Probes.Location.AndroidProximityProbe, SensusAndroid",
+          "MaxDataStoresPerSecond": null,
+          "KeepDeviceAwake": false,
+          "Enabled": false,
+          "OriginallyEnabled": false,
+          "Protocol": {
+            "$ref": "27"
+          },
+          "StoreData": true,
+          "StartStopTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.Tuple`2[[System.Boolean, mscorlib],[System.DateTime, mscorlib]], mscorlib]], mscorlib",
+            "$values": []
+          },
+          "SuccessfulHealthTestTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "MaxChartDataCount": 10
+        },
+        {
+          "$id": "61",
+          "$type": "Sensus.Android.Probes.Device.AndroidScreenProbe, SensusAndroid",
+          "PollingSleepDurationMS": 15000,
+          "PollingTimeoutMinutes": 5,
+          "MaxDataStoresPerSecond": null,
+          "PollTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "AcPowerConnectPoll": false,
+          "AcPowerConnectPollOverridesScheduledPolls": false,
+          "Enabled": false,
+          "OriginallyEnabled": false,
+          "Protocol": {
+            "$ref": "27"
+          },
+          "StoreData": true,
+          "StartStopTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.Tuple`2[[System.Boolean, mscorlib],[System.DateTime, mscorlib]], mscorlib]], mscorlib",
+            "$values": []
+          },
+          "SuccessfulHealthTestTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "MaxChartDataCount": 10
+        },
+        {
+          "$ref": "1"
+        },
+        {
+          "$id": "62",
+          "$type": "Sensus.Android.Probes.Context.AndroidSoundProbe, SensusAndroid",
+          "SampleLengthMS": 5000,
+          "PollingSleepDurationMS": 600000,
+          "PollingTimeoutMinutes": 5,
+          "MaxDataStoresPerSecond": null,
+          "PollTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "AcPowerConnectPoll": false,
+          "AcPowerConnectPollOverridesScheduledPolls": false,
+          "Enabled": false,
+          "OriginallyEnabled": false,
+          "Protocol": {
+            "$ref": "27"
+          },
+          "StoreData": true,
+          "StartStopTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.Tuple`2[[System.Boolean, mscorlib],[System.DateTime, mscorlib]], mscorlib]], mscorlib",
+            "$values": []
+          },
+          "SuccessfulHealthTestTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "MaxChartDataCount": 10
+        },
+        {
+          "$id": "63",
+          "$type": "Sensus.Probes.Movement.PollingSpeedProbe, SensusAndroid",
+          "PollingSleepDurationMS": 15000,
+          "PollingTimeoutMinutes": 5,
+          "MaxDataStoresPerSecond": null,
+          "PollTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "AcPowerConnectPoll": false,
+          "AcPowerConnectPollOverridesScheduledPolls": false,
+          "Enabled": false,
+          "OriginallyEnabled": false,
+          "Protocol": {
+            "$ref": "27"
+          },
+          "StoreData": true,
+          "StartStopTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.Tuple`2[[System.Boolean, mscorlib],[System.DateTime, mscorlib]], mscorlib]], mscorlib",
+            "$values": []
+          },
+          "SuccessfulHealthTestTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "MaxChartDataCount": 10
+        },
+        {
+          "$id": "64",
+          "$type": "Sensus.Probes.Movement.ListeningSpeedProbe, SensusAndroid",
+          "MaxDataStoresPerSecond": null,
+          "KeepDeviceAwake": true,
+          "Enabled": false,
+          "OriginallyEnabled": false,
+          "Protocol": {
+            "$ref": "27"
+          },
+          "StoreData": true,
+          "StartStopTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.Tuple`2[[System.Boolean, mscorlib],[System.DateTime, mscorlib]], mscorlib]], mscorlib",
+            "$values": []
+          },
+          "SuccessfulHealthTestTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "MaxChartDataCount": 10
+        },
+        {
+          "$id": "65",
+          "$type": "Sensus.Android.Probes.Context.AndroidAmbientTemperatureProbe, SensusAndroid",
+          "MaxDataStoresPerSecond": null,
+          "KeepDeviceAwake": true,
+          "Enabled": false,
+          "OriginallyEnabled": false,
+          "Protocol": {
+            "$ref": "27"
+          },
+          "StoreData": true,
+          "StartStopTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.Tuple`2[[System.Boolean, mscorlib],[System.DateTime, mscorlib]], mscorlib]], mscorlib",
+            "$values": []
+          },
+          "SuccessfulHealthTestTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "MaxChartDataCount": 10
+        },
+        {
+          "$id": "66",
+          "$type": "Sensus.Android.Probes.Communication.AndroidSmsProbe, SensusAndroid",
+          "MaxDataStoresPerSecond": null,
+          "KeepDeviceAwake": false,
+          "Enabled": false,
+          "OriginallyEnabled": false,
+          "Protocol": {
+            "$ref": "27"
+          },
+          "StoreData": true,
+          "StartStopTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.Tuple`2[[System.Boolean, mscorlib],[System.DateTime, mscorlib]], mscorlib]], mscorlib",
+            "$values": []
+          },
+          "SuccessfulHealthTestTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "MaxChartDataCount": 10
+        },
+        {
+          "$id": "67",
+          "$type": "Sensus.Android.Probes.Network.AndroidListeningWlanProbe, SensusAndroid",
+          "MaxDataStoresPerSecond": null,
+          "KeepDeviceAwake": false,
+          "Enabled": false,
+          "OriginallyEnabled": false,
+          "Protocol": {
+            "$ref": "27"
+          },
+          "StoreData": true,
+          "StartStopTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.Tuple`2[[System.Boolean, mscorlib],[System.DateTime, mscorlib]], mscorlib]], mscorlib",
+            "$values": []
+          },
+          "SuccessfulHealthTestTimes": {
+            "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+            "$values": []
+          },
+          "MaxChartDataCount": 10
+        }
+      ]
+    },
+    "LocalDataStore": {
+      "$id": "68",
+      "$type": "Sensus.DataStores.Local.FileLocalDataStore, SensusAndroid",
+      "CompressionLevel": 0,
+      "BufferSizeBytes": 4000,
+      "Encrypt": false,
+      "WriteToRemote": true,
+      "Protocol": {
+        "$ref": "27"
+      },
+      "CaptionText": null
+    },
+    "RemoteDataStore": {
+      "$id": "69",
+      "$type": "Sensus.DataStores.Remote.AmazonS3RemoteDataStore, SensusAndroid",
+      "Region": "us-east-1",
+      "Bucket": "714646876205-78bfe241-4882-4482-88b3-00672395ca17",
+      "Folder": "data",
+      "IamAccountString": "AKIAJOE7WS2B3YGNJNVQ:h3Iol6chDhwFcMZcIID7fRTpKUTvW4c80dCYiqaA",
+      "PinnedServiceURL": null,
+      "PinnedPublicKey": null,
+      "WriteDelayMS": 999999999,
+      "WriteTimeoutMinutes": 15,
+      "WriteOnPowerConnect": true,
+      "RequireWiFi": false,
+      "RequireCharging": false,
+      "RequiredBatteryChargeLevelPercent": 5.0,
+      "UserNotificationMessage": "Sensus vorrebbe mandare i tuoi dati al responsabile dello studio. Per piacere, apri l'applicazione. Grazie!",
+      "Protocol": {
+        "$ref": "27"
+      },
+      "CaptionText": null
+    },
+    "StorageDirectory": "/data/user/0/edu.virginia.sie.ptl.sensus/files/ProtocolStudentF",
+    "LockPasswordHash": "a6b1d0ccf4df9db5a48ba6da43c43efabadbd3f1c9f98caf2ace2c2e8c0318",
+    "JsonAnonymizer": {
+      "$id": "70",
+      "$type": "Sensus.Anonymization.AnonymizedJsonContractResolver, SensusAndroid",
+      "Protocol": {
+        "$ref": "27"
+      },
+      "PropertyStringAnonymizerString": {
+        "$type": "System.Collections.ObjectModel.ObservableCollection`1[[System.String, mscorlib]], System",
+        "$values": [
+          "Sensus.Probes.Movement.AccelerometerDatum-X:",
+          "Sensus.Probes.Movement.AccelerometerDatum-Y:",
+          "Sensus.Probes.Movement.AccelerometerDatum-Z:",
+          "Sensus.Probes.Movement.AccelerometerDatum-DeviceId:",
+          "Sensus.Probes.Movement.AccelerometerDatum-Timestamp:",
+          "Sensus.Probes.Movement.ActivityDatum-DeviceId:",
+          "Sensus.Probes.Movement.ActivityDatum-Timestamp:",
+          "Sensus.Probes.Location.AltitudeDatum-Altitude:",
+          "Sensus.Probes.Location.AltitudeDatum-DeviceId:",
+          "Sensus.Probes.Location.AltitudeDatum-Timestamp:",
+          "Sensus.Probes.Device.BatteryDatum-Level:",
+          "Sensus.Probes.Device.BatteryDatum-DeviceId:",
+          "Sensus.Probes.Device.BatteryDatum-Timestamp:",
+          "Sensus.Probes.Context.BluetoothDeviceProximityDatum-EncounteredDeviceId:",
+          "Sensus.Probes.Context.BluetoothDeviceProximityDatum-DeviceId:",
+          "Sensus.Probes.Context.BluetoothDeviceProximityDatum-Timestamp:",
+          "Sensus.Probes.Network.CellTowerDatum-CellTower:",
+          "Sensus.Probes.Network.CellTowerDatum-DeviceId:",
+          "Sensus.Probes.Network.CellTowerDatum-Timestamp:",
+          "Sensus.Probes.Location.CompassDatum-Heading:",
+          "Sensus.Probes.Location.CompassDatum-DeviceId:",
+          "Sensus.Probes.Location.CompassDatum-Timestamp:",
+          "Sensus.Probes.Location.EstimoteBeaconDatum-EventName:",
+          "Sensus.Probes.Location.EstimoteBeaconDatum-DistanceMeters:",
+          "Sensus.Probes.Location.EstimoteBeaconDatum-DeviceId:",
+          "Sensus.Probes.Location.EstimoteBeaconDatum-Timestamp:",
+          "Sensus.Probes.Apps.FacebookDatum-AgeRange:",
+          "Sensus.Probes.Apps.FacebookDatum-FirstName:",
+          "Sensus.Probes.Apps.FacebookDatum-Gender:",
+          "Sensus.Probes.Apps.FacebookDatum-UserId:",
+          "Sensus.Probes.Apps.FacebookDatum-LastName:",
+          "Sensus.Probes.Apps.FacebookDatum-TimelineLink:",
+          "Sensus.Probes.Apps.FacebookDatum-Locale:",
+          "Sensus.Probes.Apps.FacebookDatum-FullName:",
+          "Sensus.Probes.Apps.FacebookDatum-Timezone:",
+          "Sensus.Probes.Apps.FacebookDatum-UpdatedTime:",
+          "Sensus.Probes.Apps.FacebookDatum-Verified:",
+          "Sensus.Probes.Apps.FacebookDatum-Email:",
+          "Sensus.Probes.Apps.FacebookDatum-About:",
+          "Sensus.Probes.Apps.FacebookDatum-Education:",
+          "Sensus.Probes.Apps.FacebookDatum-Hometown:",
+          "Sensus.Probes.Apps.FacebookDatum-Location:",
+          "Sensus.Probes.Apps.FacebookDatum-RelationshipStatus:",
+          "Sensus.Probes.Apps.FacebookDatum-SignificantOther:",
+          "Sensus.Probes.Apps.FacebookDatum-Religion:",
+          "Sensus.Probes.Apps.FacebookDatum-Politics:",
+          "Sensus.Probes.Apps.FacebookDatum-Website:",
+          "Sensus.Probes.Apps.FacebookDatum-Employment:",
+          "Sensus.Probes.Apps.FacebookDatum-Friends:",
+          "Sensus.Probes.Apps.FacebookDatum-Books:",
+          "Sensus.Probes.Apps.FacebookDatum-Runs:",
+          "Sensus.Probes.Apps.FacebookDatum-Walks:",
+          "Sensus.Probes.Apps.FacebookDatum-Bikes:",
+          "Sensus.Probes.Apps.FacebookDatum-Songs:",
+          "Sensus.Probes.Apps.FacebookDatum-Playlists:",
+          "Sensus.Probes.Apps.FacebookDatum-NewsReads:",
+          "Sensus.Probes.Apps.FacebookDatum-NewsPublishes:",
+          "Sensus.Probes.Apps.FacebookDatum-VideosWatched:",
+          "Sensus.Probes.Apps.FacebookDatum-VideoRatings:",
+          "Sensus.Probes.Apps.FacebookDatum-VideoWishList:",
+          "Sensus.Probes.Apps.FacebookDatum-Events:",
+          "Sensus.Probes.Apps.FacebookDatum-Likes:",
+          "Sensus.Probes.Apps.FacebookDatum-PhotoCaptions:",
+          "Sensus.Probes.Apps.FacebookDatum-Posts:",
+          "Sensus.Probes.Apps.FacebookDatum-TaggedPlaces:",
+          "Sensus.Probes.Apps.FacebookDatum-VideoTitles:",
+          "Sensus.Probes.Apps.FacebookDatum-DeviceId:",
+          "Sensus.Probes.Apps.FacebookDatum-Timestamp:",
+          "Sensus.Probes.Location.LocationDatum-Latitude:",
+          "Sensus.Probes.Location.LocationDatum-Longitude:",
+          "Sensus.Probes.Location.LocationDatum-DeviceId:",
+          "Sensus.Probes.Location.LocationDatum-Timestamp:",
+          "Sensus.Probes.Context.LightDatum-Brightness:",
+          "Sensus.Probes.Context.LightDatum-DeviceId:",
+          "Sensus.Probes.Context.LightDatum-Timestamp:",
+          "Sensus.Probes.User.MicrosoftBand.MicrosoftBandAccelerometerDatum-X:",
+          "Sensus.Probes.User.MicrosoftBand.MicrosoftBandAccelerometerDatum-Y:",
+          "Sensus.Probes.User.MicrosoftBand.MicrosoftBandAccelerometerDatum-Z:",
+          "Sensus.Probes.User.MicrosoftBand.MicrosoftBandAccelerometerDatum-DeviceId:",
+          "Sensus.Probes.User.MicrosoftBand.MicrosoftBandAccelerometerDatum-Timestamp:",
+          "Sensus.Probes.User.MicrosoftBand.MicrosoftBandAirPressureDatum-AirPressure:",
+          "Sensus.Probes.User.MicrosoftBand.MicrosoftBandAirPressureDatum-DeviceId:",
+          "Sensus.Probes.User.MicrosoftBand.MicrosoftBandAirPressureDatum-Timestamp:",
+          "Sensus.Probes.User.MicrosoftBand.MicrosoftBandAirTemperatureDatum-Temperature:",
+          "Sensus.Probes.User.MicrosoftBand.MicrosoftBandAirTemperatureDatum-DeviceId:",
+          "Sensus.Probes.User.MicrosoftBand.MicrosoftBandAirTemperatureDatum-Timestamp:",
+          "Sensus.Probes.User.MicrosoftBand.MicrosoftBandCaloriesDatum-Calories:",
+          "Sensus.Probes.User.MicrosoftBand.MicrosoftBandCaloriesDatum-DeviceId:",
+          "Sensus.Probes.User.MicrosoftBand.MicrosoftBandCaloriesDatum-Timestamp:",
+          "Sensus.Probes.User.MicrosoftBand.MicrosoftBandContactDatum-DeviceId:",
+          "Sensus.Probes.User.MicrosoftBand.MicrosoftBandContactDatum-Timestamp:",
+          "Sensus.Probes.User.MicrosoftBand.MicrosoftBandDistanceDatum-TotalDistance:",
+          "Sensus.Probes.User.MicrosoftBand.MicrosoftBandDistanceDatum-DeviceId:",
+          "Sensus.Probes.User.MicrosoftBand.MicrosoftBandDistanceDatum-Timestamp:",
+          "Sensus.Probes.User.MicrosoftBand.MicrosoftBandGsrDatum-Resistance:",
+          "Sensus.Probes.User.MicrosoftBand.MicrosoftBandGsrDatum-DeviceId:",
+          "Sensus.Probes.User.MicrosoftBand.MicrosoftBandGsrDatum-Timestamp:",
+          "Sensus.Probes.User.MicrosoftBand.MicrosoftBandGyroscopeDatum-AngularX:",
+          "Sensus.Probes.User.MicrosoftBand.MicrosoftBandGyroscopeDatum-AngularY:",
+          "Sensus.Probes.User.MicrosoftBand.MicrosoftBandGyroscopeDatum-AngularZ:",
+          "Sensus.Probes.User.MicrosoftBand.MicrosoftBandGyroscopeDatum-DeviceId:",
+          "Sensus.Probes.User.MicrosoftBand.MicrosoftBandGyroscopeDatum-Timestamp:",
+          "Sensus.Probes.User.MicrosoftBand.MicrosoftBandHeartRateDatum-HeartRate:",
+          "Sensus.Probes.User.MicrosoftBand.MicrosoftBandHeartRateDatum-DeviceId:",
+          "Sensus.Probes.User.MicrosoftBand.MicrosoftBandHeartRateDatum-Timestamp:",
+          "Sensus.Probes.User.MicrosoftBand.MicrosoftBandLightDatum-Brightness:",
+          "Sensus.Probes.User.MicrosoftBand.MicrosoftBandLightDatum-DeviceId:",
+          "Sensus.Probes.User.MicrosoftBand.MicrosoftBandLightDatum-Timestamp:",
+          "Sensus.Probes.User.MicrosoftBand.MicrosoftBandPedometerDatum-DeviceId:",
+          "Sensus.Probes.User.MicrosoftBand.MicrosoftBandPedometerDatum-Timestamp:",
+          "Sensus.Probes.User.MicrosoftBand.MicrosoftBandRRIntervalDatum-Interval:",
+          "Sensus.Probes.User.MicrosoftBand.MicrosoftBandRRIntervalDatum-DeviceId:",
+          "Sensus.Probes.User.MicrosoftBand.MicrosoftBandRRIntervalDatum-Timestamp:",
+          "Sensus.Probes.User.MicrosoftBand.MicrosoftBandSkinTemperatureDatum-Temperature:",
+          "Sensus.Probes.User.MicrosoftBand.MicrosoftBandSkinTemperatureDatum-DeviceId:",
+          "Sensus.Probes.User.MicrosoftBand.MicrosoftBandSkinTemperatureDatum-Timestamp:",
+          "Sensus.Probes.User.MicrosoftBand.MicrosoftBandStepDatum-StepsAscended:",
+          "Sensus.Probes.User.MicrosoftBand.MicrosoftBandStepDatum-DeviceId:",
+          "Sensus.Probes.User.MicrosoftBand.MicrosoftBandStepDatum-Timestamp:",
+          "Sensus.Probes.User.MicrosoftBand.MicrosoftBandUltravioletLightDatum-DeviceId:",
+          "Sensus.Probes.User.MicrosoftBand.MicrosoftBandUltravioletLightDatum-Timestamp:",
+          "Sensus.Probes.Communication.TelephonyDatum-PhoneNumber:",
+          "Sensus.Probes.Communication.TelephonyDatum-DeviceId:",
+          "Sensus.Probes.Communication.TelephonyDatum-Timestamp:",
+          "Sensus.Probes.Location.PointOfInterestProximityDatum-PoiName:",
+          "Sensus.Probes.Location.PointOfInterestProximityDatum-PoiType:",
+          "Sensus.Probes.Location.PointOfInterestProximityDatum-PoiLatitude:",
+          "Sensus.Probes.Location.PointOfInterestProximityDatum-PoiLongitude:",
+          "Sensus.Probes.Location.PointOfInterestProximityDatum-DistanceToPoiMeters:",
+          "Sensus.Probes.Location.PointOfInterestProximityDatum-DeviceId:",
+          "Sensus.Probes.Location.PointOfInterestProximityDatum-Timestamp:",
+          "Sensus.Probes.Device.ScreenDatum-DeviceId:",
+          "Sensus.Probes.Device.ScreenDatum-Timestamp:",
+          "Sensus.Probes.User.Scripts.ScriptDatum-TriggerDatumId:Sensus.Anonymization.Anonymizers.ValueOmittingAnonymizer",
+          "Sensus.Probes.User.Scripts.ScriptDatum-Latitude:Sensus.Anonymization.Anonymizers.ValueOmittingAnonymizer",
+          "Sensus.Probes.User.Scripts.ScriptDatum-Longitude:Sensus.Anonymization.Anonymizers.ValueOmittingAnonymizer",
+          "Sensus.Probes.User.Scripts.ScriptDatum-DeviceId:",
+          "Sensus.Probes.User.Scripts.ScriptDatum-Timestamp:",
+          "Sensus.Probes.Context.SoundDatum-Decibels:",
+          "Sensus.Probes.Context.SoundDatum-DeviceId:",
+          "Sensus.Probes.Context.SoundDatum-Timestamp:",
+          "Sensus.Probes.Movement.SpeedDatum-KPH:",
+          "Sensus.Probes.Movement.SpeedDatum-DeviceId:",
+          "Sensus.Probes.Movement.SpeedDatum-Timestamp:",
+          "Sensus.Probes.Context.AmbientTemperatureDatum-DegreesCelsius:",
+          "Sensus.Probes.Context.AmbientTemperatureDatum-DeviceId:",
+          "Sensus.Probes.Context.AmbientTemperatureDatum-Timestamp:",
+          "Sensus.Probes.Communication.SmsDatum-FromNumber:",
+          "Sensus.Probes.Communication.SmsDatum-ToNumber:",
+          "Sensus.Probes.Communication.SmsDatum-Message:",
+          "Sensus.Probes.Communication.SmsDatum-ParticipantIsSender:",
+          "Sensus.Probes.Communication.SmsDatum-DeviceId:",
+          "Sensus.Probes.Communication.SmsDatum-Timestamp:",
+          "Sensus.Probes.Network.WlanDatum-AccessPointBSSID:",
+          "Sensus.Probes.Network.WlanDatum-DeviceId:",
+          "Sensus.Probes.Network.WlanDatum-Timestamp:",
+          "Sensus.Probes.Context.HumidityDatum-RelativeHumidity:",
+          "Sensus.Probes.Context.HumidityDatum-DeviceId:",
+          "Sensus.Probes.Context.HumidityDatum-Timestamp:",
+          "Sensus.Probes.Location.ProximityDatum-Distance:",
+          "Sensus.Probes.Location.ProximityDatum-MaxDistance:",
+          "Sensus.Probes.Location.ProximityDatum-DeviceId:",
+          "Sensus.Probes.Location.ProximityDatum-Timestamp:"
+        ]
+      },
+      "DynamicCodeGeneration": false,
+      "DefaultMembersSearchFlags": 20,
+      "SerializeCompilerGeneratedMembers": false,
+      "IgnoreSerializableInterface": false,
+      "IgnoreSerializableAttribute": true,
+      "IgnoreIsSpecifiedMembers": false,
+      "IgnoreShouldSerializeMembers": false,
+      "NamingStrategy": null
+    },
+    "RandomTimeAnchor": "0617-01-26T16:22:33.1240768+00:00",
+    "PointsOfInterest": {
+      "$type": "Sensus.Concurrent.ConcurrentObservableCollection`1[[Sensus.Probes.Location.PointOfInterest, SensusAndroid]], SensusAndroid",
+      "$values": []
+    },
+    "Description": "Università degli Studi di Padova:\n\"Variabilità della frequenza cardiaca è processi cognitivi e affettivi: relazioni intra-individuali\"\n\n-----------------------\n\nDURANTE LO STUDIO TI CHIEDIAMO DI TENERE IL TELEFONO SEMPRE ACCESO, CARICO E CON LA CONNESSIONE DATI ATTIVATA. L'APP DEVE RIMANERE SEMPRE APERTA. TI CHIEDIAMO DI ATTIVARE LA SUONERIA O LA VIBRAZIONE.\n\n-------------------------\n\nRECAPITI:\nIl responsabile dello studio é Luca Menghini (dottorando presso il Dipartimento di Psicologia Generale, Università degli Studi di Padova, luca.menghini.3@phd.unipd.it, 3407524899).\n\n-----------------------\n\nINSERISCI LA TUA EMAIL QUI SOTTO (2 volte) e premi Submit.",
+    "StartImmediately": true,
+    "StartDate": "2018-06-25T08:00:00",
+    "StartTime": "08:00:00",
+    "ContinueIndefinitely": true,
+    "EndDate": "2018-06-29T23:00:00",
+    "EndTime": "23:00:00",
+    "ParticipationHorizonDays": 3,
+    "ContactEmail": "luca.menghini.3@phd.unipd.it",
+    "Groupable": false,
+    "GroupedProtocols": {
+      "$type": "System.Collections.Generic.List`1[[Sensus.Protocol, SensusAndroid]], mscorlib",
+      "$values": []
+    },
+    "RewardThreshold": null,
+    "GpsDesiredAccuracyMeters": 25.0,
+    "GpsMinTimeDelayMS": 5000,
+    "GpsMinDistanceDelayMeters": 50.0,
+    "VariableValue": {
+      "$id": "71",
+      "$type": "System.Collections.Generic.Dictionary`2[[System.String, mscorlib],[System.String, mscorlib]], mscorlib"
+    },
+    "ParticipantId": "Prova",
+    "AlertExclusionWindowString": "00:00-08:00, 20:15-23:59",
+    "AsymmetricEncryptionPublicKey": null,
+    "AllowViewData": false,
+    "AllowViewStatus": false,
+    "AllowSubmitData": true,
+    "AllowParticipationScanning": false,
+    "AllowCopy": true,
+    "Shareable": true,
+    "AllowLocalDataShare": true,
+    "AllowParticipantIdReset": true,
+    "StartConfirmationMode": 2,
+    "PushNotificationsHub": null,
+    "PushNotificationsSharedAccessSignature": null,
+    "GpsLongitudeAnonymizationStudyOffset": 95.881521737147864
+  },
+  "StoreData": true,
+  "StartStopTimes": {
+    "$type": "System.Collections.Generic.List`1[[System.Tuple`2[[System.Boolean, mscorlib],[System.DateTime, mscorlib]], mscorlib]], mscorlib",
+    "$values": [
+      {
+        "$id": "72",
+        "$type": "System.Tuple`2[[System.Boolean, mscorlib],[System.DateTime, mscorlib]], mscorlib",
+        "Item1": true,
+        "Item2": "2018-11-20T09:23:06.782801+01:00"
+      },
+      {
+        "$id": "73",
+        "$type": "System.Tuple`2[[System.Boolean, mscorlib],[System.DateTime, mscorlib]], mscorlib",
+        "Item1": false,
+        "Item2": "2018-11-20T09:23:20.490953+01:00"
+      }
+    ]
+  },
+  "SuccessfulHealthTestTimes": {
+    "$type": "System.Collections.Generic.List`1[[System.DateTime, mscorlib]], mscorlib",
+    "$values": []
+  },
+  "MaxChartDataCount": 30
+}
