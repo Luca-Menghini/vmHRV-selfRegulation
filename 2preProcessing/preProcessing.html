@@ -11,7 +11,7 @@
 
 <meta name="author" content="Luca Menghini, MS^1, Giulia Fuochi, PhD^2, Michela Sarlo, PhD^3" />
 
-<meta name="date" content="2022-03-29" />
+<meta name="date" content="2022-04-04" />
 
 <title>Inter- and intraindividual relationships between vagally-mediated heart rate variability and self-regulatory processes: An ecological momentary assessment</title>
 
@@ -273,7 +273,7 @@ div.tocify {
 <h1 class="title toc-ignore">Inter- and intraindividual relationships between vagally-mediated heart rate variability and self-regulatory processes: An ecological momentary assessment</h1>
 <h3 class="subtitle">Supplementary material 2: Data pre-processing</h3>
 <h4 class="author">Luca Menghini, MS<span class="math inline">\(^1\)</span>, Giulia Fuochi, PhD<span class="math inline">\(^2\)</span>, Michela Sarlo, PhD<span class="math inline">\(^3\)</span></h4>
-<h4 class="date">2022-03-29</h4>
+<h4 class="date">2022-04-04</h4>
 
 </div>
 
@@ -288,7 +288,7 @@ div.tocify {
 <p>The present document includes the data pre-processing steps used to read the different types of data collected over three days from a sample of 105 healthy adults:</p>
 <ul>
 <li><p><code>PrelQS</code> = demographic &amp; retrospective self-report data collected with the preliminary questionnaire (<a href="https://www.google.com/intl/it/forms/about/">Google Forms</a>)</p></li>
-<li><p><code>ESM</code> = experience sampling measures collected with the Sensus Mobile app (<a href="#ref">Xiong et al., 2016</a>)</p></li>
+<li><p><code>ESM</code> = experience sampling measures collected with the <a href="https://predictive-technology-laboratory.github.io/sensus/">Sensus Mobile app</a> (<a href="#ref">Xiong et al., 2016</a>)</p></li>
 <li><p><code>HRV</code> = 2-min segments of blood volume pulse data recorded with the E4 wristband (Empatica, Milan)</p></li>
 <li><p><code>GNG</code> = Go/No-Go behavioral data recorded with E-Prime 2.0.10 (Psychology Software Tools, Inc., Sharpsburg, PA)</p></li>
 </ul>
@@ -309,7 +309,7 @@ Sys.setenv(tz=&quot;GMT&quot;)</code></pre>
 <p><br></p>
 <p>The following R packages are used in this document (see <a href="#ref">References section</a>):</p>
 <pre class="r"><code># required packages
-packages &lt;- c(&quot;ggplot2&quot;,&quot;gridExtra&quot;,&quot;lubridate&quot;,&quot;tidyr&quot;,&quot;dplyr&quot;,&quot;tcltk&quot;)
+packages &lt;- c(&quot;ggplot2&quot;,&quot;gridExtra&quot;,&quot;lubridate&quot;,&quot;tidyr&quot;,&quot;dplyr&quot;,&quot;tcltk&quot;,&quot;jsonlite&quot;,&quot;plyr&quot;)
 
 # generate packages references
 knitr::write_bib(c(.packages(), packages),&quot;packagesProc.bib&quot;)
@@ -339,7 +339,12 @@ colnames(PrelQS)[1:2] &lt;- c(&quot;timestamp&quot;,&quot;ID&quot;)
 
 # loading and using the function to recode the ID variable
 source(&quot;prel.qs_IDrecode.R&quot;) 
-PrelQS &lt;- prel.qs_IDrecode(PrelQS)</code></pre>
+(PrelQS &lt;- prel.qs_IDrecode(PrelQS))[1:3,] # showing first three rows</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["timestamp"],"name":[1],"type":["chr"],"align":["left"]},{"label":["ID"],"name":[2],"type":["chr"],"align":["left"]},{"label":["X"],"name":[3],"type":["chr"],"align":["left"]},{"label":["EtÃ."],"name":[4],"type":["dbl"],"align":["right"]},{"label":["Sesso"],"name":[5],"type":["chr"],"align":["left"]},{"label":["Peso..kg."],"name":[6],"type":["dbl"],"align":["right"]},{"label":["Altezza..cm."],"name":[7],"type":["dbl"],"align":["right"]},{"label":["Madrelingua.italiana."],"name":[8],"type":["chr"],"align":["left"]},{"label":["Stai.assumendo.dei.farmaci."],"name":[9],"type":["chr"],"align":["left"]},{"label":["Se.sÃ...indica.il.tipo.di.farmaci"],"name":[10],"type":["chr"],"align":["left"]},{"label":["Soffri.di.disturbi.o.disfunzioni.cardiovascolari...es..ipertensione..aritmie..ischemie."],"name":[11],"type":["chr"],"align":["left"]},{"label":["Se.sÃ...indica.il.tipo.di.disturbo.o.disfunzione"],"name":[12],"type":["chr"],"align":["left"]},{"label":["Soffri.di.altri.disturbi."],"name":[13],"type":["chr"],"align":["left"]},{"label":["Se.sÃ...indica.il.tipo.di.disturbo"],"name":[14],"type":["chr"],"align":["left"]},{"label":["Possiedi.uno.smartphone."],"name":[15],"type":["chr"],"align":["left"]},{"label":["Se.sÃ...di.che.tipo."],"name":[16],"type":["chr"],"align":["left"]},{"label":["Ho.provato.molta.tensione.e.ho.avuto.difficoltÃ..a.recuperare.uno.stato.di.calma"],"name":[17],"type":["int"],"align":["right"]},{"label":["Mi.sono.accorto.di.avere.la.bocca.secca"],"name":[18],"type":["int"],"align":["right"]},{"label":["Non.riuscivo.proprio.a.provare.delle.emozioni.positive"],"name":[19],"type":["int"],"align":["right"]},{"label":["Mi.sono.sentito.molto.in.affanno.con.difficoltÃ..a.respirare..per.es..respiro.molto.accelerato..sensazione.di.forte.affanno.in.assenza.di.sforzo.fisico."],"name":[20],"type":["int"],"align":["right"]},{"label":["Ho.avuto.unâ..estrema.difficoltÃ..nel.cominciare.quello.che.dovevo.fare"],"name":[21],"type":["int"],"align":["right"]},{"label":["Ho.avuto.la.tendenza.a.reagire.in.maniera.eccessiva.alle.situazioni"],"name":[22],"type":["int"],"align":["right"]},{"label":["Ho.avuto.tremori..per.es..alle.mani."],"name":[23],"type":["int"],"align":["right"]},{"label":["Ho.sentito.che.stavo.impiegando.molta.energia.nervosa"],"name":[24],"type":["int"],"align":["right"]},{"label":["Ho.temuto.di.trovarmi.in.situazioni.in.cui.sarei.potuto.andare.nel.panico.e.rendermi.ridicolo"],"name":[25],"type":["int"],"align":["right"]},{"label":["Non.vedevo.nulla.di.buono.nel.mio.futuro"],"name":[26],"type":["int"],"align":["right"]},{"label":["Mi.sono.sentito.stressato"],"name":[27],"type":["int"],"align":["right"]},{"label":["Ho.avuto.difficoltÃ..a.rilassarmi"],"name":[28],"type":["int"],"align":["right"]},{"label":["Mi.sono.sentito.scoraggiato.e.depresso"],"name":[29],"type":["int"],"align":["right"]},{"label":["Non.riuscivo.a.tollerare.per.nulla.eventi.o.situazioni.che.mi.impedivano.di.portare.avanti.ciÃ².che.stavo.facendo"],"name":[30],"type":["int"],"align":["right"]},{"label":["Ho.sentito.di.essere.vicino.ad.avere.un.attacco.di.panico"],"name":[31],"type":["int"],"align":["right"]},{"label":["Non.c.era.nulla.che.mi.dava.entusiasmo"],"name":[32],"type":["int"],"align":["right"]},{"label":["Sentivo.di.valere.poco.come.persona"],"name":[33],"type":["int"],"align":["right"]},{"label":["Mi.sono.sentito.piuttosto.irritabile"],"name":[34],"type":["int"],"align":["right"]},{"label":["Ho.percepito.distintamente.il.battito.del.mio.cuore.senza.aver.fatto.uno.sforzo.fisico..per.es..battito.cardiaco.accelerato.o.perdita.di.un.battito."],"name":[35],"type":["int"],"align":["right"]},{"label":["Mi.sono.sentito.spaventato.senza.ragione"],"name":[36],"type":["int"],"align":["right"]},{"label":["Sentivo.la.vita.priva.di.significato"],"name":[37],"type":["int"],"align":["right"]},{"label":["X..Determinato.a."],"name":[38],"type":["chr"],"align":["left"]},{"label":["X..Attivo.a."],"name":[39],"type":["chr"],"align":["left"]},{"label":["X..Interessato.a."],"name":[40],"type":["chr"],"align":["left"]},{"label":["X..Attento.a."],"name":[41],"type":["chr"],"align":["left"]},{"label":["X..Entusiasta."],"name":[42],"type":["chr"],"align":["left"]},{"label":["X..Concentrato.a."],"name":[43],"type":["chr"],"align":["left"]},{"label":["X..Forte."],"name":[44],"type":["chr"],"align":["left"]},{"label":["X..Ispirato.a."],"name":[45],"type":["chr"],"align":["left"]},{"label":["X..Eccitato.a."],"name":[46],"type":["chr"],"align":["left"]},{"label":["X..Orgoglioso.a."],"name":[47],"type":["chr"],"align":["left"]},{"label":["X..Impaurito.a."],"name":[48],"type":["chr"],"align":["left"]},{"label":["X..Turbato.a."],"name":[49],"type":["chr"],"align":["left"]},{"label":["X..Nervoso.a."],"name":[50],"type":["chr"],"align":["left"]},{"label":["X..Agitato.a."],"name":[51],"type":["chr"],"align":["left"]},{"label":["X..Spaventato.a."],"name":[52],"type":["chr"],"align":["left"]},{"label":["X..Angosciato.a."],"name":[53],"type":["chr"],"align":["left"]},{"label":["X..Colpevole."],"name":[54],"type":["chr"],"align":["left"]},{"label":["X..Vergognato.a."],"name":[55],"type":["chr"],"align":["left"]},{"label":["X..Irritabile."],"name":[56],"type":["chr"],"align":["left"]},{"label":["X..Ostile."],"name":[57],"type":["chr"],"align":["left"]},{"label":["X..I.miei.sentimenti.mi.sono.chiari."],"name":[58],"type":["chr"],"align":["left"]},{"label":["X..Presto.attenzione.al.modo.in.cui.mi.sento."],"name":[59],"type":["chr"],"align":["left"]},{"label":["X..Le.mie.emozioni.mi.sembrano.opprimenti.e.fuori.dal.mio.controllo."],"name":[60],"type":["chr"],"align":["left"]},{"label":["X..Non.ho.nessuna.idea.di.quello.che.provo."],"name":[61],"type":["chr"],"align":["left"]},{"label":["X..Ho.difficoltÃ..a.dare.un.senso.ai.miei.sentimenti."],"name":[62],"type":["chr"],"align":["left"]},{"label":["X..Sono.attento.a.ai.miei.sentimenti."],"name":[63],"type":["chr"],"align":["left"]},{"label":["X..So.esattamente.quello.che.provo."],"name":[64],"type":["chr"],"align":["left"]},{"label":["X..Mi.interessa.quello.che.provo."],"name":[65],"type":["chr"],"align":["left"]},{"label":["X..Sono.confuso.a.riguardo.a.quello.che.provo."],"name":[66],"type":["chr"],"align":["left"]},{"label":["Quando.sono.turbato.a...Riconosco.le.mie.emozioni."],"name":[67],"type":["chr"],"align":["left"]},{"label":["Quando.sono.turbato.a...Mi.arrabbio.con.me.stesso.a.per.quello.che.sto.provando."],"name":[68],"type":["chr"],"align":["left"]},{"label":["Quando.sono.turbato.a...Mi.imbarazza.sentirmi.cosÃ.."],"name":[69],"type":["chr"],"align":["left"]},{"label":["Quando.sono.turbato.a...Ho.difficoltÃ..a.concludere.un.lavoro."],"name":[70],"type":["chr"],"align":["left"]},{"label":["Quando.sono.turbato.a...Divento.fuori.controllo."],"name":[71],"type":["chr"],"align":["left"]},{"label":["Quando.sono.turbato.a...Penso.che.rimarrÃ².in.quello.stato.a.lungo."],"name":[72],"type":["chr"],"align":["left"]},{"label":["Quando.sono.turbato.a...Penso.che.finirÃ².col.sentirmi.molto.depresso.a."],"name":[73],"type":["chr"],"align":["left"]},{"label":["Quando.sono.turbato.a...Penso.che.i.miei.sentimenti.siano.legittimi.e.importanti."],"name":[74],"type":["chr"],"align":["left"]},{"label":["Quando.sono.turbato.a...Ho.difficoltÃ..a.concentrarmi.su.altre.cose."],"name":[75],"type":["chr"],"align":["left"]},{"label":["Quando.sono.turbato.a...Mi.sento.fuori.controllo."],"name":[76],"type":["chr"],"align":["left"]},{"label":["Quando.sono.turbato.a...Riesco.a.concludere.quello.che.sto.facendo."],"name":[77],"type":["chr"],"align":["left"]},{"label":["Quando.sono.turbato.a...Mi.vergogno.di.me.stesso.a.per.quello.che.sto.provando."],"name":[78],"type":["chr"],"align":["left"]},{"label":["Quando.sono.turbato.a...So.che.alla.fine.troverÃ².un.modo.per.sentirmi.meglio."],"name":[79],"type":["chr"],"align":["left"]},{"label":["Quando.sono.turbato.a...Mi.sento.come.se.fossi.debole."],"name":[80],"type":["chr"],"align":["left"]},{"label":["Quando.sono.turbato.a...Mi.sento.come.se.potessi.mantenere.il.controllo.dei.miei.comportamenti."],"name":[81],"type":["chr"],"align":["left"]},{"label":["Quando.sono.turbato.a...Mi.sento.in.colpa.per.quello.che.sto.provando."],"name":[82],"type":["chr"],"align":["left"]},{"label":["Quando.sono.turbato.a...Ho.difficoltÃ..a.concentrarmi."],"name":[83],"type":["chr"],"align":["left"]},{"label":["Quando.sono.turbato.a...Ho.difficoltÃ..a.controllare.i.miei.comportamenti."],"name":[84],"type":["chr"],"align":["left"]},{"label":["Quando.sono.turbato.a...Penso.che.non.ci.sia.nulla.che.io.possa.fare.per.sentirmi.meglio."],"name":[85],"type":["chr"],"align":["left"]},{"label":["Quando.sono.turbato.a...Mi.innervosisco.con.me.stesso.a.per.quello.che.sto.provando."],"name":[86],"type":["chr"],"align":["left"]},{"label":["Quando.sono.turbato.a...Comincio.a.sentire.dei.sentimenti.molto.negativi.verso.di.me."],"name":[87],"type":["chr"],"align":["left"]},{"label":["Quando.sono.turbato.a...Credo.che.crogiolarmi.in.quello.stato.sia.l.unica.cosa.che.posso.fare."],"name":[88],"type":["chr"],"align":["left"]},{"label":["Quando.sono.turbato.a...Perdo.il.controllo.dei.miei.comportamenti."],"name":[89],"type":["chr"],"align":["left"]},{"label":["Quando.sono.turbato.a...Ho.difficoltÃ..a.pensare.a.qualsiasi.altra.cosa."],"name":[90],"type":["chr"],"align":["left"]},{"label":["Quando.sono.turbato.a...Prendo.tempo.per.comprendere.come.mi.sento.veramente."],"name":[91],"type":["chr"],"align":["left"]},{"label":["Quando.sono.turbato.a...Ci.vuole.molto.tempo.per.sentirmi.meglio."],"name":[92],"type":["chr"],"align":["left"]},{"label":["Quando.sono.turbato.a...Le.mie.emozioni.mi.sembrano.opprimenti."],"name":[93],"type":["chr"],"align":["left"]},{"label":["X..Pianifico.le.attivitÃ..attentamente."],"name":[94],"type":["chr"],"align":["left"]},{"label":["X..Faccio.le.cose.senza.pensarci."],"name":[95],"type":["chr"],"align":["left"]},{"label":["X..Decido.velocemente."],"name":[96],"type":["chr"],"align":["left"]},{"label":["X..Mi.affido.alla.sorte."],"name":[97],"type":["chr"],"align":["left"]},{"label":["X..Non.â.œfocalizzo.lâ..attenzioneâ..."],"name":[98],"type":["chr"],"align":["left"]},{"label":["X..I.miei.pensieri.â.œvanno.a.gran.velocitÃ.â..."],"name":[99],"type":["chr"],"align":["left"]},{"label":["X..Pianifico.i.viaggi.con.molto.anticipo."],"name":[100],"type":["chr"],"align":["left"]},{"label":["X..Ho.autocontrollo."],"name":[101],"type":["chr"],"align":["left"]},{"label":["X..Mi.concentro.facilmente."],"name":[102],"type":["chr"],"align":["left"]},{"label":["X..Risparmio.con.regolaritÃ.."],"name":[103],"type":["chr"],"align":["left"]},{"label":["X..Non.riesco.a.star.fermo.durante.gli.spettacoli.o.le.lezioni."],"name":[104],"type":["chr"],"align":["left"]},{"label":["X..Sono.un.attento.pensatore."],"name":[105],"type":["chr"],"align":["left"]},{"label":["X..Faccio.progetti.per.una.sicurezza.lavorativa."],"name":[106],"type":["chr"],"align":["left"]},{"label":["X..Dico.cose.senza.pensare."],"name":[107],"type":["chr"],"align":["left"]},{"label":["X..Mi.piace.pensare.a.problemi.complessi."],"name":[108],"type":["chr"],"align":["left"]},{"label":["X..Agisco.â.œdâ..impulsoâ..."],"name":[109],"type":["chr"],"align":["left"]},{"label":["X..Mi.annoio.facilmente.quando.devo.risolvere.dei.problemi.concettuali."],"name":[110],"type":["chr"],"align":["left"]},{"label":["X..Agisco.sullâ..impulso.del.momento."],"name":[111],"type":["chr"],"align":["left"]},{"label":["X..Sono.un.pensatore.assiduo."],"name":[112],"type":["chr"],"align":["left"]},{"label":["X..Compro.le.cose.dâ..impulso."],"name":[113],"type":["chr"],"align":["left"]},{"label":["X..Riesco.a.pensare.ad.un.solo.problema.per.volta."],"name":[114],"type":["chr"],"align":["left"]},{"label":["X..Spendo.piÃ¹.di.quello.che.mi.posso.permettere."],"name":[115],"type":["chr"],"align":["left"]},{"label":["X..Quando.penso.ho.spesso.pensieri.estranei."],"name":[116],"type":["chr"],"align":["left"]},{"label":["X..Mi.interesso.piÃ¹.al.presente.che.al.futuro."],"name":[117],"type":["chr"],"align":["left"]},{"label":["X..Sono.irrequieto.a.teatro.o.durante.le.lezioni."],"name":[118],"type":["chr"],"align":["left"]},{"label":["X..Mi.piacciono.i.rompicapo."],"name":[119],"type":["chr"],"align":["left"]},{"label":["X..Sono.orientato.verso.il.futuro."],"name":[120],"type":["chr"],"align":["left"]},{"label":["X..Mal.di.stomaco.o.nausea."],"name":[121],"type":["chr"],"align":["left"]},{"label":["X..Mal.di.schiena."],"name":[122],"type":["chr"],"align":["left"]},{"label":["X..Sonno.disturbato."],"name":[123],"type":["chr"],"align":["left"]},{"label":["X..Eruzione.cutanea."],"name":[124],"type":["chr"],"align":["left"]},{"label":["X..Respiro.affannoso."],"name":[125],"type":["chr"],"align":["left"]},{"label":["X..Dolore.al.torace."],"name":[126],"type":["chr"],"align":["left"]},{"label":["X..Mal.di.testa."],"name":[127],"type":["chr"],"align":["left"]},{"label":["X..Febbre."],"name":[128],"type":["chr"],"align":["left"]},{"label":["X..AciditÃ..o.bruciore.di.stomaco."],"name":[129],"type":["chr"],"align":["left"]},{"label":["X..Affaticamento.agli.occhi."],"name":[130],"type":["chr"],"align":["left"]},{"label":["X..Diarrea."],"name":[131],"type":["chr"],"align":["left"]},{"label":["X..Crampi.allo.stomaco..non.mestruali.."],"name":[132],"type":["chr"],"align":["left"]},{"label":["X..Costipazione."],"name":[133],"type":["chr"],"align":["left"]},{"label":["X..Battito.accelerato.a.riposo."],"name":[134],"type":["chr"],"align":["left"]},{"label":["X..Calo.di.appetito."],"name":[135],"type":["chr"],"align":["left"]},{"label":["X..Vertigini."],"name":[136],"type":["chr"],"align":["left"]},{"label":["X..Stanchezza.o.affaticamento."],"name":[137],"type":["chr"],"align":["left"]}],"data":[{"1":"2018/11/06 6:49:09 PM EET","2":"HRV004","3":"Acconsento","4":"22","5":"F","6":"48","7":"154","8":"","9":"No","10":"","11":"No","12":"","13":"No","14":"","15":"SÃ¬","16":"Android","17":"1","18":"2","19":"0","20":"0","21":"0","22":"0","23":"0","24":"1","25":"0","26":"0","27":"1","28":"0","29":"0","30":"0","31":"0","32":"0","33":"0","34":"2","35":"0","36":"0","37":"0","38":"Abbastanza","39":"Abbastanza","40":"Abbastanza","41":"Abbastanza","42":"Abbastanza","43":"Ogni tanto","44":"Abbastanza","45":"Ogni tanto","46":"Ogni tanto","47":"Ogni tanto","48":"Abbastanza","49":"Spesso","50":"Spesso","51":"Spesso","52":"Ogni tanto","53":"Spesso","54":"Abbastanza","55":"Ogni tanto","56":"Spesso","57":"Spesso","58":"Qualche volta","59":"La maggior parte delle volte","60":"Circa la metÃ  delle volte","61":"Circa la metÃ  delle volte","62":"La maggior parte delle volte","63":"La maggior parte delle volte","64":"Qualche volta","65":"Sempre","66":"La maggior parte delle volte","67":"Circa la metÃ  delle volte","68":"Circa la metÃ  delle volte","69":"Qualche volta","70":"Mai o quasi mai","71":"Mai o quasi mai","72":"Circa la metÃ  delle volte","73":"Qualche volta","74":"Circa la metÃ  delle volte","75":"Qualche volta","76":"Mai o quasi mai","77":"Mai o quasi mai","78":"Qualche volta","79":"Qualche volta","80":"La maggior parte delle volte","81":"Qualche volta","82":"La maggior parte delle volte","83":"Qualche volta","84":"Mai o quasi mai","85":"La maggior parte delle volte","86":"La maggior parte delle volte","87":"Circa la metÃ  delle volte","88":"La maggior parte delle volte","89":"Mai o quasi mai","90":"Circa la metÃ  delle volte","91":"Circa la metÃ  delle volte","92":"Circa la metÃ  delle volte","93":"La maggior parte delle volte","94":"Quasi sempre/sempre","95":"Talvolta","96":"Talvolta","97":"Mai/raramente","98":"Mai/raramente","99":"Spesso","100":"Quasi sempre/sempre","101":"Spesso","102":"Talvolta","103":"Spesso","104":"Quasi sempre/sempre","105":"Spesso","106":"Spesso","107":"Talvolta","108":"Talvolta","109":"Spesso","110":"Mai/raramente","111":"Talvolta","112":"Talvolta","113":"Mai/raramente","114":"Mai/raramente","115":"Mai/raramente","116":"Mai/raramente","117":"Spesso","118":"Mai/raramente","119":"Talvolta","120":"Spesso","121":"No","122":"SÃ¬, ma non ho visto un medico","123":"No","124":"No","125":"No","126":"SÃ¬, ma non ho visto un medico","127":"SÃ¬, ma non ho visto un medico","128":"SÃ¬, ma non ho visto un medico","129":"No","130":"SÃ¬, ma non ho visto un medico","131":"No","132":"No","133":"No","134":"No","135":"No","136":"No","137":"SÃ¬, ma non ho visto un medico","_rn_":"1"},{"1":"2018/11/06 7:07:25 PM EET","2":"HRV003","3":"Acconsento","4":"22","5":"F","6":"77","7":"170","8":"","9":"No","10":"","11":"No","12":"","13":"No","14":"","15":"SÃ¬","16":"Android","17":"1","18":"2","19":"2","20":"1","21":"2","22":"2","23":"0","24":"1","25":"2","26":"1","27":"2","28":"1","29":"2","30":"2","31":"0","32":"1","33":"1","34":"2","35":"2","36":"1","37":"0","38":"Abbastanza","39":"Spesso","40":"Spesso","41":"Spesso","42":"Spesso","43":"Spesso","44":"Spesso","45":"Abbastanza","46":"Abbastanza","47":"Abbastanza","48":"Ogni tanto","49":"Mai","50":"Abbastanza","51":"Abbastanza","52":"Ogni tanto","53":"Mai","54":"Mai","55":"Ogni tanto","56":"Abbastanza","57":"Mai","58":"Circa la metÃ  delle volte","59":"Qualche volta","60":"Mai o quasi mai","61":"Qualche volta","62":"Qualche volta","63":"Circa la metÃ  delle volte","64":"Circa la metÃ  delle volte","65":"Qualche volta","66":"Qualche volta","67":"Qualche volta","68":"Circa la metÃ  delle volte","69":"Circa la metÃ  delle volte","70":"La maggior parte delle volte","71":"Qualche volta","72":"Mai o quasi mai","73":"Mai o quasi mai","74":"Circa la metÃ  delle volte","75":"Qualche volta","76":"Mai o quasi mai","77":"La maggior parte delle volte","78":"Mai o quasi mai","79":"La maggior parte delle volte","80":"Qualche volta","81":"Circa la metÃ  delle volte","82":"Mai o quasi mai","83":"Qualche volta","84":"Mai o quasi mai","85":"Mai o quasi mai","86":"Qualche volta","87":"Mai o quasi mai","88":"Mai o quasi mai","89":"Qualche volta","90":"Qualche volta","91":"Mai o quasi mai","92":"Mai o quasi mai","93":"Mai o quasi mai","94":"Talvolta","95":"Spesso","96":"Spesso","97":"Talvolta","98":"Talvolta","99":"Spesso","100":"Quasi sempre/sempre","101":"Spesso","102":"Spesso","103":"Talvolta","104":"Quasi sempre/sempre","105":"Talvolta","106":"Talvolta","107":"Spesso","108":"Mai/raramente","109":"Talvolta","110":"Mai/raramente","111":"Talvolta","112":"Talvolta","113":"Mai/raramente","114":"Mai/raramente","115":"Mai/raramente","116":"Mai/raramente","117":"Spesso","118":"Quasi sempre/sempre","119":"Quasi sempre/sempre","120":"Spesso","121":"SÃ¬, ma non ho visto un medico","122":"No","123":"No","124":"No","125":"No","126":"No","127":"SÃ¬, ma non ho visto un medico","128":"No","129":"No","130":"SÃ¬, ma non ho visto un medico","131":"No","132":"No","133":"No","134":"No","135":"No","136":"SÃ¬, ma non ho visto un medico","137":"SÃ¬, ma non ho visto un medico","_rn_":"2"},{"1":"2018/11/06 7:11:53 PM EET","2":"HRV006","3":"Acconsento","4":"21","5":"M","6":"80","7":"176","8":"","9":"No","10":"","11":"No","12":"","13":"No","14":"","15":"SÃ¬","16":"Android","17":"2","18":"2","19":"2","20":"3","21":"2","22":"1","23":"2","24":"3","25":"3","26":"2","27":"2","28":"2","29":"1","30":"1","31":"2","32":"2","33":"3","34":"1","35":"3","36":"2","37":"1","38":"Mai","39":"Ogni tanto","40":"Ogni tanto","41":"Ogni tanto","42":"Mai","43":"Ogni tanto","44":"Ogni tanto","45":"Mai","46":"Mai","47":"Mai","48":"Mai","49":"Spesso","50":"Spesso","51":"Spesso","52":"Ogni tanto","53":"Abbastanza","54":"Abbastanza","55":"Spesso","56":"Mai","57":"Mai","58":"La maggior parte delle volte","59":"Sempre","60":"La maggior parte delle volte","61":"Qualche volta","62":"Qualche volta","63":"Sempre","64":"La maggior parte delle volte","65":"Sempre","66":"Qualche volta","67":"La maggior parte delle volte","68":"Qualche volta","69":"La maggior parte delle volte","70":"La maggior parte delle volte","71":"Qualche volta","72":"La maggior parte delle volte","73":"Mai o quasi mai","74":"La maggior parte delle volte","75":"La maggior parte delle volte","76":"Qualche volta","77":"Qualche volta","78":"La maggior parte delle volte","79":"Qualche volta","80":"La maggior parte delle volte","81":"Mai o quasi mai","82":"Circa la metÃ  delle volte","83":"La maggior parte delle volte","84":"Qualche volta","85":"Mai o quasi mai","86":"La maggior parte delle volte","87":"Qualche volta","88":"Mai o quasi mai","89":"Qualche volta","90":"La maggior parte delle volte","91":"La maggior parte delle volte","92":"La maggior parte delle volte","93":"La maggior parte delle volte","94":"Talvolta","95":"Talvolta","96":"Talvolta","97":"Talvolta","98":"Spesso","99":"Quasi sempre/sempre","100":"Talvolta","101":"Talvolta","102":"Mai/raramente","103":"Mai/raramente","104":"Mai/raramente","105":"Spesso","106":"Mai/raramente","107":"Mai/raramente","108":"Talvolta","109":"Mai/raramente","110":"Mai/raramente","111":"Mai/raramente","112":"Spesso","113":"Mai/raramente","114":"Mai/raramente","115":"Talvolta","116":"Mai/raramente","117":"Talvolta","118":"Mai/raramente","119":"Mai/raramente","120":"Spesso","121":"No","122":"No","123":"SÃ¬, ma non ho visto un medico","124":"No","125":"SÃ¬, ma non ho visto un medico","126":"SÃ¬, ma non ho visto un medico","127":"No","128":"No","129":"No","130":"SÃ¬, ma non ho visto un medico","131":"No","132":"No","133":"No","134":"SÃ¬, ma non ho visto un medico","135":"No","136":"No","137":"SÃ¬, ma non ho visto un medico","_rn_":"3"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
 <p><br></p>
 </div>
 <div id="other-variables" class="section level3">
@@ -650,6 +655,299 @@ cat(nrow(PrelQS[substr(PrelQS$ID,1,3)==&quot;HRV&quot;,]),&quot;included partici
 </div>
 <div id="esm-data" class="section level1">
 <h1>2. ESM data</h1>
+<p>Here, the raw data collected with the <strong>experience sampling method (ESM)</strong> are read and encoded in the <code>ESM</code> dataset, recoded, and filtered based on response rate and inclusion criteria.</p>
+<div id="data-reading-1" class="section level2">
+<h2>2.1. Data reading</h2>
+<p>First, we read the JSON data files exported from the <a href="https://predictive-technology-laboratory.github.io/sensus/">Sensus Mobile app</a> (<a href="#ref">Xiong et al., 2016</a>).</p>
+<p>Specifically, the <a href="https://github.com/Luca-Menghini/vmHRV-selfRegulation/tree/main/1ESMmeasures/sensus/protocols">Protocols created with Sensus</a> were configured to store the recorded .JSON data files in our private <a href="https://aws.amazon.com/s3/">AWS S3</a> bucket, from which they were downloaded and stored in the <code>ESM/data</code> folder. From the Sensus app, we also exported the <a href="https://github.com/Luca-Menghini/vmHRV-selfRegulation/tree/main/1ESMmeasures/sensus/protocols">Probe Definition files</a>, which we use to replace the <em>input IDs</em> (i.e., by default, each item is associated with an alphanumeic code) with the corresponding <em>input names</em> (i.e., the item labels that we set in the protocols). These files were saved in the <code>ESM/probe</code> folder.</p>
+<p>The following function is used to optimize the ESM data reading:</p>
+<details>
+<summary>
+<code>readSurveyData</code>
+</summary>
+<p>
+<pre class="r"><code>#&#39; @title Read JSON data exported from the Sensus mobile app
+#&#39; @param data.path = character string indicating the full path to the folder where the JSON raw data are stored.
+#&#39; @param probe.definition = character string indicating the full path to the folder where Probe Definition JSON file(s) (from the Sensus mobile app: Protocol &gt; Probe &gt; Scripted Interaction &gt; Share definition).
+#&#39; @param messages = logical value indicating whether the processing steps should be printed (default: TRUE).
+readSurveyData &lt;- function(data.path,probe.definition,messages=TRUE){ require(jsonlite); require(tcltk)
+  options(digits.secs=3) # settin No. of digits
+
+  # 1. Reading data
+  # .......................................
+  if(messages==TRUE){ cat(&quot;\n\nReading data files from&quot;,data.path,&quot;...&quot;)}
+  paths = list.files(data.path,recursive=TRUE,full.names=TRUE,include.dirs=FALSE) # listing files in data path
+  var.names &lt;- c(&quot;ParticipantId&quot;,&quot;Timestamp&quot;,&quot;InputId&quot;,&quot;Response&quot;,&quot;RunTimestamp&quot;,&quot;SubmissionTimestamp&quot;,
+                 &quot;ScriptName&quot;,&quot;ProtocolId&quot;,&quot;$type&quot;) # selecting variables of interest
+  data &lt;- as.data.frame(matrix(nrow=0,ncol=9)) # empty dataframe creation and population
+  colnames(data) &lt;- var.names
+  pb &lt;- tkProgressBar(&quot;(1/2) Data reading:&quot;, &quot;Data reading %&quot;,0, 100, 50) # progress bar
+  for(path in paths){ info &lt;- sprintf(&quot;%d%% done&quot;, round(which(paths==path)/length(paths)*100))
+    setTkProgressBar(pb, round(which(paths==path)/length(paths)*100), sprintf(&quot;(1/2) Data reading:&quot;, info), info)
+    if(file.info(path)$size&gt;0){ # only reading Datum files (i.e., containing ScriptDatum, which is sized &gt; 0 Kb)
+      new.data &lt;- read_json(path,simplifyDataFrame=TRUE)
+      if(class(new.data)==&quot;data.frame&quot; &amp; !is.null(new.data$Response)){ # only keeping files with Response data
+        if(class(new.data$Response)==&quot;data.frame&quot;){ # sometimes the Response column is read as dataframe
+          new.data$Response &lt;- as.character(new.data$Response$`$values`)}
+        data &lt;- rbind(data,new.data[var.names]) }}} 
+  close(pb) # closing progress bar
+  data &lt;- data[!is.na(data$ParticipantId),] # only keeping data with ParticipantId information (i.e., participant identification)
+  data &lt;- data[!is.na(data$InputId),] # only keeping data with InputId information (i.e., item identification)
+  names(data)[9] &lt;- &quot;os&quot; # $type as OS (android or iOS) # mobile OS information
+  data[,9] &lt;- gsub(&quot;Sensus.Probes.User.Scripts.ScriptDatum, Sensus&quot;,&quot;&quot;,data[,9]) # removing unuseful information
+  
+  # 2. From Response Ids to Item labels (based on Probe Definition) 
+  # ...............................................................
+  if(!is.na(probe.definition)){ if(messages==TRUE){ cat(&quot;\n\nConverting ResponseId into InputId based on Probe Definition...&quot;)}
+    # function to read Probe Definition files
+    readProbe &lt;- function(path){ probedefinition &lt;- read_json(path,simplifyDataFrame=TRUE) # first probe definition file
+      # reading input labels of the first inputGroup
+      inputs &lt;- probedefinition$ScriptRunners$`$values`$Script$InputGroups$`$values`[[1]]$Inputs$`$values`[[1]]$Name
+      infos &lt;- probedefinition$ScriptRunners$`$values`$Script$InputGroups$`$values`[[1]] # input labels
+      PROTOCOL &lt;- data.frame(protocolName=probedefinition$Protocol$Name,protocolId=probedefinition$Protocol$Id, # protocol name
+                             scriptName=infos$Name,inputName=inputs,inputId=infos$Inputs$`$values`[[1]]$Id) # script name
+      if(length(probedefinition$ScriptRunners$`$values`$Script$InputGroups$`$values`)&gt;1){ # reading the following inputGroups
+        for(i in 2:length(probedefinition$ScriptRunners$`$values`$Script$InputGroups$`$values`)){
+          inputs &lt;- probedefinition$ScriptRunners$`$values`$Script$InputGroups$`$values`[[i]]$Inputs$`$values`[[1]]$Name
+          infos &lt;- probedefinition$ScriptRunners$`$values`$Script$InputGroups$`$values`[[i]]
+          PROTOCOL &lt;- rbind(PROTOCOL,data.frame(protocolName=probedefinition$Protocol$Name,
+                                                protocolId=probedefinition$Protocol$Id,
+                                                scriptName=infos$Name,inputName=inputs,
+                                                inputId=infos$Inputs$`$values`[[1]]$Id)) }}
+      return(PROTOCOL) }
+    paths = list.files(probe.definition,recursive=TRUE,full.names=TRUE,include.dirs=FALSE) # listing files in probe.definition path
+    PROTOCOL &lt;- readProbe(paths[1]) # reading the first Probe Definition file
+    if(length(list.files(probe.definition))&gt;1){ # reading the following Probe Definition files when &gt; 1
+      for(path in paths[2:length(paths)]){ PROTOCOL &lt;- rbind(PROTOCOL,readProbe(path)) }}
+    pb &lt;- tkProgressBar(&quot;(2/2) Data processing:&quot;, &quot;Data processing %&quot;,0, 100, 50) # progress bar
+    for(i in 1:nrow(data)){ info &lt;- sprintf(&quot;%d%% done&quot;, round(i/nrow(data)*100)) # converting inputID to inputName (item labels)
+    setTkProgressBar(pb, round(i/nrow(data)*100), sprintf(&quot;(2/2) Converting InputIDs to InputNames&quot;, info), info)
+      for(j in 1:nrow(PROTOCOL)){ if(!is.na(data[i,3]) &amp; data[i,3]==PROTOCOL[j,5]){ data[i,3] &lt;- as.character(PROTOCOL[j,4]) }}}
+    close(pb) }
+  
+  # 3. Cleaning and unlisting Response data
+  # ...............................................................
+  if(messages==TRUE){ cat(&quot;\n\nUnlisting Response data and removing system information...&quot;)}
+  data$Response &lt;- gsub(&quot;list&quot;,&quot;&quot;,data$Response) # cleaning categorical items from Sensus system info
+  data$Response &lt;- gsub(paste(&quot;c&quot;,&quot;\\(|\\)&quot;,sep=&quot;&quot;),&quot;&quot;,data$Response)
+  data$Response &lt;- gsub(&quot;\\(|\\)&quot;,&quot;&quot;,data$Response)
+  data$Response &lt;- gsub(&quot;\\[|\\]&quot;,&quot;&quot;,data$Response)
+  data$Response &lt;- gsub(&quot;\\$type` = \&quot;System.Collections.Generic.List`1System.Object, mscorlib, mscorlib\&quot;, &quot;,&quot;&quot;,data$Response)
+  data$Response &lt;- gsub(&quot;\\$values&quot;,&quot;&quot;,data$Response)
+  data$Response &lt;- gsub(&#39;``` = &#39;, &quot;&quot;,data$Response)
+  data$Response &lt;- gsub(&#39;\ &#39;, &quot;&quot;,data$Response)
+  data$Response &lt;- gsub(&#39;\&quot;&#39;, &quot;&quot;,data$Response)
+  data$Response &lt;- gsub(&#39;\&quot;No\&quot;&#39;, &quot;No&quot;,data$Response)
+  data$Response &lt;- gsub(&#39;\&quot;Sì\&quot;&#39;, &quot;Si&quot;,data$Response)
+  if(class(data$Response)==&quot;data.frame&quot;){ data$Response &lt;- as.character(data$Response$`$values`[[1]]) # unlisting Response column
+    } else { data$Response &lt;- as.character(data$Response) }
+  
+  # 4. Encoding time information
+  # ...............................................................
+  if(messages==TRUE){ cat(&quot;\n\nConverting Timestamp variables as POSIXct and creating day.of.week variable...&quot;)}
+  timestamps &lt;- c(&quot;Timestamp&quot;,&quot;RunTimestamp&quot;,&quot;SubmissionTimestamp&quot;) # timestamps variables
+  data[,timestamps] &lt;- lapply(data[,timestamps],function(x) as.POSIXct(x,format=&quot;%Y-%m-%dT%H:%M:%OS&quot;,tz=&quot;GMT&quot;) +
+                                1*60*60) # adding 1h due to tz differences
+  data$day.of.week &lt;- as.POSIXlt(data$RunTimestamp)$wday # creating indicator for the weekday (Monday=1, Tuestday=2, etc.)
+  
+  # 5. Cleaning incomplete double responses
+  # ...............................................................
+  # in some cases, multiple responses are recorded with the same ParticipantId, RunTimeStamp, and InputId
+  if(messages==TRUE){ cat(&quot;\n\nLooking for double responses...\n&quot;)}
+  data$id.r &lt;- paste(data$ParticipantId,data$RunTimestamp,data$InputId,sep=&quot;_&quot;) # ID-time-item identifier
+  data$id.t &lt;- paste(data$ParticipantId,data$RunTimestamp,sep=&quot;_&quot;) # ID-time identifier
+  doubles &lt;- levels(as.factor(data[duplicated(data$id.r),&quot;id.t&quot;])) # double responses (same ID-time-item identifier)
+  ndoubles &lt;- rep(length(doubles),2) # No. of double responses
+  for(double in doubles){ subId &lt;- levels(as.factor(data[data$id.t==double,&quot;SubmissionTimestamp&quot;])) # submission time
+    if(length(subId)&gt;1){ ndoubles[1] &lt;- ndoubles[1] - 1
+      maxDouble &lt;- max(as.POSIXct(subId)) # when the SubmissionTimestamp is different -&gt; splitting responses
+      data[data$id.t==double,&quot;RunTimestamp&quot;] &lt;- maxDouble - 4*60 # 2nd RunTimeStamp = Submission - 4 min (average response time) 
+    } else { ndoubles[2] &lt;- ndoubles[2] - 1
+      data &lt;- rbind(data[data$id.t!=double,], # when even the SubmissionTimestamp is different -&gt; removing double resp.
+                    data[data$id.t==double &amp; !duplicated(data$id.r),]) }}
+  cat(&quot; - Removed&quot;,ndoubles[1],&quot;double responses (same ID, InputName, RunTimestamp, &amp; SubmissionTimestamp)\n&quot;,
+      &quot;- Splitted&quot;,ndoubles[2],&quot;double responses with different SubmissionTimestamp\n&quot;,
+      &quot;  (in these cases, RunTimestamp is recomputed as SubmissionTimestamp - 4 min (average response length)&quot;)
+  
+  # 6. Sorting columns and Reshaping
+  # ...............................................................
+  if(messages==TRUE){ cat(&quot;\n\nSorting columns and reshaping (one row per data entry)...&quot;)}
+  colnames(data)[1] &lt;- &quot;ID&quot; # selecting and sorting columns
+  data &lt;- data[,c(&quot;ID&quot;,&quot;os&quot;,&quot;ProtocolId&quot;,&quot;ScriptName&quot;,&quot;day.of.week&quot;,&quot;RunTimestamp&quot;,&quot;SubmissionTimestamp&quot;,&quot;InputId&quot;,&quot;Response&quot;)]
+  data &lt;- reshape(data,v.names=c(&quot;Response&quot;),timevar=c(&quot;InputId&quot;), # reshaping from long (item-by-item) to wide (resp-by-resp)
+                  idvar=c(&quot;RunTimestamp&quot;,&quot;SubmissionTimestamp&quot;),direction=c(&quot;wide&quot;),sep=&quot;&quot;)
+  colnames(data) &lt;- gsub(&quot;Response&quot;,&quot;&quot;,colnames(data)) # removing label &quot;Response&quot; from ResponseId
+  data &lt;- data[order(data$ID,data$RunTimestamp),] # sorting rows by participant ID and RunTimestamp
+  data &lt;- plyr::ddply(data,c(&quot;ID&quot;,&quot;day.of.week&quot;),transform,within.day=seq_along(day.of.week)) # row identifier within each day
+  data &lt;- data.frame(cbind(data[1:3],data[ncol(data)],data[5:ncol(data)-1])) # final sorting of rows and columns
+  data &lt;- data[order(data$ID,data$RunTimestamp),]
+  row.names(data) &lt;- as.character(1:nrow(data))
+  if(messages==TRUE){ cat(&quot;\n\nRead&quot;,nrow(data),&quot;responses from&quot;,nlevels(as.factor(data$ID)),&quot;participants.&quot;) }
+  return(data) } # returning processed dataset</code></pre>
+</p>
+</details>
+<p>Reads and merges .JSON data files exported from the <a href="https://predictive-technology-laboratory.github.io/sensus/">Sensus Mobile app</a> (<a href="#ref">Xiong et al., 2016</a>).</p>
+<p><br></p>
+<p>Here, we use the <code>readSurveyData</code> function (depicted above) to read and preliminary recode the .JSON data files, and to merge them into the <code>ESM</code> dataframe.</p>
+<pre class="r"><code># data reading, encoding and saving
+ESM &lt;- readSurveyData(data.path=&quot;ESM/data&quot;,probe.definition=&quot;ESM/probe&quot;)</code></pre>
+<pre><code>## Loading required package: jsonlite</code></pre>
+<pre><code>## Warning: package &#39;jsonlite&#39; was built under R version 4.0.4</code></pre>
+<pre><code>## Loading required package: tcltk</code></pre>
+<pre><code>## 
+## 
+## Reading data files from ESM/data ...</code></pre>
+<pre><code>## Warning: JSON string contains (illegal) UTF8 byte-order-mark!</code></pre>
+<pre><code>## 
+## 
+## Converting ResponseId into InputId based on Probe Definition...
+## 
+## Unlisting Response data and removing system information...
+## 
+## Converting Timestamp variables as POSIXct and creating day.of.week variable...
+## 
+## Looking for double responses...
+##  - Removed 2 double responses (same ID, InputName, RunTimestamp, &amp; SubmissionTimestamp)
+##  - Splitted 10 double responses with different SubmissionTimestamp
+##    (in these cases, RunTimestamp is recomputed as SubmissionTimestamp - 4 min (average response length)
+## 
+## Sorting columns and reshaping (one row per data entry)...
+## 
+## Read 1392 responses from 104 participants.</code></pre>
+<p><br></p>
+<p>We also integrate the <code>ESM</code> dataset with <strong>four additional responses</strong> that were sent via instant messages (i.e., screenshot of the responses) due to technical problems. These were stored in the <code>screenshotX4.rda</code> file.</p>
+<pre class="r"><code>load(&quot;ESM/screenshot_surevyMalfunctioning/screenshotX4.rda&quot;) # loading additiona responses
+cat(&quot;Adding&quot;,nrow(screenshotX4),&quot;additional responses sent via instant messages&quot;) # N = 4</code></pre>
+<pre><code>## Adding 4 additional responses sent via instant messages</code></pre>
+<pre class="r"><code>ESM &lt;- rbind(ESM,screenshotX4) # adding additional responses to the ESM dataset</code></pre>
+<p><br></p>
+<p>Finally, we import the <strong>“baseline surveys”</strong> data (i.e., ESM data collected in the lab at the beginning of each day, using <a href="https://www.google.com/intl/it/forms/about/">Google Forms</a>), exported from Google Form as a .CSV file. Some recoding procedures will be necessary before merging the <code>baseline</code> and the <code>ESM</code> datasets.</p>
+<pre class="r"><code># reading raw dataset exported from Google Forms
+baseline &lt;- read.csv(&quot;baseline/Baseline.csv&quot;,header=TRUE)
+cat(&quot;Reading&quot;,nrow(baseline),&quot;responses to the baseline questionnaire&quot;)</code></pre>
+<pre><code>## Reading 311 responses to the baseline questionnaire</code></pre>
+<p><br></p>
+</div>
+<div id="data-recoding-1" class="section level2">
+<h2>2.2. Data recoding</h2>
+<p>Then, we recode the <code>ESM</code> variables to be used for the analyses.</p>
+<p>The following functions are used to optimize the ESM data recoding:</p>
+<details>
+<summary>
+<code>varsRecoding</code>
+</summary>
+<p>
+<pre class="r"><code>varsRecoding &lt;- function(data){
+
+  # Recoding item scores and reversed items
+  data$v3.positivo.negativo &lt;- 8 - data$v3.positivo.negativo # HEDONIC TONE = positive
+  colnames(data)[which(colnames(data)==&quot;v2.soddisfatto.insoddisfatto&quot;)] &lt;- &quot;v2.insoddisfatto.soddisfatto&quot; # changing wrong label
+  data$t1.rilassato.teso &lt;- 8 - data$t1.rilassato.teso # CALMNESS = positive
+  data$e2.pieno.privodenergia &lt;- 8 - data$e2.pieno.privodenergia # ENERGETIC AROUSAL = positive
+
+  # Recoding confounders
+  data$alcohol &lt;- as.factor(gsub(&quot;No&quot;,&quot;0&quot;,gsub(&quot;Sì&quot;,&quot;1&quot;,data$alcohol))) # alcohol (from yes/no --&gt; 1/0)
+  data$Activity &lt;- as.factor(gsub(&quot;Leggerasedutiocoricatiperlamaggiorpartedeltempo&quot;,&quot;0&quot;, # physical activity level (0 = seated)
+                                  gsub(&quot;Moderatacamminata,farelescale&quot;,&quot;0&quot;, # (1 = moderate)
+                                       gsub(&quot;Intensaattivitàsportiva,palestra,corsaodiverserampediscale&quot;,&quot;2&quot;, # (2 = vigorous)
+                                            data$Activity))))
+  data$People.rec &lt;- as.factor(gsub(&quot;No,erodasola&quot;,&quot;0&quot;,gsub(&quot;No,erodasolo&quot;,&quot;0&quot;, # (0=alone)
+                                gsub(&quot;Sì,manonsonostatadisturbata&quot;,&quot;1&quot;,gsub(&quot;Sì,manonsonostatodisturbato&quot;,&quot;1&quot;, # (1=not interact)
+                                     gsub(&quot;Sì,esonostataunpo&#39;disturbata&quot;,&quot;2&quot;,gsub(&quot;Sì,esonostataunpo&#39;disturbato&quot;,&quot;2&quot;, # (2=disturb)
+                                          gsub(&quot;Sì,esonostatainterrotta&quot;,&quot;3&quot;,gsub(&quot;Sì,esonostatainterrotto&quot;,&quot;3&quot;, #(3 = interrupted)
+                                               data$People.rec)))))))))
+  data$ProtocolId &lt;- as.factor(gsub(&quot;ProtocolStudent&quot;,&quot;&quot;,data$ProtocolId)) # from protocol ID to sex
+  colnames(data)[which(colnames(data)==&quot;ProtocolId&quot;)] &lt;- &quot;sex&quot;
+  
+  # Sorting and renaming columns
+  data &lt;- data[,c(&quot;ID&quot;,&quot;os&quot;,&quot;sex&quot;,&quot;day.of.week&quot;,&quot;within.day&quot;,&quot;RunTimestamp&quot;, # response information
+                  &quot;v1.male.bene&quot;,&quot;v2.insoddisfatto.soddisfatto&quot;,&quot;v3.positivo.negativo&quot;, # hedonic tone
+                  &quot;t1.rilassato.teso&quot;,&quot;t2.agitato.calmo&quot;,&quot;t3.nervoso.tranquillo&quot;, # calmness
+                  &quot;e1.stanco.sveglio&quot;,&quot;e2.pieno.privodenergia&quot;,&quot;e3.affaticato.fresco&quot;, # energetic arousal
+                  &quot;PE&quot;,&quot;PE.int&quot;,&quot;NE&quot;,&quot;NE.int&quot;, # emotional events
+                  &quot;smoke&quot;,&quot;coffe&quot;,&quot;alcohol&quot;,&quot;Activity&quot;,&quot;People.rec&quot;)] # confounders
+  colnames(data)[7:ncol(data)] &lt;- c(&quot;v1&quot;,&quot;v2&quot;,&quot;v3&quot;,&quot;t1&quot;,&quot;t2&quot;,&quot;t3&quot;,&quot;f1&quot;,&quot;f2&quot;,&quot;f3&quot;, # renaming columns
+                                    &quot;PE&quot;,&quot;intensity.PE&quot;,&quot;NE&quot;,&quot;intensity.NE&quot;,&quot;smoke&quot;,&quot;coffe&quot;,&quot;alcohol&quot;,&quot;activity&quot;,&quot;people&quot;)
+  
+  # Fixing inconsistencies due to Daylight Time (adding 1h between April and 27th October 2019)
+  # data$RunTimestamp &lt;- as.character(data$RunTimestamp)
+  dlt &lt;- c(as.POSIXct(&quot;2019-04-01 00:00:00&quot;),as.POSIXct(&quot;2019-10-27 00:00:00&quot;))
+  data[data$RunTimestamp&gt;dlt[1] &amp; data$RunTimestamp&lt;dlt[2],&quot;RunTimestamp&quot;] &lt;-
+    data[data$RunTimestamp&gt;dlt[1] &amp; data$RunTimestamp&lt;dlt[2],&quot;RunTimestamp&quot;] + 1*60*60
+  # data$RunTimestamp &lt;- as.POSIXct(data$RunTimestamp)
+  
+  # final sorting and returning data
+  data$sort &lt;- as.numeric(substr(data$ID,4,6))
+  data &lt;- data[order(data$sort,data$RunTimestamp),] # sorting by ID and timestamp
+  data$sort &lt;- NULL # removing sort column
+  return(data) }</code></pre>
+</p>
+</details>
+<p>Recodes slider and multiple-choice responses collected with the Sensus protocols used in the study, sort the columns and fix problems due to Daylight Time changes.</p>
+<details>
+<summary>
+<code>blsRecoding</code>
+</summary>
+<p>
+<pre class="r"><code>blsRecoding &lt;- function(baseline){ require(textclean); require(mgsub)
+  
+  # renaming and sorting columns
+  colnames(baseline) &lt;- c(&quot;RunTimestamp&quot;,&quot;ID&quot;,&quot;v1&quot;,&quot;t1&quot;,&quot;f1&quot;,&quot;v2&quot;,&quot;t2&quot;,&quot;f2&quot;,&quot;v3&quot;,&quot;t3&quot;,&quot;f3&quot;,
+                          &quot;PE&quot;,&quot;PE.int&quot;,&quot;NE&quot;,&quot;NE.int&quot;,&quot;Sleep1&quot;,&quot;Sleep2&quot;,&quot;Sleep3&quot;,&quot;daybefore.ex&quot;,&quot;drugs&quot;,&quot;drugs.which&quot;)
+  baseline &lt;- baseline[,c(2,1,3,6,9,4,7,10,5,8,11:21)]
+
+  # recoding item scores
+  baseline$v2 &lt;- 8 - baseline$v2 # hedonic tone = positive
+  baseline$v3 &lt;- 8 - baseline$v3
+  baseline$t2 &lt;- 8 - baseline$t2 # t.arousal = negative
+  baseline$t3 &lt;- 8 - baseline$t3
+  baseline$f2 &lt;- 8 - baseline$f2 # e.arousal = positive
+  baseline$Sleep2 &lt;- 8 - baseline$Sleep2 # sleep quality = positive
+  baseline$Sleep3 &lt;- 8 - baseline$Sleep3
+
+  # other confounding variables
+  baseline$drugs &lt;- gsub(&quot;SÃ¬&quot;,&quot;1&quot;,baseline$drugs) # drugs
+  baseline$drugs &lt;- as.factor(gsub(&quot;No&quot;,&quot;0&quot;,baseline$drugs))
+  baseline$daybefore.ex &lt;- gsub(&quot;SÃ¬&quot;,&quot;1&quot;,baseline$daybefore.ex) # intense exercise on the day before
+  baseline$daybefore.ex &lt;- as.factor(gsub(&quot;No&quot;,&quot;0&quot;,baseline$daybefore.ex))
+
+  # timestamp variables
+  baseline$RunTimestamp &lt;- as.POSIXct(as.character(baseline$RunTimestamp),
+                                      format=&quot;%Y/%m/%d %H:%M:%S&quot;)
+  baseline$day.of.week &lt;- as.POSIXlt(baseline$RunTimestamp)$wday # creating day of week
+  baseline$within.day &lt;- 0
+  baseline &lt;- baseline[,c(1,2,22,23,3:21)]
+  baseline &lt;- baseline[order(baseline$ID,baseline$RunTimestamp),] # sorting by timestamp
+  
+  return(baseline)}</code></pre>
+</p>
+</details>
+<p><br></p>
+<div id="id-recoding-1" class="section level3">
+<h3>2.2.1. ID recoding</h3>
+<p>As a first step, we <strong>recode participants’ identification codes</strong> <code>ID</code> (currently corresponding to their e-mail addresses) using the “HRVXXX” format (e.g., from ‘<a href="mailto:john.smith@gmail.com" class="email">john.smith@gmail.com</a>’ to ‘HRV001’). This is done with the <code>prel.qs_IDrecode()</code> and the <code>participantID_recoding_baseline()</code> functions. Again, since the participants’ e-mail addresses are confidential, both the function and the original dataset are not showed.</p>
+<pre class="r"><code># loading and using the function to recode the ID variable
+source(&quot;participantID_recoding.R&quot;); source(&quot;participantID_recoding_baseline.R&quot;)
+(ESM &lt;- participantID_recoding(ESM))[1:3,] # recoding ESM IDs and showing first three rows</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["ID"],"name":[1],"type":["chr"],"align":["left"]},{"label":["os"],"name":[2],"type":["chr"],"align":["left"]},{"label":["ProtocolId"],"name":[3],"type":["chr"],"align":["left"]},{"label":["within.day"],"name":[4],"type":["chr"],"align":["left"]},{"label":["ScriptName"],"name":[5],"type":["chr"],"align":["left"]},{"label":["day.of.week"],"name":[6],"type":["chr"],"align":["left"]},{"label":["RunTimestamp"],"name":[7],"type":["dttm"],"align":["right"]},{"label":["SubmissionTimestamp"],"name":[8],"type":["dttm"],"align":["right"]},{"label":["e3.affaticato.fresco"],"name":[9],"type":["chr"],"align":["left"]},{"label":["PE"],"name":[10],"type":["chr"],"align":["left"]},{"label":["intensity.PE"],"name":[11],"type":["chr"],"align":["left"]},{"label":["NE"],"name":[12],"type":["chr"],"align":["left"]},{"label":["intensity.NE"],"name":[13],"type":["chr"],"align":["left"]},{"label":["smoke"],"name":[14],"type":["chr"],"align":["left"]},{"label":["coffe"],"name":[15],"type":["chr"],"align":["left"]},{"label":["alcohol"],"name":[16],"type":["chr"],"align":["left"]},{"label":["Activity"],"name":[17],"type":["chr"],"align":["left"]},{"label":["People.rec"],"name":[18],"type":["chr"],"align":["left"]},{"label":["v1.male.bene"],"name":[19],"type":["chr"],"align":["left"]},{"label":["t1.rilassato.teso"],"name":[20],"type":["chr"],"align":["left"]},{"label":["e1.stanco.sveglio"],"name":[21],"type":["chr"],"align":["left"]},{"label":["v2.soddisfatto.insoddisfatto"],"name":[22],"type":["chr"],"align":["left"]},{"label":["t2.agitato.calmo"],"name":[23],"type":["chr"],"align":["left"]},{"label":["e2.pieno.privodenergia"],"name":[24],"type":["chr"],"align":["left"]},{"label":["v3.positivo.negativo"],"name":[25],"type":["chr"],"align":["left"]},{"label":["t3.nervoso.tranquillo"],"name":[26],"type":["chr"],"align":["left"]}],"data":[{"1":"HRV001","2":"Android","3":"ProtocolStudentM","4":"1","5":"SurveyM","6":"2","7":"2018-11-06 11:38:33.269","8":"2018-11-06 11:45:28.070","9":"6","10":"1","11":"1","12":"2","13":"4","14":"0","15":"0","16":"No","17":"Leggerasedutiocoricatiperlamaggiorpartedeltempo","18":"Sì,manonsonostatadisturbato","19":"5","20":"5","21":"6","22":"4","23":"3","24":"5","25":"4","26":"3","_rn_":"1"},{"1":"HRV001","2":"Android","3":"ProtocolStudentM","4":"2","5":"SurveyM","6":"2","7":"2018-11-06 12:44:45.654","8":"2018-11-06 12:54:44.704","9":"5","10":"2","11":"2","12":"1","13":"1","14":"0","15":"0","16":"No","17":"Moderatacamminata,farelescale","18":"Sì,manonsonostatadisturbato","19":"4","20":"6","21":"5","22":"4","23":"3","24":"5","25":"5","26":"3","_rn_":"2"},{"1":"HRV001","2":"Android","3":"ProtocolStudentM","4":"3","5":"SurveyM","6":"2","7":"2018-11-06 13:51:50.186","8":"2018-11-06 14:04:58.351","9":"5","10":"1","11":"1","12":"2","13":"4","14":"0","15":"0","16":"No","17":"Leggerasedutiocoricatiperlamaggiorpartedeltempo","18":"No,erodasolo","19":"4","20":"6","21":"6","22":"4","23":"3","24":"4","25":"5","26":"2","_rn_":"3"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<pre class="r"><code>colnames(baseline)[2] &lt;- &quot;ID&quot;
+(baseline &lt;- participantID_recoding_baseline(baseline))[1:3,] # recoding baseline IDs and showing first three rows</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["Informazioni.cronologiche"],"name":[1],"type":["chr"],"align":["left"]},{"label":["ID"],"name":[2],"type":["chr"],"align":["left"]},{"label":["X"],"name":[3],"type":["int"],"align":["right"]},{"label":["X.1"],"name":[4],"type":["int"],"align":["right"]},{"label":["X.2"],"name":[5],"type":["int"],"align":["right"]},{"label":["X.3"],"name":[6],"type":["int"],"align":["right"]},{"label":["X.4"],"name":[7],"type":["int"],"align":["right"]},{"label":["X.5"],"name":[8],"type":["int"],"align":["right"]},{"label":["X.6"],"name":[9],"type":["int"],"align":["right"]},{"label":["X.7"],"name":[10],"type":["int"],"align":["right"]},{"label":["X.8"],"name":[11],"type":["int"],"align":["right"]},{"label":["....POSITIVI"],"name":[12],"type":["int"],"align":["right"]},{"label":["Quanto.sono.stati.INTENSI.questi.eventi.positivi."],"name":[13],"type":["int"],"align":["right"]},{"label":["....NEGATIVI"],"name":[14],"type":["int"],"align":["right"]},{"label":["Quanto.sono.stati.INTENSI.questi.eventi.negativi."],"name":[15],"type":["int"],"align":["right"]},{"label":["Come.valuti.complessivamente.la.qualitÃ..del.tuo.sonno."],"name":[16],"type":["int"],"align":["right"]},{"label":["La.scorsa.notte.quanto.spesso.ti.sei.risvegliato.a.durante.il.sonno."],"name":[17],"type":["int"],"align":["right"]},{"label":["Quando.ti.sei.svegliato.a.stamattina..come.ti.sei.sentito.a."],"name":[18],"type":["int"],"align":["right"]},{"label":["Ieri.hai.praticato.attivitÃ..fisica.intensa...es..sport.agonistico.o.amatoriale.o.palestra."],"name":[19],"type":["chr"],"align":["left"]},{"label":["Oggi.hai.preso.o.intendi.prendere.dei.farmaci.diversi.da.quelli.che.prendi.di.solito."],"name":[20],"type":["chr"],"align":["left"]},{"label":["Se.sÃ...indica.il.tipo.di.farmaco"],"name":[21],"type":["chr"],"align":["left"]}],"data":[{"1":"2018/11/06 10:12:16 AM CET","2":"HRV001","3":"5","4":"5","5":"6","6":"5","7":"5","8":"2","9":"4","10":"6","11":"6","12":"3","13":"2","14":"1","15":"1","16":"6","17":"2","18":"2","19":"No","20":"No","21":"","_rn_":"1"},{"1":"2018/11/07 10:01:52 AM CET","2":"HRV001","3":"4","4":"3","5":"5","6":"5","7":"5","8":"4","9":"3","10":"3","11":"6","12":"2","13":"2","14":"2","15":"4","16":"6","17":"2","18":"6","19":"No","20":"No","21":"","_rn_":"6"},{"1":"2018/11/08 10:00:39 AM CET","2":"HRV001","3":"5","4":"2","5":"2","6":"4","7":"5","8":"5","9":"4","10":"3","11":"2","12":"1","13":"1","14":"2","15":"5","16":"7","17":"2","18":"6","19":"No","20":"No","21":"","_rn_":"11"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<p><br></p>
+</div>
+<div id="other-variables-1" class="section level3">
+<h3>2.2.2. Other variables</h3>
+<p>To be continued…</p>
+</div>
+</div>
 </div>
 <div id="hrv-data" class="section level1">
 <h1>3. HRV data</h1>
@@ -681,14 +979,26 @@ Auguie, Baptiste. 2017. <em>gridExtra: Miscellaneous Functions for &quot;Grid&qu
 <div id="ref-lubridate2011" class="csl-entry">
 Grolemund, Garrett, and Hadley Wickham. 2011. <span>“Dates and Times Made Easy with <span class="nocase">lubridate</span>.”</span> <em>Journal of Statistical Software</em> 40 (3): 1–25. <a href="https://www.jstatsoft.org/v40/i03/">https://www.jstatsoft.org/v40/i03/</a>.
 </div>
+<div id="ref-jsonlite2014" class="csl-entry">
+Ooms, Jeroen. 2014. <span>“The Jsonlite Package: A Practical and Consistent Mapping Between JSON Data and r Objects.”</span> <em>arXiv:1403.2805 [Stat.CO]</em>. <a href="https://arxiv.org/abs/1403.2805">https://arxiv.org/abs/1403.2805</a>.
+</div>
+<div id="ref-R-jsonlite" class="csl-entry">
+———. 2020. <em>Jsonlite: A Simple and Robust JSON Parser and Generator for r</em>. <a href="https://CRAN.R-project.org/package=jsonlite">https://CRAN.R-project.org/package=jsonlite</a>.
+</div>
 <div id="ref-R-base" class="csl-entry">
 R Core Team. 2020. <em>R: A Language and Environment for Statistical Computing</em>. Vienna, Austria: R Foundation for Statistical Computing. <a href="https://www.R-project.org/">https://www.R-project.org/</a>.
 </div>
 <div id="ref-R-lubridate" class="csl-entry">
 Spinu, Vitalie, Garrett Grolemund, and Hadley Wickham. 2021. <em>Lubridate: Make Dealing with Dates a Little Easier</em>. <a href="https://CRAN.R-project.org/package=lubridate">https://CRAN.R-project.org/package=lubridate</a>.
 </div>
+<div id="ref-plyr2011" class="csl-entry">
+Wickham, Hadley. 2011. <span>“The Split-Apply-Combine Strategy for Data Analysis.”</span> <em>Journal of Statistical Software</em> 40 (1): 1–29. <a href="http://www.jstatsoft.org/v40/i01/">http://www.jstatsoft.org/v40/i01/</a>.
+</div>
 <div id="ref-ggplot22016" class="csl-entry">
-Wickham, Hadley. 2016. <em>Ggplot2: Elegant Graphics for Data Analysis</em>. Springer-Verlag New York. <a href="https://ggplot2.tidyverse.org">https://ggplot2.tidyverse.org</a>.
+———. 2016. <em>Ggplot2: Elegant Graphics for Data Analysis</em>. Springer-Verlag New York. <a href="https://ggplot2.tidyverse.org">https://ggplot2.tidyverse.org</a>.
+</div>
+<div id="ref-R-plyr" class="csl-entry">
+———. 2020. <em>Plyr: Tools for Splitting, Applying and Combining Data</em>. <a href="https://CRAN.R-project.org/package=plyr">https://CRAN.R-project.org/package=plyr</a>.
 </div>
 <div id="ref-R-tidyr" class="csl-entry">
 ———. 2021. <em>Tidyr: Tidy Messy Data</em>. <a href="https://CRAN.R-project.org/package=tidyr">https://CRAN.R-project.org/package=tidyr</a>.

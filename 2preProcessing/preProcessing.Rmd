@@ -34,7 +34,7 @@ The present document includes the data pre-processing steps used to read the dif
 
 - `PrelQS` = demographic & retrospective self-report data collected with the preliminary questionnaire ([Google Forms](https://www.google.com/intl/it/forms/about/))
 
-- `ESM` = experience sampling measures collected with the Sensus Mobile app ([Xiong et al., 2016](#ref))
+- `ESM` = experience sampling measures collected with the [Sensus Mobile app](https://predictive-technology-laboratory.github.io/sensus/) ([Xiong et al., 2016](#ref))
 
 - `HRV` = 2-min segments of blood volume pulse data recorded with the E4 wristband (Empatica, Milan)
 
@@ -66,7 +66,7 @@ Sys.setenv(tz="GMT")
 The following R packages are used in this document (see [References section](#ref)):
 ```{r }
 # required packages
-packages <- c("ggplot2","gridExtra","lubridate","tidyr","dplyr","tcltk")
+packages <- c("ggplot2","gridExtra","lubridate","tidyr","dplyr","tcltk","jsonlite","plyr")
 
 # generate packages references
 knitr::write_bib(c(.packages(), packages),"packagesProc.bib")
@@ -107,7 +107,7 @@ colnames(PrelQS)[1:2] <- c("timestamp","ID")
 
 # loading and using the function to recode the ID variable
 source("prel.qs_IDrecode.R") 
-PrelQS <- prel.qs_IDrecode(PrelQS)
+(PrelQS <- prel.qs_IDrecode(PrelQS))[1:3,] # showing first three rows
 ```
 
 <br>
@@ -386,6 +386,285 @@ cat(nrow(PrelQS[substr(PrelQS$ID,1,3)=="HRV",]),"included participants out of",
 <br>
 
 # 2. ESM data
+
+Here, the raw data collected with the **experience sampling method (ESM)** are read and encoded in the `ESM` dataset, recoded, and filtered based on response rate and inclusion criteria.
+
+## 2.1. Data reading
+
+First, we read the JSON data files exported from the [Sensus Mobile app](https://predictive-technology-laboratory.github.io/sensus/) ([Xiong et al., 2016](#ref)). 
+
+Specifically, the [Protocols created with Sensus](https://github.com/Luca-Menghini/vmHRV-selfRegulation/tree/main/1ESMmeasures/sensus/protocols) were configured to store the recorded .JSON data files in our private [AWS S3](https://aws.amazon.com/s3/) bucket, from which they were downloaded and stored in the `ESM/data` folder. From the Sensus app, we also exported the [Probe Definition files](https://github.com/Luca-Menghini/vmHRV-selfRegulation/tree/main/1ESMmeasures/sensus/protocols), which we use to replace the *input IDs* (i.e., by default, each item is associated with an alphanumeic code) with the corresponding *input names* (i.e., the item labels that we set in the protocols). These files were saved in the `ESM/probe` folder.
+
+The following function is used to optimize the ESM data reading:
+
+<details><summary>`readSurveyData`</summary>
+<p>
+```{r }
+#' @title Read JSON data exported from the Sensus mobile app
+#' @param data.path = character string indicating the full path to the folder where the JSON raw data are stored.
+#' @param probe.definition = character string indicating the full path to the folder where Probe Definition JSON file(s) (from the Sensus mobile app: Protocol > Probe > Scripted Interaction > Share definition).
+#' @param messages = logical value indicating whether the processing steps should be printed (default: TRUE).
+readSurveyData <- function(data.path,probe.definition,messages=TRUE){ require(jsonlite); require(tcltk)
+  options(digits.secs=3) # settin No. of digits
+
+  # 1. Reading data
+  # .......................................
+  if(messages==TRUE){ cat("\n\nReading data files from",data.path,"...")}
+  paths = list.files(data.path,recursive=TRUE,full.names=TRUE,include.dirs=FALSE) # listing files in data path
+  var.names <- c("ParticipantId","Timestamp","InputId","Response","RunTimestamp","SubmissionTimestamp",
+                 "ScriptName","ProtocolId","$type") # selecting variables of interest
+  data <- as.data.frame(matrix(nrow=0,ncol=9)) # empty dataframe creation and population
+  colnames(data) <- var.names
+  pb <- tkProgressBar("(1/2) Data reading:", "Data reading %",0, 100, 50) # progress bar
+  for(path in paths){ info <- sprintf("%d%% done", round(which(paths==path)/length(paths)*100))
+    setTkProgressBar(pb, round(which(paths==path)/length(paths)*100), sprintf("(1/2) Data reading:", info), info)
+    if(file.info(path)$size>0){ # only reading Datum files (i.e., containing ScriptDatum, which is sized > 0 Kb)
+      new.data <- read_json(path,simplifyDataFrame=TRUE)
+      if(class(new.data)=="data.frame" & !is.null(new.data$Response)){ # only keeping files with Response data
+        if(class(new.data$Response)=="data.frame"){ # sometimes the Response column is read as dataframe
+          new.data$Response <- as.character(new.data$Response$`$values`)}
+        data <- rbind(data,new.data[var.names]) }}} 
+  close(pb) # closing progress bar
+  data <- data[!is.na(data$ParticipantId),] # only keeping data with ParticipantId information (i.e., participant identification)
+  data <- data[!is.na(data$InputId),] # only keeping data with InputId information (i.e., item identification)
+  names(data)[9] <- "os" # $type as OS (android or iOS) # mobile OS information
+  data[,9] <- gsub("Sensus.Probes.User.Scripts.ScriptDatum, Sensus","",data[,9]) # removing unuseful information
+  
+  # 2. From Response Ids to Item labels (based on Probe Definition) 
+  # ...............................................................
+  if(!is.na(probe.definition)){ if(messages==TRUE){ cat("\n\nConverting ResponseId into InputId based on Probe Definition...")}
+    # function to read Probe Definition files
+    readProbe <- function(path){ probedefinition <- read_json(path,simplifyDataFrame=TRUE) # first probe definition file
+      # reading input labels of the first inputGroup
+      inputs <- probedefinition$ScriptRunners$`$values`$Script$InputGroups$`$values`[[1]]$Inputs$`$values`[[1]]$Name
+      infos <- probedefinition$ScriptRunners$`$values`$Script$InputGroups$`$values`[[1]] # input labels
+      PROTOCOL <- data.frame(protocolName=probedefinition$Protocol$Name,protocolId=probedefinition$Protocol$Id, # protocol name
+                             scriptName=infos$Name,inputName=inputs,inputId=infos$Inputs$`$values`[[1]]$Id) # script name
+      if(length(probedefinition$ScriptRunners$`$values`$Script$InputGroups$`$values`)>1){ # reading the following inputGroups
+        for(i in 2:length(probedefinition$ScriptRunners$`$values`$Script$InputGroups$`$values`)){
+          inputs <- probedefinition$ScriptRunners$`$values`$Script$InputGroups$`$values`[[i]]$Inputs$`$values`[[1]]$Name
+          infos <- probedefinition$ScriptRunners$`$values`$Script$InputGroups$`$values`[[i]]
+          PROTOCOL <- rbind(PROTOCOL,data.frame(protocolName=probedefinition$Protocol$Name,
+                                                protocolId=probedefinition$Protocol$Id,
+                                                scriptName=infos$Name,inputName=inputs,
+                                                inputId=infos$Inputs$`$values`[[1]]$Id)) }}
+      return(PROTOCOL) }
+    paths = list.files(probe.definition,recursive=TRUE,full.names=TRUE,include.dirs=FALSE) # listing files in probe.definition path
+    PROTOCOL <- readProbe(paths[1]) # reading the first Probe Definition file
+    if(length(list.files(probe.definition))>1){ # reading the following Probe Definition files when > 1
+      for(path in paths[2:length(paths)]){ PROTOCOL <- rbind(PROTOCOL,readProbe(path)) }}
+    pb <- tkProgressBar("(2/2) Data processing:", "Data processing %",0, 100, 50) # progress bar
+    for(i in 1:nrow(data)){ info <- sprintf("%d%% done", round(i/nrow(data)*100)) # converting inputID to inputName (item labels)
+    setTkProgressBar(pb, round(i/nrow(data)*100), sprintf("(2/2) Converting InputIDs to InputNames", info), info)
+      for(j in 1:nrow(PROTOCOL)){ if(!is.na(data[i,3]) & data[i,3]==PROTOCOL[j,5]){ data[i,3] <- as.character(PROTOCOL[j,4]) }}}
+    close(pb) }
+  
+  # 3. Cleaning and unlisting Response data
+  # ...............................................................
+  if(messages==TRUE){ cat("\n\nUnlisting Response data and removing system information...")}
+  data$Response <- gsub("list","",data$Response) # cleaning categorical items from Sensus system info
+  data$Response <- gsub(paste("c","\\(|\\)",sep=""),"",data$Response)
+  data$Response <- gsub("\\(|\\)","",data$Response)
+  data$Response <- gsub("\\[|\\]","",data$Response)
+  data$Response <- gsub("\\$type` = \"System.Collections.Generic.List`1System.Object, mscorlib, mscorlib\", ","",data$Response)
+  data$Response <- gsub("\\$values","",data$Response)
+  data$Response <- gsub('``` = ', "",data$Response)
+  data$Response <- gsub('\ ', "",data$Response)
+  data$Response <- gsub('\"', "",data$Response)
+  data$Response <- gsub('\"No\"', "No",data$Response)
+  data$Response <- gsub('\"Sì\"', "Si",data$Response)
+  if(class(data$Response)=="data.frame"){ data$Response <- as.character(data$Response$`$values`[[1]]) # unlisting Response column
+    } else { data$Response <- as.character(data$Response) }
+  
+  # 4. Encoding time information
+  # ...............................................................
+  if(messages==TRUE){ cat("\n\nConverting Timestamp variables as POSIXct and creating day.of.week variable...")}
+  timestamps <- c("Timestamp","RunTimestamp","SubmissionTimestamp") # timestamps variables
+  data[,timestamps] <- lapply(data[,timestamps],function(x) as.POSIXct(x,format="%Y-%m-%dT%H:%M:%OS",tz="GMT") +
+                                1*60*60) # adding 1h due to tz differences
+  data$day.of.week <- as.POSIXlt(data$RunTimestamp)$wday # creating indicator for the weekday (Monday=1, Tuestday=2, etc.)
+  
+  # 5. Cleaning incomplete double responses
+  # ...............................................................
+  # in some cases, multiple responses are recorded with the same ParticipantId, RunTimeStamp, and InputId
+  if(messages==TRUE){ cat("\n\nLooking for double responses...\n")}
+  data$id.r <- paste(data$ParticipantId,data$RunTimestamp,data$InputId,sep="_") # ID-time-item identifier
+  data$id.t <- paste(data$ParticipantId,data$RunTimestamp,sep="_") # ID-time identifier
+  doubles <- levels(as.factor(data[duplicated(data$id.r),"id.t"])) # double responses (same ID-time-item identifier)
+  ndoubles <- rep(length(doubles),2) # No. of double responses
+  for(double in doubles){ subId <- levels(as.factor(data[data$id.t==double,"SubmissionTimestamp"])) # submission time
+    if(length(subId)>1){ ndoubles[1] <- ndoubles[1] - 1
+      maxDouble <- max(as.POSIXct(subId)) # when the SubmissionTimestamp is different -> splitting responses
+      data[data$id.t==double,"RunTimestamp"] <- maxDouble - 4*60 # 2nd RunTimeStamp = Submission - 4 min (average response time) 
+    } else { ndoubles[2] <- ndoubles[2] - 1
+      data <- rbind(data[data$id.t!=double,], # when even the SubmissionTimestamp is different -> removing double resp.
+                    data[data$id.t==double & !duplicated(data$id.r),]) }}
+  cat(" - Removed",ndoubles[1],"double responses (same ID, InputName, RunTimestamp, & SubmissionTimestamp)\n",
+      "- Splitted",ndoubles[2],"double responses with different SubmissionTimestamp\n",
+      "  (in these cases, RunTimestamp is recomputed as SubmissionTimestamp - 4 min (average response length)")
+  
+  # 6. Sorting columns and Reshaping
+  # ...............................................................
+  if(messages==TRUE){ cat("\n\nSorting columns and reshaping (one row per data entry)...")}
+  colnames(data)[1] <- "ID" # selecting and sorting columns
+  data <- data[,c("ID","os","ProtocolId","ScriptName","day.of.week","RunTimestamp","SubmissionTimestamp","InputId","Response")]
+  data <- reshape(data,v.names=c("Response"),timevar=c("InputId"), # reshaping from long (item-by-item) to wide (resp-by-resp)
+                  idvar=c("RunTimestamp","SubmissionTimestamp"),direction=c("wide"),sep="")
+  colnames(data) <- gsub("Response","",colnames(data)) # removing label "Response" from ResponseId
+  data <- data[order(data$ID,data$RunTimestamp),] # sorting rows by participant ID and RunTimestamp
+  data <- plyr::ddply(data,c("ID","day.of.week"),transform,within.day=seq_along(day.of.week)) # row identifier within each day
+  data <- data.frame(cbind(data[1:3],data[ncol(data)],data[5:ncol(data)-1])) # final sorting of rows and columns
+  data <- data[order(data$ID,data$RunTimestamp),]
+  row.names(data) <- as.character(1:nrow(data))
+  if(messages==TRUE){ cat("\n\nRead",nrow(data),"responses from",nlevels(as.factor(data$ID)),"participants.") }
+  return(data) } # returning processed dataset
+```
+</p></details>
+
+Reads and merges .JSON data files exported from the [Sensus Mobile app](https://predictive-technology-laboratory.github.io/sensus/) ([Xiong et al., 2016](#ref)).
+
+<br>
+
+Here, we use the `readSurveyData` function (depicted above) to read and preliminary recode the .JSON data files, and to merge them into the `ESM` dataframe.
+```{r }
+# data reading, encoding and saving
+ESM <- readSurveyData(data.path="ESM/data",probe.definition="ESM/probe")
+```
+
+<br>
+
+We also integrate the `ESM` dataset with **four additional responses** that were sent via instant messages (i.e., screenshot of the responses) due to technical problems. These were stored in the `screenshotX4.rda` file.
+```{r }
+load("ESM/screenshot_surevyMalfunctioning/screenshotX4.rda") # loading additiona responses
+cat("Adding",nrow(screenshotX4),"additional responses sent via instant messages") # N = 4
+ESM <- rbind(ESM,screenshotX4) # adding additional responses to the ESM dataset
+```
+
+<br>
+
+Finally, we import the **"baseline surveys"** data (i.e., ESM data collected in the lab at the beginning of each day, using [Google Forms](https://www.google.com/intl/it/forms/about/)), exported from Google Form as a .CSV file. Some recoding procedures will be necessary before merging the `baseline` and the `ESM` datasets.
+```{r }
+# reading raw dataset exported from Google Forms
+baseline <- read.csv("baseline/Baseline.csv",header=TRUE)
+cat("Reading",nrow(baseline),"responses to the baseline questionnaire")
+```
+
+<br>
+
+## 2.2. Data recoding
+
+Then, we recode the `ESM` variables to be used for the analyses.
+
+The following functions are used to optimize the ESM data recoding:
+
+<details><summary>`varsRecoding`</summary>
+<p>
+```{r }
+varsRecoding <- function(data){
+
+  # Recoding item scores and reversed items
+  data$v3.positivo.negativo <- 8 - data$v3.positivo.negativo # HEDONIC TONE = positive
+  colnames(data)[which(colnames(data)=="v2.soddisfatto.insoddisfatto")] <- "v2.insoddisfatto.soddisfatto" # changing wrong label
+  data$t1.rilassato.teso <- 8 - data$t1.rilassato.teso # CALMNESS = positive
+  data$e2.pieno.privodenergia <- 8 - data$e2.pieno.privodenergia # ENERGETIC AROUSAL = positive
+
+  # Recoding confounders
+  data$alcohol <- as.factor(gsub("No","0",gsub("Sì","1",data$alcohol))) # alcohol (from yes/no --> 1/0)
+  data$Activity <- as.factor(gsub("Leggerasedutiocoricatiperlamaggiorpartedeltempo","0", # physical activity level (0 = seated)
+                                  gsub("Moderatacamminata,farelescale","0", # (1 = moderate)
+                                       gsub("Intensaattivitàsportiva,palestra,corsaodiverserampediscale","2", # (2 = vigorous)
+                                            data$Activity))))
+  data$People.rec <- as.factor(gsub("No,erodasola","0",gsub("No,erodasolo","0", # (0=alone)
+                                gsub("Sì,manonsonostatadisturbata","1",gsub("Sì,manonsonostatodisturbato","1", # (1=not interact)
+                                     gsub("Sì,esonostataunpo'disturbata","2",gsub("Sì,esonostataunpo'disturbato","2", # (2=disturb)
+                                          gsub("Sì,esonostatainterrotta","3",gsub("Sì,esonostatainterrotto","3", #(3 = interrupted)
+                                               data$People.rec)))))))))
+  data$ProtocolId <- as.factor(gsub("ProtocolStudent","",data$ProtocolId)) # from protocol ID to sex
+  colnames(data)[which(colnames(data)=="ProtocolId")] <- "sex"
+  
+  # Sorting and renaming columns
+  data <- data[,c("ID","os","sex","day.of.week","within.day","RunTimestamp", # response information
+                  "v1.male.bene","v2.insoddisfatto.soddisfatto","v3.positivo.negativo", # hedonic tone
+                  "t1.rilassato.teso","t2.agitato.calmo","t3.nervoso.tranquillo", # calmness
+                  "e1.stanco.sveglio","e2.pieno.privodenergia","e3.affaticato.fresco", # energetic arousal
+                  "PE","PE.int","NE","NE.int", # emotional events
+                  "smoke","coffe","alcohol","Activity","People.rec")] # confounders
+  colnames(data)[7:ncol(data)] <- c("v1","v2","v3","t1","t2","t3","f1","f2","f3", # renaming columns
+                                    "PE","intensity.PE","NE","intensity.NE","smoke","coffe","alcohol","activity","people")
+  
+  # Fixing inconsistencies due to Daylight Time (adding 1h between April and 27th October 2019)
+  # data$RunTimestamp <- as.character(data$RunTimestamp)
+  dlt <- c(as.POSIXct("2019-04-01 00:00:00"),as.POSIXct("2019-10-27 00:00:00"))
+  data[data$RunTimestamp>dlt[1] & data$RunTimestamp<dlt[2],"RunTimestamp"] <-
+    data[data$RunTimestamp>dlt[1] & data$RunTimestamp<dlt[2],"RunTimestamp"] + 1*60*60
+  # data$RunTimestamp <- as.POSIXct(data$RunTimestamp)
+  
+  # final sorting and returning data
+  data$sort <- as.numeric(substr(data$ID,4,6))
+  data <- data[order(data$sort,data$RunTimestamp),] # sorting by ID and timestamp
+  data$sort <- NULL # removing sort column
+  return(data) }
+```
+</p></details>
+
+Recodes slider and multiple-choice responses collected with the Sensus protocols used in the study, sort the columns and fix problems due to Daylight Time changes.
+
+<details><summary>`blsRecoding`</summary>
+<p>
+```{r }
+blsRecoding <- function(baseline){ require(textclean); require(mgsub)
+  
+  # renaming and sorting columns
+  colnames(baseline) <- c("RunTimestamp","ID","v1","t1","f1","v2","t2","f2","v3","t3","f3",
+                          "PE","PE.int","NE","NE.int","Sleep1","Sleep2","Sleep3","daybefore.ex","drugs","drugs.which")
+  baseline <- baseline[,c(2,1,3,6,9,4,7,10,5,8,11:21)]
+
+  # recoding item scores
+  baseline$v2 <- 8 - baseline$v2 # hedonic tone = positive
+  baseline$v3 <- 8 - baseline$v3
+  baseline$t2 <- 8 - baseline$t2 # t.arousal = negative
+  baseline$t3 <- 8 - baseline$t3
+  baseline$f2 <- 8 - baseline$f2 # e.arousal = positive
+  baseline$Sleep2 <- 8 - baseline$Sleep2 # sleep quality = positive
+  baseline$Sleep3 <- 8 - baseline$Sleep3
+
+  # other confounding variables
+  baseline$drugs <- gsub("SÃ¬","1",baseline$drugs) # drugs
+  baseline$drugs <- as.factor(gsub("No","0",baseline$drugs))
+  baseline$daybefore.ex <- gsub("SÃ¬","1",baseline$daybefore.ex) # intense exercise on the day before
+  baseline$daybefore.ex <- as.factor(gsub("No","0",baseline$daybefore.ex))
+
+  # timestamp variables
+  baseline$RunTimestamp <- as.POSIXct(as.character(baseline$RunTimestamp),
+                                      format="%Y/%m/%d %H:%M:%S")
+  baseline$day.of.week <- as.POSIXlt(baseline$RunTimestamp)$wday # creating day of week
+  baseline$within.day <- 0
+  baseline <- baseline[,c(1,2,22,23,3:21)]
+  baseline <- baseline[order(baseline$ID,baseline$RunTimestamp),] # sorting by timestamp
+  
+  return(baseline)}
+```
+</p></details>
+
+<br>
+
+### 2.2.1. ID recoding
+
+As a first step, we **recode participants' identification codes** `ID` (currently corresponding to their e-mail addresses) using the "HRVXXX" format (e.g., from '[john.smith\@gmail.com](mailto:john.smith@gmail.com){.email}' to 'HRV001'). This is done with the `prel.qs_IDrecode()` and the `participantID_recoding_baseline()`  functions. Again, since the participants' e-mail addresses are confidential, both the function and the original dataset are not showed.
+```{r }
+# loading and using the function to recode the ID variable
+source("participantID_recoding.R"); source("participantID_recoding_baseline.R")
+(ESM <- participantID_recoding(ESM))[1:3,] # recoding ESM IDs and showing first three rows
+colnames(baseline)[2] <- "ID"
+(baseline <- participantID_recoding_baseline(baseline))[1:3,] # recoding baseline IDs and showing first three rows
+```
+
+<br>
+
+### 2.2.2. Other variables
+
+To be continued...
+
 
 # 3. HRV data
 
