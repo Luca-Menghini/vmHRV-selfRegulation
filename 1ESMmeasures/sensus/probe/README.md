@@ -1,0 +1,4 @@
+# Probe Definition files
+This folder includes the Probe Definition files exported from the [Protocols](https://github.com/Luca-Menghini/vmHRV-selfRegulation/tree/main/1ESMmeasures/sensus/protocols) created with the [Sensus Mobile app](https://predictive-technology-laboratory.github.io/sensus/) ([Xiong et al., 2016](https://doi.org/10.1145/2971648.2971711)).
+
+The Probe Definition files were exported from the Sensus app (`Protocol` -\> `Probe` -\> `Scripted Interaction` -\> `Share definition`) to couple **input IDs** (i.e., alphanumeric code associated by Sensus to each item) with **input names** (i.e., the label that we set for each item). For further details, see section 2 of the [data pre-processing report](https://Luca-Menghini.github.io/vmHRV-selfRegulation/2preProcessing/preProcessing.html).
