@@ -8,7 +8,7 @@ Menghini, L., Fuochi, G., Sarlo, M. Inter- and intraindividual relationships bet
 ## Supplementary materials
 The repository includes the following materials:
 
-1. `1ESMeasures`: Experience sampling measures used in the study (screenshots in Italian and English translations).
+1. `1ESMeasures`: Experience sampling measures used in the study (screenshots in Italian and English translations), and related protocols and Probe Definition JSON files used with the [Sensus Mobile app](https://predictive-technology-laboratory.github.io/sensus/) ([Xiong et al., 2016](https://doi.org/10.1145/2971648.2971711))
 
 2. `2preProcessing`: R code and generated report with full outputs of the pre-processing procedures applied to the raw data (available upon request to the corresponding author). The **data pre-processing report** is [depicted at this page](https://Luca-Menghini.github.io/vmHRV-selfRegulation/2preProcessing/preProcessing.html).
 
