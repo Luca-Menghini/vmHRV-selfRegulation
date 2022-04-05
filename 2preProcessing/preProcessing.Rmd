@@ -66,7 +66,7 @@ Sys.setenv(tz="GMT")
 The following R packages are used in this document (see [References section](#ref)):
 ```{r }
 # required packages
-packages <- c("ggplot2","gridExtra","lubridate","tidyr","dplyr","tcltk","jsonlite","plyr")
+packages <- c("ggplot2","gridExtra","jsonlite","plyr","lubridate")
 
 # generate packages references
 knitr::write_bib(c(.packages(), packages),"packagesProc.bib")
@@ -404,27 +404,24 @@ The following function is used to optimize the ESM data reading:
 #' @param data.path = character string indicating the full path to the folder where the JSON raw data are stored.
 #' @param probe.definition = character string indicating the full path to the folder where Probe Definition JSON file(s) (from the Sensus mobile app: Protocol > Probe > Scripted Interaction > Share definition).
 #' @param messages = logical value indicating whether the processing steps should be printed (default: TRUE).
-readSurveyData <- function(data.path,probe.definition,messages=TRUE){ require(jsonlite); require(tcltk)
-  options(digits.secs=3) # settin No. of digits
+readSurveyData <- function(data.path,probe.definition,messages=TRUE){ require(jsonlite)
 
   # 1. Reading data
   # .......................................
-  if(messages==TRUE){ cat("\n\nReading data files from",data.path,"...")}
+  options(digits.secs=3) # setting No. of digits
   paths = list.files(data.path,recursive=TRUE,full.names=TRUE,include.dirs=FALSE) # listing files in data path
+  if(messages==TRUE){ cat("\n\nReading",length(paths),"data files from",data.path,"...")}
   var.names <- c("ParticipantId","Timestamp","InputId","Response","RunTimestamp","SubmissionTimestamp",
                  "ScriptName","ProtocolId","$type") # selecting variables of interest
   data <- as.data.frame(matrix(nrow=0,ncol=9)) # empty dataframe creation and population
   colnames(data) <- var.names
-  pb <- tkProgressBar("(1/2) Data reading:", "Data reading %",0, 100, 50) # progress bar
-  for(path in paths){ info <- sprintf("%d%% done", round(which(paths==path)/length(paths)*100))
-    setTkProgressBar(pb, round(which(paths==path)/length(paths)*100), sprintf("(1/2) Data reading:", info), info)
+  for(path in paths){ 
     if(file.info(path)$size>0){ # only reading Datum files (i.e., containing ScriptDatum, which is sized > 0 Kb)
       new.data <- read_json(path,simplifyDataFrame=TRUE)
       if(class(new.data)=="data.frame" & !is.null(new.data$Response)){ # only keeping files with Response data
         if(class(new.data$Response)=="data.frame"){ # sometimes the Response column is read as dataframe
           new.data$Response <- as.character(new.data$Response$`$values`)}
         data <- rbind(data,new.data[var.names]) }}} 
-  close(pb) # closing progress bar
   data <- data[!is.na(data$ParticipantId),] # only keeping data with ParticipantId information (i.e., participant identification)
   data <- data[!is.na(data$InputId),] # only keeping data with InputId information (i.e., item identification)
   names(data)[9] <- "os" # $type as OS (android or iOS) # mobile OS information
@@ -453,11 +450,8 @@ readSurveyData <- function(data.path,probe.definition,messages=TRUE){ require(js
     PROTOCOL <- readProbe(paths[1]) # reading the first Probe Definition file
     if(length(list.files(probe.definition))>1){ # reading the following Probe Definition files when > 1
       for(path in paths[2:length(paths)]){ PROTOCOL <- rbind(PROTOCOL,readProbe(path)) }}
-    pb <- tkProgressBar("(2/2) Data processing:", "Data processing %",0, 100, 50) # progress bar
-    for(i in 1:nrow(data)){ info <- sprintf("%d%% done", round(i/nrow(data)*100)) # converting inputID to inputName (item labels)
-    setTkProgressBar(pb, round(i/nrow(data)*100), sprintf("(2/2) Converting InputIDs to InputNames", info), info)
-      for(j in 1:nrow(PROTOCOL)){ if(!is.na(data[i,3]) & data[i,3]==PROTOCOL[j,5]){ data[i,3] <- as.character(PROTOCOL[j,4]) }}}
-    close(pb) }
+    for(i in 1:nrow(data)){ 
+      for(j in 1:nrow(PROTOCOL)){ if(!is.na(data[i,3]) & data[i,3]==PROTOCOL[j,5]){ data[i,3] <- as.character(PROTOCOL[j,4]) }}}}
   
   # 3. Cleaning and unlisting Response data
   # ...............................................................
@@ -478,11 +472,9 @@ readSurveyData <- function(data.path,probe.definition,messages=TRUE){ require(js
   
   # 4. Encoding time information
   # ...............................................................
-  if(messages==TRUE){ cat("\n\nConverting Timestamp variables as POSIXct and creating day.of.week variable...")}
+  if(messages==TRUE){ cat("\n\nConverting Timestamp variables as POSIXct...")}
   timestamps <- c("Timestamp","RunTimestamp","SubmissionTimestamp") # timestamps variables
-  data[,timestamps] <- lapply(data[,timestamps],function(x) as.POSIXct(x,format="%Y-%m-%dT%H:%M:%OS",tz="GMT") +
-                                1*60*60) # adding 1h due to tz differences
-  data$day.of.week <- as.POSIXlt(data$RunTimestamp)$wday # creating indicator for the weekday (Monday=1, Tuestday=2, etc.)
+  data[,timestamps] <- lapply(data[,timestamps],function(x) as.POSIXct(x,format="%Y-%m-%dT%H:%M:%OS",tz="GMT"))
   
   # 5. Cleaning incomplete double responses
   # ...............................................................
@@ -507,12 +499,11 @@ readSurveyData <- function(data.path,probe.definition,messages=TRUE){ require(js
   # ...............................................................
   if(messages==TRUE){ cat("\n\nSorting columns and reshaping (one row per data entry)...")}
   colnames(data)[1] <- "ID" # selecting and sorting columns
-  data <- data[,c("ID","os","ProtocolId","ScriptName","day.of.week","RunTimestamp","SubmissionTimestamp","InputId","Response")]
+  data <- data[,c("ID","os","ProtocolId","ScriptName","RunTimestamp","SubmissionTimestamp","InputId","Response")]
   data <- reshape(data,v.names=c("Response"),timevar=c("InputId"), # reshaping from long (item-by-item) to wide (resp-by-resp)
                   idvar=c("RunTimestamp","SubmissionTimestamp"),direction=c("wide"),sep="")
   colnames(data) <- gsub("Response","",colnames(data)) # removing label "Response" from ResponseId
   data <- data[order(data$ID,data$RunTimestamp),] # sorting rows by participant ID and RunTimestamp
-  data <- plyr::ddply(data,c("ID","day.of.week"),transform,within.day=seq_along(day.of.week)) # row identifier within each day
   data <- data.frame(cbind(data[1:3],data[ncol(data)],data[5:ncol(data)-1])) # final sorting of rows and columns
   data <- data[order(data$ID,data$RunTimestamp),]
   row.names(data) <- as.character(1:nrow(data))
@@ -525,7 +516,7 @@ Reads and merges .JSON data files exported from the [Sensus Mobile app](https://
 
 <br>
 
-Here, we use the `readSurveyData` function (depicted above) to read and preliminary recode the .JSON data files, and to merge them into the `ESM` dataframe.
+Here, we use the `readSurveyData` function (depicted above) to read and preliminary recode the .JSON data files, and to merge them into the `ESM` dataset. In one single case, the JSON string contains (illegal) UTF8 byte-order-mark.
 ```{r }
 # data reading, encoding and saving
 ESM <- readSurveyData(data.path="ESM/data",probe.definition="ESM/probe")
@@ -535,7 +526,7 @@ ESM <- readSurveyData(data.path="ESM/data",probe.definition="ESM/probe")
 
 We also integrate the `ESM` dataset with **four additional responses** that were sent via instant messages (i.e., screenshot of the responses) due to technical problems. These were stored in the `screenshotX4.rda` file.
 ```{r }
-load("ESM/screenshot_surevyMalfunctioning/screenshotX4.rda") # loading additiona responses
+load("ESM/screenshot_surevyMalfunctioning/screenshotX4.RData") # loading additiona responses
 cat("Adding",nrow(screenshotX4),"additional responses sent via instant messages") # N = 4
 ESM <- rbind(ESM,screenshotX4) # adding additional responses to the ESM dataset
 ```
@@ -546,16 +537,75 @@ Finally, we import the **"baseline surveys"** data (i.e., ESM data collected in 
 ```{r }
 # reading raw dataset exported from Google Forms
 baseline <- read.csv("baseline/Baseline.csv",header=TRUE)
-cat("Reading",nrow(baseline),"responses to the baseline questionnaire")
+cat("Reading",nrow(baseline),"responses to the baseline questionnaire from",
+    nlevels(as.factor(baseline$Nome.utente)),"participants")
 ```
 
 <br>
 
 ## 2.2. Data recoding
 
-Then, we recode the `ESM` variables to be used for the analyses.
+Then, we recode the `ESM` and `baseline` variables to be used for the analyses, and we merge the two datasets. 
 
-The following functions are used to optimize the ESM data recoding:
+The following packages and functions are used to optimize the ESM data recoding:
+```{r warning=FALSE,message=FALSE}
+library(lubridate); library(scales)
+```
+
+<br>
+
+<details><summary>`within.day.adjust`</summary>
+<p>
+```{r }
+within.day.adjust <- function(data){
+  
+  # Creating within.day.indicator (dafault = 0)
+  data$within.day <- NA
+  
+  # adjusting within.day based on the scheduled times
+  for(i in 1:nrow(data)){
+    if(strftime(data[i,"RunTimestamp",], # survey 1 between 11:20 (- 10 min error) and 11:40 (up to 12.00 + 10min error)
+                format="%H:%M:%S")>strftime("1970-01-01 11:10:00",
+                                            format="%H:%M:%S") & strftime(data[i,"RunTimestamp",],
+                                                                          format="%H:%M:%S")<strftime("1970-01-01 12:10:00",
+                                                                                                      format="%H:%M:%S")){
+      data[i,"within.day"] = 1 } 
+    else if(strftime(data[i,"RunTimestamp",], # survey 2 between 12:30 (- 10min error) and 12:50 (up to 13:10 + 10min error)
+                     format="%H:%M:%S")>strftime("1970-01-01 12:20:00",
+                                                 format="%H:%M:%S") & strftime(data[i,"RunTimestamp",],
+                                                                               format="%H:%M:%S")<strftime("1970-01-01 13:20:00",
+                                                                                                           format="%H:%M:%S")){
+      data[i,"within.day"] = 2 } 
+    else if(strftime(data[i,"RunTimestamp",], # survey 3 between 13:40 (- 10min error) and 14:00 (up to 14:20 + 10min error)
+                     format="%H:%M:%S")>strftime("1970-01-01 13:30:00",
+                                                 format="%H:%M:%S") & strftime(data[i,"RunTimestamp",],
+                                                                               format="%H:%M:%S")<strftime("1970-01-01 14:30:00",
+                                                                                                           format="%H:%M:%S")){
+      data[i,"within.day"] = 3} 
+    else if(strftime(data[i,"RunTimestamp",], # survey 4 between 14:50 (- 10min error) and 15:10 (up to 15.30 + 10min error)
+                     format="%H:%M:%S")>strftime("1970-01-01 14:40:00",
+                                                 format="%H:%M:%S") & strftime(data[i,"RunTimestamp",],
+                                                                               format="%H:%M:%S")<strftime("1970-01-01 15:40:00",
+                                                                                                           format="%H:%M:%S")){
+      data[i,"within.day"] = 4 } 
+    else if(strftime(data[i,"RunTimestamp",], # survey 5 between 16:00 (- 10min error) and 16:20 (up to 16:40 + 10min error)
+                     format="%H:%M:%S")>strftime("1970-01-01 15:50:00",
+                                                 format="%H:%M:%S") & strftime(data[i,"RunTimestamp",],
+                                                                               format="%H:%M:%S")<strftime("1970-01-01 16:50:00",
+                                                                                                           format="%H:%M:%S")){
+      data[i,"within.day"] = 5 }}
+  
+  # sorting dataset based on ID, day.of.week and within.day
+  data <- data[order(data$ID,data$day.of.week,data$within.day),]
+  data$within.day <- as.factor(data$within.day)
+  rownames(data) <- 1:nrow(data)
+  cat("Creating/Adjusting within.day variable...\n Printing summary of cases:\n")
+  print(summary(data$within.day))
+  return(data) }
+```
+</p></details>
+
+Creates or adjusts the `within.day` variable based on the scheduled temporal windows used in the current study.
 
 <details><summary>`varsRecoding`</summary>
 <p>
@@ -592,12 +642,7 @@ varsRecoding <- function(data){
   colnames(data)[7:ncol(data)] <- c("v1","v2","v3","t1","t2","t3","f1","f2","f3", # renaming columns
                                     "PE","intensity.PE","NE","intensity.NE","smoke","coffe","alcohol","activity","people")
   
-  # Fixing inconsistencies due to Daylight Time (adding 1h between April and 27th October 2019)
-  # data$RunTimestamp <- as.character(data$RunTimestamp)
-  dlt <- c(as.POSIXct("2019-04-01 00:00:00"),as.POSIXct("2019-10-27 00:00:00"))
-  data[data$RunTimestamp>dlt[1] & data$RunTimestamp<dlt[2],"RunTimestamp"] <-
-    data[data$RunTimestamp>dlt[1] & data$RunTimestamp<dlt[2],"RunTimestamp"] + 1*60*60
-  # data$RunTimestamp <- as.POSIXct(data$RunTimestamp)
+  
   
   # final sorting and returning data
   data$sort <- as.numeric(substr(data$ID,4,6))
@@ -661,9 +706,161 @@ colnames(baseline)[2] <- "ID"
 
 <br>
 
-### 2.2.2. Other variables
+### 2.2.2. Timestamps
 
-To be continued...
+Here, we process the **timestamps** (i.e., temporal variables) in both the `EMA` and the `baseline` datasets.
+
+First, we convert the included timestamps **from character to POSIXct** (the R format for dates and times), using the "GMT" time zone (note that data were collected in the CET/CEST region, but GMT is easier to handle).
+```{r }
+# converting temporal variables as POSIXct in the ESM dataset
+ESM[,c("RunTimestamp","SubmissionTimestamp")] <- # no need to specify format since they already are POSIXct
+  lapply(ESM[,c("RunTimestamp","SubmissionTimestamp")],function(x) as.POSIXct(x,tz="GMT"))
+
+# converting baseline variables as POSIXct in the baseline dataset
+colnames(baseline)[which(colnames(baseline)=="Informazioni.cronologiche")] <- "RunTimestamp"
+baseline$RunTimestamp <- as.POSIXct(baseline$RunTimestamp,format="%Y/%m/%d %I:%M:%S %p",tz="GMT")
+```
+
+<br>
+
+Second, we inspect the data for cases of **wrongly encoded timestamps**, considering that data collection started on November 6th, 2018 and ended on November 21th, 2019. Only two cases are detected, whose `RunTimestamp` was recorded with the wrong year.
+```{r }
+# min and max RunTimestamp
+c(min(ESM$RunTimestamp),max(ESM$RunTimestamp)) # ESM: unexpected values < November 2018
+c(min(baseline$RunTimestamp),max(baseline$RunTimestamp)) # baseline: ok
+
+# only two cases with RunTimestamp < November 2018 and no SubmissionTimestamp
+ESM[ESM$RunTimestamp < as.POSIXct("2018-11-06") | ESM$RunTimestamp > as.POSIXct("2019-11-22"),
+    c("ID","RunTimestamp","SubmissionTimestamp")]
+# plotting all timestamps from these two participants: isolated point recorded as it was collected one year before
+grid.arrange(ggplot(ESM[ESM$ID=="HRV046",],aes(RunTimestamp)) + geom_histogram(bins=30) + ggtitle("HRV046"),
+             ggplot(ESM[ESM$ID=="HRV048",],aes(RunTimestamp)) + geom_histogram(bins=30) + ggtitle("HRV048"))
+
+# correcting wrongly encoded RunTimestamps (subtracting 1year) and SubmissionTimestamps (RunTimestamp + 4 min)
+ESM[substr(ESM$RunTimestamp,1,7)=="2018-01","SubmissionTimestamp"] <-
+  ESM[substr(ESM$RunTimestamp,1,7)=="2018-01","RunTimestamp"] + 4*60
+ESM[substr(ESM$RunTimestamp,1,7)=="2018-01",c("RunTimestamp","SubmissionTimestamp")] <-
+  ESM[substr(ESM$RunTimestamp,1,7)=="2018-01",c("RunTimestamp","SubmissionTimestamp")] + 24*60*60*365
+c(min(ESM$RunTimestamp),max(ESM$RunTimestamp)) # sanity check: min and max matching with the data collection period
+
+# 2 further cases with missing SubmissionTimestamp (replacing with RunTimestamp + 4 min)
+ESM[is.na(ESM$SubmissionTimestamp),c("ID","RunTimestamp","SubmissionTimestamp")]
+ESM[is.na(ESM$SubmissionTimestamp),"SubmissionTimestamp"] <- ESM[is.na(ESM$SubmissionTimestamp),"RunTimestamp"] + 4*60
+```
+
+<br>
+
+#### Daylight saving time
+
+Third, we **adjust the temporal coordinates** accounting for **daylight saving time**. Indeed, whereas timestamps were recorded based on the internal clock of participants' mobile phones, which automatically synchronizes based on time changes, such time shifts got lost in the data exporting or the reading, resulting in **one-hour shifts during standard time**. In Italy, during the data collection period, daylight saving time was applied from March 31th to October 27th 2019. Here, we visually inspect the timestamp of the first response for both the `EMA` and the `baseline` datasets.
+```{r fig.width=8,fig.height=3}
+# ESM: computing and plotting time without date
+ESM$daytime <- as.POSIXct(paste(hour(ESM$RunTimestamp),minute(ESM$RunTimestamp)),format="%H %M",tz="GMT")
+ESM$daylight <- "standard"
+ESM[ESM$RunTimestamp > as.POSIXct("2019-04-01") & ESM$RunTimestamp < as.POSIXct("2019-10-27"),"daylight"] <- "daylight"
+ggplot(ESM[!duplicated(ESM$ID),],aes(y=daytime,fill=daylight)) + geom_bar(position=position_dodge(),width=50) +
+  scale_y_datetime(labels = date_format("%H:%M"),date_breaks="60 min") +
+  ggtitle("ESM$RunTimestamp of the first response for each participant")
+
+# baseline: computing and plotting time without date
+baseline$daytime <- as.POSIXct(paste(hour(baseline$RunTimestamp),minute(baseline$RunTimestamp)),format="%H %M",tz="GMT")
+baseline$daylight <- "standard"
+baseline[baseline$RunTimestamp>as.POSIXct("2019-04-01") & baseline$RunTimestamp<as.POSIXct("2019-10-27"),"daylight"]<-"daylight"
+ggplot(baseline[,],aes(y=daytime,fill=daylight)) + geom_bar(position=position_dodge(),width=50) +
+  scale_y_datetime(labels = date_format("%H:%M"),date_breaks="60 min") +
+  ggtitle("baseline$RunTimestamp")
+```
+
+<br>
+
+*Comments:*
+
+- in the `EMA` dataset, the responses recorded during **standard time** were encoded with **one hour behind** the actual time (i.e., the first questionnaire was scheduled at 11:30, whereas most responses were recorded at 10:30), while those recorded during **daylight saving time** showing **one additional hour behind** the actual time (i.e., most responses recorded at 9:30)
+
+- in the `baseline` dataset, the responses recorded during **daylight saving time** were recorded with **one hour behind** the actual time (i.e., baseline questionnaires were administered around 10:30, whereas most responses are around 9:30), while those recorded during **standard time** looks fine
+
+<br>
+
+Here, we adjust the temporal coordinates in both datasets according to the observed time shifts.
+```{r fig.width=8,fig.height=3}
+# adding 1 hour to all ESM timestamps
+ESM[,c("RunTimestamp","SubmissionTimestamp")] <- ESM[,c("RunTimestamp","SubmissionTimestamp")] + 1*60*60
+# adding 1 further hour to ESM timestamps during daylightsaving time
+ESM[ESM$daylight=="daylight",c("RunTimestamp","SubmissionTimestamp")] <- 
+  ESM[ESM$daylight=="daylight",c("RunTimestamp","SubmissionTimestamp")] + 1*60*60
+
+# adding 1 hour to baseline timestamps during daylightsaving time
+baseline[baseline$daylight=="daylight","RunTimestamp"] <- baseline[baseline$daylight=="daylight","RunTimestamp"] + 1*60*60
+
+# ESM: computing and plotting time without date (NOW OK)
+ESM$daytime <- as.POSIXct(paste(hour(ESM$RunTimestamp),minute(ESM$RunTimestamp)),format="%H %M",tz="GMT")
+ggplot(ESM[!duplicated(ESM$ID),],aes(y=daytime,fill=daylight)) + geom_bar(position=position_dodge(),width=50) +
+  scale_y_datetime(labels = date_format("%H:%M"),date_breaks="60 min") +
+  ggtitle("ESM$RunTimestamp of the first response for each participant")
+
+# baseline: computing and plotting time without date (NOW OK)
+baseline$daytime <- as.POSIXct(paste(hour(baseline$RunTimestamp),minute(baseline$RunTimestamp)),format="%H %M",tz="GMT")
+ggplot(baseline[,],aes(y=daytime,fill=daylight)) + geom_bar(position=position_dodge(),width=50) +
+  scale_y_datetime(labels = date_format("%H:%M"),date_breaks="60 min") +
+  ggtitle("baseline$RunTimestamp of the first response for each participant")
+```
+
+<br>
+
+#### day.of.week & within.day
+
+Finally, we create two variables to better organize the temporal structure of the datasets: 
+- `day.of.week` indicating the weekday indicator (i.e., 1 = Tuesday, 2 = Wednesday, 3 = Thursday)
+- `within.day` consisting in a row identifier within each day. For `baseline` responses, we set `within.day = 0`
+```{r }
+# creating indicator for the weekday 
+ESM$day.of.week <- as.POSIXlt(ESM$RunTimestamp)$wday - 1
+baseline$day.of.week <- as.POSIXlt(baseline$RunTimestamp)$wday - 1
+levels(as.factor(c(levels(as.factor(ESM$day.of.week)),levels(as.factor(baseline$day.of.week))))) # sanity check: ok
+
+# creating row identifier within each day
+ESM <- plyr::ddply(ESM,c("ID","day.of.week"),transform,within.day=seq_along(day.of.week))
+baseline$within.day <- 0 # assigning zero to the baseline questionnaires
+
+# showing data structure
+ESM[,c("ID","day.of.week","within.day","RunTimestamp")]
+```
+
+<br>
+
+However, the method used above to encode the `within.day` variable counts the survey as they are received (i.e., first, second, third), and not as they were *scheduled* (i.e., based on the `RunTimestamp` variable), neglecting missing responses. 
+
+Here, we use the `within.day.adjust()` function to recode the `within.day` variable accounting for the following **scheduled temporal windows** and the **expiration time** (i.e., after 20 minutes), and we add **10 extra minutes** before and after the following time limits to account for the variability among devices:
+
+-   *0* = 09:45 \~ 11:00 (*baseline survey*)
+
+-   *1* = 11:20 - 11:40 + 20 min (up to 12:00)
+
+-   *2* = 12:30 - 12:50 + 20 min (up to 13:10)
+
+-   *3* = 13:40 - 14:00 + 20 min (up to 14:20)
+
+-   *4* = 14:50 - 15:10 + 20 min (up to 15:50)
+
+-   *5* = 16:00 - 16:20 + 20 min (up to 16:40)
+
+Here, we apply the function and we correct one case of missing `within.day` (i.e., `RunTimestamp` = 17:40; recorded as `within.day = 5`).
+```{r message=FALSE,warning=FALSE}
+# adjusting within.day based on scheduled time windows
+ESM <- within.day.adjust(ESM)
+
+# correcting 1 missing case (17:40 -> within.day = 5)
+ESM[is.na(ESM$within.day),"within.day"] <- 5
+
+# showing data structure
+ESM[,c("ID","day.of.week","within.day","RunTimestamp")]
+```
+
+<br>
+
+### 2.2.3. Other variables
+
+Qua invece usi le due funzioni recode qui sopra
 
 
 # 3. HRV data
