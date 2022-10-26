@@ -16,9 +16,9 @@ output:
 
 <br>
 
-$^1$Department Psychology, University of Bologna, Italy
+$^1$Department of General Psychology, University of Padova, Italy
 
-$^2$Department of Philosophy, Sociology, Pedagogy and Applied Psychology, University of Padua, Italy
+$^2$Department of Philosophy, Sociology, Pedagogy and Applied Psychology, University of Padova, Italy
 
 $^3$Department of Communication Sciences, Humanities and International Studies, University of Urbino Carlo Bo, Italy
 
@@ -42,9 +42,9 @@ The present document includes the data pre-processing steps used to read the dif
 
 <br>
 
-For each data type, the steps depicted below are implemented to generate the `wide` and `long` datasets to be used for data analysis (see analytical reports [1. Psychometrics and descriptives](https://luca-menghini/vmHRV-selfRegulation/) and [2. Regression models](https://luca-menghini/vmHRV-selfRegulation/)):
+For each data type, the following pre-processing steps are implemented to generate the `wide` and `long` datasets to be used for subsequent data analysis (see analytical reports [1. Psychometrics and descriptives](https://luca-menghini/vmHRV-selfRegulation/) and [2. Regression models](https://luca-menghini/vmHRV-selfRegulation/)):
 
-1. Raw data files **reading & merging** into a single dataset
+1. Raw data files **reading & merging** 
 
 2. Raw data **recoding & processing**
 
@@ -80,10 +80,12 @@ knitr::write_bib(c(.packages(), packages),"packagesProc.bib")
 
 # 1. PrelQS data
 
-Here, the retrospective self-report data collected with the **preliminary questionnaire** are read and encoded in the `PrelQS` dataset, recoded, and filtered based on the inclusion criteria.
+Here, the retrospective self-report data collected with the **preliminary questionnaire** are read and saved in the `PrelQS` dataset, recoded, and filtered based on the inclusion criteria.
 ```{r warning=FALSE,message=FALSE}
 library(ggplot2);library(gridExtra) # loading required packages
 ```
+
+<br>
 
 ## 1.1. Data reading
 
@@ -132,10 +134,9 @@ colnames(PrelQS) <- c("time","ID", # submission timestamp & participants ID
                       paste("BIS11",c(1:15,17:20,22,23,25:30),sep=""), # Barratt Impulsiveness Scale-11 (3 items out)
                       paste("PSI",1:17,sep="")) # Physical Symptoms Inventory*
 
-# keeping only considered variables (demographics, inclusion criteria and BIS-11)
+# keeping only considered variables (demographics and inclusion criteria)
 PrelQS <- PrelQS[,c("ID","time",colnames(PrelQS)[which(colnames(PrelQS)=="age"):which(colnames(PrelQS)=="height")],
-                    colnames(PrelQS)[which(colnames(PrelQS)=="drugs"):which(colnames(PrelQS)=="phone.which")],
-                    paste("BIS11",c(1:15,17:20,22,23,25:30),sep=""))]
+                    colnames(PrelQS)[which(colnames(PrelQS)=="drugs"):which(colnames(PrelQS)=="phone.which")])]
 
 # recoding variables
 PrelQS[,c("ID","sex")] <- lapply(PrelQS[,c("ID","sex")],as.factor) # ID and sex as factor
@@ -143,14 +144,9 @@ PrelQS$time <- as.POSIXct(PrelQS$time,format="%Y/%m/%d %I:%M:%S %p") # time as P
 PrelQS[PrelQS$height<3,"height"] <- PrelQS[PrelQS$height<3,"height"]*100 # correcting heights reported in meters
 PrelQS <- cbind(PrelQS[,1:4],BMI=PrelQS$weight/(PrelQS$height/100)^2, # computing BMI, removing weight & height
                 PrelQS[,7:ncol(PrelQS)])
-for(i in which(colnames(PrelQS)%in%c("drugs","cvDysf","otherDysf","phone"))){ PrelQS[,i] <- gsub("SÃ¬","Yes",PrelQS[,i]) }
+for(i in which(colnames(PrelQS)%in%c("drugs","cvDysf","otherDysf","phone"))){ PrelQS[,i] <- gsub("Sì","Yes",PrelQS[,i]) }
 PrelQS[,which(colnames(PrelQS)=="drugs"):which(colnames(PrelQS)=="phone.which")] <- # inclusion criteria as factors
   lapply(PrelQS[,which(colnames(PrelQS)=="drugs"):which(colnames(PrelQS)=="phone.which")],as.factor)
-for(i in which(substr(colnames(PrelQS),1,5)=="BIS11")){ # BIS-11 item scores from character to numeric
-  PrelQS[,i] <- as.numeric(gsub("Mai/raramente","1",
-                                gsub("Talvolta","2",
-                                     gsub("Spesso","3",
-                                          gsub("Quasi sempre/sempre","4",PrelQS[,i]))))) }
 
 # sorting dataset by ID and time
 PrelQS <- PrelQS[order(PrelQS$ID,PrelQS$time),]
@@ -169,14 +165,16 @@ str(PrelQS)
 
 ## 1.3. Cleaning & filtering
 
-The original No. of cases in the `PrelQS` dataset is 164. Here, we clean and filter the data based on the inclusion criteria.
+Here, we inspect the original number of cases in the `PrelQS` dataset. The questionnaire was completed by a total of 164 respondents, of which a subsample was invited to participate in the daily protocol. Here, we clean and filter the data based on the inclusion criteria, and considering the actual sample of 105 participants.
 ```{r }
 cat("Original No. of responses to the PrelQS =",nrow(PrelQS))
 ```
 
+<br>
+
 ### 1.3.1. Data cleaning
 
-First, we inspect and remove cases of **double responses** (N = 3 couples of responses with the same `ID` value). In these cases, only the first response is included.
+First, we inspect and remove cases of **double responses** (N = 3 couples of responses with the same `ID` value). In these cases, only the first response (i.e., the one with the earilest timestamp) is included.
 ```{r }
 # detecting double responses
 cat(nrow(PrelQS[duplicated(PrelQS$ID),]),"cases of double responses (same ID)")
@@ -201,7 +199,7 @@ Second, we take a look at the variables concerning the **inclusion criteria** of
 
 <br>
 
-Above we marked the cases of participants not meeting the inclusion criteria, as well as other cases of participants that were not invited to take part in the EMA protocol, with the "***OUT***" label in the `ID` variable, using the `prel.qs_IDrecode()` function.
+In section 1.2.1., we recoded participants identification codes and we marked the cases of participants not meeting the inclusion criteria, as well as other cases of participants that were not invited to take part in the EMA protocol for other reasons, using the "***OUT***" label in the `ID` variable. From a total of 161 responses to the preliminary questionnaire, we can see that 105 participants (65%) were actually invited to participate in the daily protocol.
 ```{r }
 cat("Total No. of responses to the PrelQS =",nrow(PrelQS),"\n -",
     nrow(PrelQS[substr(PrelQS$ID,1,3)!="OUT",]),"invited\n -",nrow(PrelQS[substr(PrelQS$ID,1,3)=="OUT",]),"not invited")
@@ -209,7 +207,7 @@ cat("Total No. of responses to the PrelQS =",nrow(PrelQS),"\n -",
 
 <br>
 
-From 161 responses to the preliminary questionnaire, a total of **56 participants did not take part to the EMA protocol**. Here, we better evaluate the reasons for their exclusion.
+Here, we better evaluate the reasons for the exclusion of the remaining 56 participants.
 
 #### SUMMARY
 
@@ -221,39 +219,27 @@ From 161 responses to the preliminary questionnaire, a total of **56 participant
 
 <br>
 
-Here, we compare the demographic and retrospective variables between included and excluded participants.
-```{r fig.width=10,fig.height=4}
+Here, we compare the demographic and retrospective variables between included and excluded participants. Most participants that were not invited to take part in the daily protocol were **female** (probably due to the higher No. of female compared to undergraduates participating to psychological studies, and our goal of having a balanced sample), with no marked differences in terms of `sex`, `age`, `BMI`
+```{r fig.width=10,fig.height=2}
 # preparing data
 PrelQS$excl <- "IN" # creating excl variable (factor)
 PrelQS[substr(PrelQS$ID,1,3)=="OUT","excl"] <- "OUT"
 PrelQS$excl <- as.factor(PrelQS$excl)
-bis <- PrelQS # computing total score at the BIS-11
-for(i in paste("BIS11",c(1,7,8,9,10,12,13,15,20,29,30),sep="")) bis[,i] <- 5 - bis[,i]
-PrelQS$BIS.tot <- apply(bis[,which(colnames(bis)=="BIS111"):which(colnames(bis)=="BIS1130")],1,sum)
 
 # plotting
 grid.arrange(ggplot(PrelQS,aes(x=excl,fill=sex)) + geom_bar(),
              ggplot(PrelQS,aes(x=excl,y=age,fill=excl)) + geom_violin(),
-             ggplot(PrelQS,aes(x=excl,y=BMI,fill=excl)) + geom_violin(),
-             ggplot(PrelQS,aes(y=BIS.tot,x=excl,fill=excl)) + geom_violin()) 
+             ggplot(PrelQS,aes(x=excl,y=BMI,fill=excl)) + geom_violin(),nrow=1) 
 
-# removing excl and BIS.tot
-PrelQS$excl <- PrelQS$BIS.tot <- NULL
+# removing excl
+PrelQS$excl <- NULL
 ```
-
-<br>
-
-*Comments*:
-
-- most participants that were not invited to take part in the EMA protocol were **female** (probably due to the higher No. of female compared to undergraduates participating to psychological studies, and our goal of having a balanced sample)
-
-- in contrast, the two groups do not differ in terms of `sex`, `age`, `BMI`, and total score at the BIS-11 (only showing a slightly lower central tendency in the excluded participants compared to those invited to participate)
 
 <br>
 
 #### DYSFUNCTIONS (7)
 
-Here, we show the No. of participants not invited to take part in the EMA protocol due to **dysfunctions** affecting either the *cardiovascular* or the *nervous* system.
+Here, we show the No. of participants not invited to take part in the EMA protocol due to **dysfunctions** affecting either the *cardiovascular* or the *nervous* system. We can see that 4 females were excluded since they reported suffering from a **cardiovascular dysfunction** including premature heart beat (`027`, `055`) and problems with the mitral valve (`033`, `053`). 3 further females (4.61%) were excluded since they reported suffering from other dysfunctions affecting the **nervous system**, including thalassemia (`009`), anxiety (`020`), Crohn’s disease (`049`).
 ```{r }
 # inclusion criteria variables
 ic <- colnames(PrelQS)[which(colnames(PrelQS)=="drugs"):which(colnames(PrelQS)=="phone.which")]
@@ -267,17 +253,9 @@ PrelQS[substr(PrelQS$ID,1,3)=="OUT" & PrelQS$otherDysf=="Yes", c("ID","sex",ic)]
 
 <br>
 
-*Comments*:
-
-- 4 females were excluded since they reported suffering from a **cardiovascular dysfunction** including premature heart beat (`027`, `055`) and problems with the mitral valve (`033`, `053`)
-
-- 3 females (4.61%) were excluded since they reported suffering from other dysfunctions affecting the **nervous system**, including thalassemia (`009`), anxiety (`020`), Crohn’s disease (`049`)
-
-<br>
-
 #### MEDICATIONS (3)
 
-Here, we show the No. of participants not invited to take part in the EMA protocol due to **medications** affecting either the *cardiovascular* or the *nervous* system.
+Here, we show the No. of participants not invited to take part in the EMA protocol due to **medications** affecting either the *cardiovascular* or the *nervous* system. 3 participants (`017`, F; `029`, M; `033`, M) were excluded since they took **antidepressants** (Laroxyl, Venlafaxina, Remeron), one of which also suffered from a cardiovascular dysfunction.
 ```{r }
 # cardiovascular dysfunctions
 PrelQS[substr(PrelQS$ID,1,3)=="OUT" & PrelQS$drugs=="Yes", c("ID","sex",ic)]
@@ -285,15 +263,9 @@ PrelQS[substr(PrelQS$ID,1,3)=="OUT" & PrelQS$drugs=="Yes", c("ID","sex",ic)]
 
 <br>
 
-*Comments*:
-
-- 3 participants (`017`, F; `029`, M; `033`, M) were excluded since they took **antidepressants** (Laroxyl, Venlafaxina, Remeron), one of which also suffered from a cardiovascular dysfunction
-
-<br>
-
 #### SMARTPHONE (1)
 
-Here, we show the No. of participants not invited to take part in the EMA protocol due to **medications** affecting either the *cardiovascular* or the *nervous* system.
+Here, we show the No. of participants not invited to take part in the EMA protocol due to **medications** affecting either the *cardiovascular* or the *nervous* system. Only 1 female (`051`) was excluded since she reported to not own a personal smarpthone.
 ```{r }
 # cardiovascular dysfunctions
 PrelQS[substr(PrelQS$ID,1,3)=="OUT" & PrelQS$phone=="No", c("ID","sex",ic)]
@@ -301,15 +273,9 @@ PrelQS[substr(PrelQS$ID,1,3)=="OUT" & PrelQS$phone=="No", c("ID","sex",ic)]
 
 <br>
 
-*Comments*:
-
-- 1 female (`051`) was excluded since she reported to not own a personal smarpthone
-
-<br>
-
 #### OTHER REASONS (46)
 
-The further participants marked with `"OUT"` were not invited due to other reasons (e.g., calendar incompatibility, end of the study).
+The further 46 participants marked with `"OUT"` were not invited due to other reasons (e.g., calendar incompatibility, end of the study).
 ```{r }
 PrelQS[substr(PrelQS$ID,1,3)=="OUT" & !(PrelQS$ID%in%c("OUT033","OUT053","OUT027","OUT055","OUT009","OUT020",
                                                        "OUT049","OUT017","OUT029","OUT051")),]
@@ -319,7 +285,16 @@ PrelQS[substr(PrelQS$ID,1,3)=="OUT" & !(PrelQS$ID%in%c("OUT033","OUT053","OUT027
 
 ### 1.3.3. Flagged participants
 
-Some of the **included participants reported suffering from dysfunctions or taking medications** that were considered irrelevant for the current study. Here, we better inspect those conditions, and we **flag** these participants with `dysfun = 1` (N = 9) and `drugs = 1` (N = 13) to be accounted in the data analysis.
+Some of the **included participants reported suffering from dysfunctions or taking medications** that were considered irrelevant for the current study. Here, we better inspect those conditions (N = 9 and 13, respectively):
+
+- **6** included participants (4 females, 2 males) reported suffering from **cardiovascular dysfunctions**: arrhythmia, tachycardia episodes, and bicuspid aortic valve
+
+- **3** included participants (2 females, 1 male) reported suffering from **other dysfunctions**: hypothyroidism, asthma, and allergy
+
+- **6** females reported taking **hormonal contraceptives**
+
+- **8** participants took other medications including antihistamines (2 males, 5 females), and thyroid hormones (EUTIROX, 1 female)
+
 ```{r }
 # cardiovascular dysfunctions
 PrelQS[substr(PrelQS$ID,1,3)=="HRV" & PrelQS$cvDysf=="Yes", c("ID","sex",ic)]
@@ -330,18 +305,6 @@ PrelQS[substr(PrelQS$ID,1,3)=="HRV" & PrelQS$otherDysf=="Yes", c("ID","sex",ic)]
 # drugs
 PrelQS[substr(PrelQS$ID,1,3)=="HRV" & PrelQS$drugs=="Yes", c("ID","sex",ic)]
 ```
-
-<br>
-
-*Comments:*
-
-- **6** included participants (4 females, 2 males) reported suffering from **cardiovascular dysfunctions**: arrhythmia, tachycardia episodes, and bicuspid aortic valve
-
-- **3** included participants (2 females, 1 male) reported suffering from **other dysfunctions**: hypothyroidism, asthma, and allergy
-
-- **6** females reported taking **hormonal contraceptives**
-
-- **8** participants took other medications including antihistamines (2 males, 5 females), and thyroid hormones (EUTIROX, 1 female)
 
 <br>
 
@@ -387,15 +350,15 @@ cat(nrow(PrelQS[substr(PrelQS$ID,1,3)=="HRV",]),"included participants out of",
 
 # 2. ESM data
 
-Here, the raw data collected with the **experience sampling method (ESM)** are read and encoded in the `ESM` dataset, recoded, and filtered based on response rate and inclusion criteria.
+Here, the raw data collected with the **experience sampling method (ESM)** are read and saved in the `ESM` dataset, recoded, and filtered based on response rate and inclusion criteria.
 
 ## 2.1. Data reading
 
 First, we read the JSON data files exported from the [Sensus Mobile app](https://predictive-technology-laboratory.github.io/sensus/) ([Xiong et al., 2016](#ref)). 
 
-Specifically, the [Protocols created with Sensus](https://github.com/Luca-Menghini/vmHRV-selfRegulation/tree/main/1ESMmeasures/sensus/protocols) were configured to store the recorded .JSON data files in our private [AWS S3](https://aws.amazon.com/s3/) bucket, from which they were downloaded and stored in the `ESM/data` folder. From the Sensus app, we also exported the [Probe Definition files](https://github.com/Luca-Menghini/vmHRV-selfRegulation/tree/main/1ESMmeasures/sensus/protocols), which we use to replace the *input IDs* (i.e., by default, each item is associated with an alphanumeic code) with the corresponding *input names* (i.e., the item labels that we set in the protocols). These files were saved in the `ESM/probe` folder.
+Specifically, the [Protocols created with Sensus](https://github.com/Luca-Menghini/vmHRV-selfRegulation/tree/main/1ESMmeasures/sensus/protocols) were configured to store the recorded .JSON data files in our private [AWS S3](https://aws.amazon.com/s3/) bucket, from which they were downloaded and stored in the `ESM/data` folder. From the Sensus app, we also exported the Probe Definition files, which we use to replace the *input IDs* (i.e., by default, each item is associated with an alphanumeic code) with the corresponding *input names* (i.e., the item labels that we set in the protocols). These files were saved in the `ESM/probe` folder.
 
-The following function is used to optimize the ESM data reading:
+The `readSurveyData` function is used to optimize the ESM data reading.
 
 <details><summary>`readSurveyData`</summary>
 <p>
@@ -512,8 +475,6 @@ readSurveyData <- function(data.path,probe.definition,messages=TRUE){ require(js
 ```
 </p></details>
 
-Reads and merges .JSON data files exported from the [Sensus Mobile app](https://predictive-technology-laboratory.github.io/sensus/) ([Xiong et al., 2016](#ref)).
-
 <br>
 
 Here, we use the `readSurveyData` function (depicted above) to read and preliminary recode the .JSON data files, and to merge them into the `ESM` dataset. In one single case, the JSON string contains (illegal) UTF8 byte-order-mark.
@@ -524,7 +485,7 @@ ESM <- readSurveyData(data.path="ESM/data",probe.definition="ESM/probe")
 
 <br>
 
-We also integrate the `ESM` dataset with **four additional responses** that were sent via instant messages (i.e., screenshot of the responses) due to technical problems. These were stored in the `screenshotX4.rda` file.
+We also integrate the `ESM` dataset with **4 additional responses** that were sent via instant messages (i.e., screenshot of the responses) due to technical problems. These were stored in the `screenshotX4.rda` file.
 ```{r }
 load("ESM/screenshot_surevyMalfunctioning/screenshotX4.RData") # loading additiona responses
 cat("Adding",nrow(screenshotX4),"additional responses sent via instant messages") # N = 4
@@ -543,6 +504,8 @@ cat("Reading",nrow(baseline),"responses to the baseline questionnaire from",
 
 <br>
 
+ARRIVATO QUI
+
 ## 2.2. Data recoding
 
 Then, we recode the `ESM` and `baseline` variables to be used for the analyses, and we merge the two datasets. 
@@ -551,8 +514,6 @@ The following packages and functions are used to optimize the ESM data recoding:
 ```{r warning=FALSE,message=FALSE}
 library(lubridate); library(scales)
 ```
-
-<br>
 
 <details><summary>`within.day.adjust`</summary>
 <p>
