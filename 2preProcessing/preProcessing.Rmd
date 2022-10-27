@@ -66,7 +66,7 @@ Sys.setenv(tz="GMT")
 The following R packages are used in this document (see [References section](#ref)):
 ```{r }
 # required packages
-packages <- c("ggplot2","gridExtra","jsonlite","plyr","lubridate")
+packages <- c("ggplot2","gridExtra","jsonlite","plyr","lubridate","Rmisc")
 
 # generate packages references
 knitr::write_bib(c(.packages(), packages),"packagesProc.bib")
@@ -121,7 +121,7 @@ Second, we rename the other variables, remove those not considered for the prese
 # renaming all variables
 colnames(PrelQS) <- c("time","ID", # submission timestamp & participants ID
                       "consent", # consent to participate (all 'yes')
-                      "age","sex","weight","height","itaMT", # demographics
+                      "age","gender","weight","height","itaMT", # demographics
                       
                       # inclusion criteria
                       "drugs","drugs.which","cvDysf","cvDysf.which",
@@ -139,7 +139,7 @@ PrelQS <- PrelQS[,c("ID","time",colnames(PrelQS)[which(colnames(PrelQS)=="age"):
                     colnames(PrelQS)[which(colnames(PrelQS)=="drugs"):which(colnames(PrelQS)=="phone.which")])]
 
 # recoding variables
-PrelQS[,c("ID","sex")] <- lapply(PrelQS[,c("ID","sex")],as.factor) # ID and sex as factor
+PrelQS[,c("ID","gender")] <- lapply(PrelQS[,c("ID","gender")],as.factor) # ID and gender as factor
 PrelQS$time <- as.POSIXct(PrelQS$time,format="%Y/%m/%d %I:%M:%S %p") # time as POSIXct
 PrelQS[PrelQS$height<3,"height"] <- PrelQS[PrelQS$height<3,"height"]*100 # correcting heights reported in meters
 PrelQS <- cbind(PrelQS[,1:4],BMI=PrelQS$weight/(PrelQS$height/100)^2, # computing BMI, removing weight & height
@@ -165,14 +165,16 @@ str(PrelQS)
 
 ## 1.3. Cleaning & filtering
 
-Here, we inspect the original number of cases in the `PrelQS` dataset. The questionnaire was completed by a total of 164 respondents, of which a subsample was invited to participate in the daily protocol. Here, we clean and filter the data based on the inclusion criteria, and considering the actual sample of 105 participants.
+Here, we clean and filter the data based on the inclusion criteria and by focusing on those participants that were actually invited to participate to the daily protocol (N = 105).
+
+First, we inspect the original number of cases in the `PrelQS` dataset. The questionnaire was completed by a total of 164 respondents, of which a subsample was invited to participate in the daily protocol. 
 ```{r }
 cat("Original No. of responses to the PrelQS =",nrow(PrelQS))
 ```
 
 <br>
 
-### 1.3.1. Data cleaning
+### 1.3.1. Double responses
 
 First, we inspect and remove cases of **double responses** (N = 3 couples of responses with the same `ID` value). In these cases, only the first response (i.e., the one with the earilest timestamp) is included.
 ```{r }
@@ -219,7 +221,7 @@ Here, we better evaluate the reasons for the exclusion of the remaining 56 parti
 
 <br>
 
-Here, we compare the demographic and retrospective variables between included and excluded participants. Most participants that were not invited to take part in the daily protocol were **female** (probably due to the higher No. of female compared to undergraduates participating to psychological studies, and our goal of having a balanced sample), with no marked differences in terms of `sex`, `age`, `BMI`
+Here, we compare the demographic and retrospective variables between included and excluded participants. Most participants that were not invited to take part in the daily protocol were **female** (probably due to the higher No. of female compared to undergraduates participating to psychological studies, and our goal of having a balanced sample), with no marked differences in terms of `gender`, `age`, `BMI`
 ```{r fig.width=10,fig.height=2}
 # preparing data
 PrelQS$excl <- "IN" # creating excl variable (factor)
@@ -227,7 +229,7 @@ PrelQS[substr(PrelQS$ID,1,3)=="OUT","excl"] <- "OUT"
 PrelQS$excl <- as.factor(PrelQS$excl)
 
 # plotting
-grid.arrange(ggplot(PrelQS,aes(x=excl,fill=sex)) + geom_bar(),
+grid.arrange(ggplot(PrelQS,aes(x=excl,fill=gender)) + geom_bar(),
              ggplot(PrelQS,aes(x=excl,y=age,fill=excl)) + geom_violin(),
              ggplot(PrelQS,aes(x=excl,y=BMI,fill=excl)) + geom_violin(),nrow=1) 
 
@@ -245,10 +247,10 @@ Here, we show the No. of participants not invited to take part in the EMA protoc
 ic <- colnames(PrelQS)[which(colnames(PrelQS)=="drugs"):which(colnames(PrelQS)=="phone.which")]
 
 # cardiovascular dysfunctions
-PrelQS[substr(PrelQS$ID,1,3)=="OUT" & PrelQS$cvDysf=="Yes", c("ID","sex",ic)]
+PrelQS[substr(PrelQS$ID,1,3)=="OUT" & PrelQS$cvDysf=="Yes", c("ID","gender",ic)]
 
 # other dysfunctions
-PrelQS[substr(PrelQS$ID,1,3)=="OUT" & PrelQS$otherDysf=="Yes", c("ID","sex",ic)]
+PrelQS[substr(PrelQS$ID,1,3)=="OUT" & PrelQS$otherDysf=="Yes", c("ID","gender",ic)]
 ```
 
 <br>
@@ -258,7 +260,7 @@ PrelQS[substr(PrelQS$ID,1,3)=="OUT" & PrelQS$otherDysf=="Yes", c("ID","sex",ic)]
 Here, we show the No. of participants not invited to take part in the EMA protocol due to **medications** affecting either the *cardiovascular* or the *nervous* system. 3 participants (`017`, F; `029`, M; `033`, M) were excluded since they took **antidepressants** (Laroxyl, Venlafaxina, Remeron), one of which also suffered from a cardiovascular dysfunction.
 ```{r }
 # cardiovascular dysfunctions
-PrelQS[substr(PrelQS$ID,1,3)=="OUT" & PrelQS$drugs=="Yes", c("ID","sex",ic)]
+PrelQS[substr(PrelQS$ID,1,3)=="OUT" & PrelQS$drugs=="Yes", c("ID","gender",ic)]
 ```
 
 <br>
@@ -268,22 +270,34 @@ PrelQS[substr(PrelQS$ID,1,3)=="OUT" & PrelQS$drugs=="Yes", c("ID","sex",ic)]
 Here, we show the No. of participants not invited to take part in the EMA protocol due to **medications** affecting either the *cardiovascular* or the *nervous* system. Only 1 female (`051`) was excluded since she reported to not own a personal smarpthone.
 ```{r }
 # cardiovascular dysfunctions
-PrelQS[substr(PrelQS$ID,1,3)=="OUT" & PrelQS$phone=="No", c("ID","sex",ic)]
+PrelQS[substr(PrelQS$ID,1,3)=="OUT" & PrelQS$phone=="No", c("ID","gender",ic)]
 ```
 
 <br>
 
 #### OTHER REASONS (46)
 
-The further 46 participants marked with `"OUT"` were not invited due to other reasons (e.g., calendar incompatibility, end of the study).
+The further 46 participants marked with `"OUT"` were not invited due to other reasons (e.g., calendar incompatibility, end of the study). Here, we inspect the data of such participants and we **remove them from the dataset**. We can see that these participants were mainly females (probably due to the higher No. of female compared to undergraduates participating to psychological studies, and our goal of having a balanced sample), with no other peculiarities compared to the rest of the sample.
 ```{r }
+# showing participants that were not invited for other reasons
 PrelQS[substr(PrelQS$ID,1,3)=="OUT" & !(PrelQS$ID%in%c("OUT033","OUT053","OUT027","OUT055","OUT009","OUT020",
                                                        "OUT049","OUT017","OUT029","OUT051")),]
 ```
 
 <br>
 
-### 1.3.3. Flagged participants
+### 1.3.3. Data filtering
+
+Here, we remove all participants marked as "OUT" from the `Prelqs` dataset.
+```{r }
+new <- PrelQS[!substr(PrelQS$ID,1,3)=="OUT",]
+cat("Filtered",nrow(PrelQS)-nrow(new),"cases; new number of cases =",nrow(new))
+PrelQS <- new
+```
+
+<br>
+
+### 1.3.4. Flagged participants
 
 Some of the **included participants reported suffering from dysfunctions or taking medications** that were considered irrelevant for the current study. Here, we better inspect those conditions (N = 9 and 13, respectively):
 
@@ -297,18 +311,18 @@ Some of the **included participants reported suffering from dysfunctions or taki
 
 ```{r }
 # cardiovascular dysfunctions
-PrelQS[substr(PrelQS$ID,1,3)=="HRV" & PrelQS$cvDysf=="Yes", c("ID","sex",ic)]
+PrelQS[PrelQS$cvDysf=="Yes", c("ID","gender",ic)]
 
 # other dysfunctions
-PrelQS[substr(PrelQS$ID,1,3)=="HRV" & PrelQS$otherDysf=="Yes", c("ID","sex",ic)]
+PrelQS[PrelQS$otherDysf=="Yes", c("ID","gender",ic)]
 
 # drugs
-PrelQS[substr(PrelQS$ID,1,3)=="HRV" & PrelQS$drugs=="Yes", c("ID","sex",ic)]
+PrelQS[PrelQS$drugs=="Yes", c("ID","gender",ic)]
 ```
 
 <br>
 
-Although we considered such conditions as irrelevant for the present study, some of them (especially cardiovascular and other dysfunctions) might play a role. Thus, we create the `dysfun` variable to flag cases of **included participants with cardiovascular and/or other dysfunctions**.
+Although we considered such conditions as potentially irrelevant for the present study, some of them (especially cardiovascular and other dysfunctions) might play a role. Thus, we create the `dysfun` variable to flag cases of **included participants with cardiovascular and/or other dysfunctions**.
 ```{r }
 # recoding dysfun variable (accounting for both cardiovascular and other dysfunctions)
 PrelQS$dysfun <- 0
@@ -327,16 +341,15 @@ summary(PrelQS[substr(PrelQS$ID,1,3)=="HRV",c("dysfun","drugs")])
 
 <br>
 
-### 1.3.4. Further excluded
+### 1.3.5. Further excluded
 
 **8 further participants were excluded** due to dropping-out during the EMA protocol (`009`, F; `059`, M), poor quality of physiological data (`015`, F; `046`, F; `066`, M) or technical problems with the mobile app (`011`, M; `027`, M; `029`, M). Here, we mark these participants as 'OUT'. 
 ```{r }
 # marking 8 excluded participants as "OUT"
 memory <- PrelQS
 PrelQS$ID <- as.character(PrelQS$ID)
-PrelQS[PrelQS$ID=="HRV009" | PrelQS$ID=="HRV011" | PrelQS$ID=="HRV015" | PrelQS$ID=="HRV027" |
-         PrelQS$ID=="HRV029" | PrelQS$ID=="HRV046" | PrelQS$ID=="HRV059" |
-         PrelQS$ID=="HRV066","ID"] <- paste("OUT0",57:(56+8),sep="") # marking excluded participants as "OUTXXX"
+excl <- c("HRV009","HRV011","HRV015","HRV027","HRV029","HRV046","HRV059","HRV066")
+PrelQS[PrelQS$ID%in%excl,"ID"] <- gsub("HRV","OUT",PrelQS[PrelQS$ID%in%excl,"ID"]) # marking excluded participants as "OUTXXX"
 PrelQS$ID <- as.factor(PrelQS$ID)
 PrelQS <- PrelQS[order(PrelQS$ID),]
 
@@ -504,15 +517,13 @@ cat("Reading",nrow(baseline),"responses to the baseline questionnaire from",
 
 <br>
 
-ARRIVATO QUI
-
 ## 2.2. Data recoding
 
 Then, we recode the `ESM` and `baseline` variables to be used for the analyses, and we merge the two datasets. 
 
 The following packages and functions are used to optimize the ESM data recoding:
 ```{r warning=FALSE,message=FALSE}
-library(lubridate); library(scales)
+library(lubridate); library(scales); library(plyr)
 ```
 
 <details><summary>`within.day.adjust`</summary>
@@ -573,7 +584,14 @@ Creates or adjusts the `within.day` variable based on the scheduled temporal win
 ```{r }
 varsRecoding <- function(data){
 
+  # ID and os as factors
+  data[,c("ID","os")] <- lapply(data[,c("ID","os")],as.factor)
+  
   # Recoding item scores and reversed items
+  ratings <- colnames(data)[c(which(colnames(data)=="t3.nervoso.tranquillo"),  # recoding ratings as integer
+                              which(colnames(data)=="e3.affaticato.fresco"):which(colnames(data)=="intensity.NE"),
+                              which(colnames(data)=="v1.male.bene"):which(colnames(data)=="v3.positivo.negativo"))]
+  data[,ratings] <- lapply(data[,ratings],as.integer)
   data$v3.positivo.negativo <- 8 - data$v3.positivo.negativo # HEDONIC TONE = positive
   colnames(data)[which(colnames(data)=="v2.soddisfatto.insoddisfatto")] <- "v2.insoddisfatto.soddisfatto" # changing wrong label
   data$t1.rilassato.teso <- 8 - data$t1.rilassato.teso # CALMNESS = positive
@@ -582,28 +600,27 @@ varsRecoding <- function(data){
   # Recoding confounders
   data$alcohol <- as.factor(gsub("No","0",gsub("Sì","1",data$alcohol))) # alcohol (from yes/no --> 1/0)
   data$Activity <- as.factor(gsub("Leggerasedutiocoricatiperlamaggiorpartedeltempo","0", # physical activity level (0 = seated)
-                                  gsub("Moderatacamminata,farelescale","0", # (1 = moderate)
+                                  gsub("Moderatacamminata,farelescale","1", # (1 = moderate)
                                        gsub("Intensaattivitàsportiva,palestra,corsaodiverserampediscale","2", # (2 = vigorous)
                                             data$Activity))))
   data$People.rec <- as.factor(gsub("No,erodasola","0",gsub("No,erodasolo","0", # (0=alone)
-                                gsub("Sì,manonsonostatadisturbata","1",gsub("Sì,manonsonostatodisturbato","1", # (1=not interact)
+                                gsub("Sì,manonsonostatadisturbata","1",gsub("Sì,manonsonostatadisturbato","1", # (1=not interact)
                                      gsub("Sì,esonostataunpo'disturbata","2",gsub("Sì,esonostataunpo'disturbato","2", # (2=disturb)
                                           gsub("Sì,esonostatainterrotta","3",gsub("Sì,esonostatainterrotto","3", #(3 = interrupted)
                                                data$People.rec)))))))))
-  data$ProtocolId <- as.factor(gsub("ProtocolStudent","",data$ProtocolId)) # from protocol ID to sex
-  colnames(data)[which(colnames(data)=="ProtocolId")] <- "sex"
+  data$ProtocolId <- as.factor(gsub("ProtocolStudent","",data$ProtocolId)) # from protocol ID to gender
+  colnames(data)[which(colnames(data)=="ProtocolId")] <- "gender"
+  data[,c("smoke","coffe")] <- lapply(data[,c("smoke","coffe")],as.factor) # remaining confounders as factor 0/1
   
   # Sorting and renaming columns
-  data <- data[,c("ID","os","sex","day.of.week","within.day","RunTimestamp", # response information
+  data <- data[,c("ID","os","gender","day.of.week","within.day","RunTimestamp", # response information
                   "v1.male.bene","v2.insoddisfatto.soddisfatto","v3.positivo.negativo", # hedonic tone
                   "t1.rilassato.teso","t2.agitato.calmo","t3.nervoso.tranquillo", # calmness
                   "e1.stanco.sveglio","e2.pieno.privodenergia","e3.affaticato.fresco", # energetic arousal
-                  "PE","PE.int","NE","NE.int", # emotional events
+                  "PE","intensity.PE","NE","intensity.PE", # emotional events
                   "smoke","coffe","alcohol","Activity","People.rec")] # confounders
   colnames(data)[7:ncol(data)] <- c("v1","v2","v3","t1","t2","t3","f1","f2","f3", # renaming columns
-                                    "PE","intensity.PE","NE","intensity.NE","smoke","coffe","alcohol","activity","people")
-  
-  
+                                    "PE","PE.int","NE","NE.int","smoke","coffe","alcohol","activity","people")
   
   # final sorting and returning data
   data$sort <- as.numeric(substr(data$ID,4,6))
@@ -615,40 +632,38 @@ varsRecoding <- function(data){
 
 Recodes slider and multiple-choice responses collected with the Sensus protocols used in the study, sort the columns and fix problems due to Daylight Time changes.
 
-<details><summary>`blsRecoding`</summary>
+<details><summary>`bslRecoding`</summary>
 <p>
 ```{r }
-blsRecoding <- function(baseline){ require(textclean); require(mgsub)
+bslRecoding <- function(data){ 
   
   # renaming and sorting columns
-  colnames(baseline) <- c("RunTimestamp","ID","v1","t1","f1","v2","t2","f2","v3","t3","f3",
-                          "PE","PE.int","NE","NE.int","Sleep1","Sleep2","Sleep3","daybefore.ex","drugs","drugs.which")
-  baseline <- baseline[,c(2,1,3,6,9,4,7,10,5,8,11:21)]
+  colnames(data) <- c("RunTimestamp","ID","v1","t1","f1","v2","t2","f2","v3","t3","f3",
+                          "PE","PE.int","NE","NE.int","Sleep1","Sleep2","Sleep3","daybefore.ex","drugs","drugs.which","day.of.week","within.day")
+  data <- data[,c("ID","day.of.week","within.day","RunTimestamp",
+                  "v1","v2","v3","t1","t2","t3","f1","f2","f3", # renaming columns
+                  "PE","PE.int","NE","NE.int","Sleep1","Sleep2","Sleep3","daybefore.ex","drugs","drugs.which")]
 
+  # ID as factor
+  data$ID <- as.factor(data$ID)
+  
   # recoding item scores
-  baseline$v2 <- 8 - baseline$v2 # hedonic tone = positive
-  baseline$v3 <- 8 - baseline$v3
-  baseline$t2 <- 8 - baseline$t2 # t.arousal = negative
-  baseline$t3 <- 8 - baseline$t3
-  baseline$f2 <- 8 - baseline$f2 # e.arousal = positive
-  baseline$Sleep2 <- 8 - baseline$Sleep2 # sleep quality = positive
-  baseline$Sleep3 <- 8 - baseline$Sleep3
+  data$v2 <- 8 - data$v2 # hedonic tone = positive
+  data$v3 <- 8 - data$v3
+  data$t2 <- 8 - data$t2 # t.arousal = negative
+  data$t3 <- 8 - data$t3
+  data$f2 <- 8 - data$f2 # e.arousal = positive
+  data$Sleep2 <- 8 - data$Sleep2 # sleep quality = positive
+  data$Sleep3 <- 8 - data$Sleep3
 
   # other confounding variables
-  baseline$drugs <- gsub("SÃ¬","1",baseline$drugs) # drugs
-  baseline$drugs <- as.factor(gsub("No","0",baseline$drugs))
-  baseline$daybefore.ex <- gsub("SÃ¬","1",baseline$daybefore.ex) # intense exercise on the day before
-  baseline$daybefore.ex <- as.factor(gsub("No","0",baseline$daybefore.ex))
+  data$drugs <- as.factor(gsub("Sì","1",gsub("No","0",data$drugs))) # drugs
+  data$daybefore.ex <- as.factor(gsub("Sì","1",gsub("No","0",data$daybefore.ex))) # intense exercise on the day before
 
-  # timestamp variables
-  baseline$RunTimestamp <- as.POSIXct(as.character(baseline$RunTimestamp),
-                                      format="%Y/%m/%d %H:%M:%S")
-  baseline$day.of.week <- as.POSIXlt(baseline$RunTimestamp)$wday # creating day of week
-  baseline$within.day <- 0
-  baseline <- baseline[,c(1,2,22,23,3:21)]
-  baseline <- baseline[order(baseline$ID,baseline$RunTimestamp),] # sorting by timestamp
+  # sorting by timestamp
+  data <- data[order(data$ID,data$RunTimestamp),] 
   
-  return(baseline)}
+  return(data)}
 ```
 </p></details>
 
@@ -667,9 +682,11 @@ colnames(baseline)[2] <- "ID"
 
 <br>
 
-### 2.2.2. Timestamps
+### 2.2.2. Time recoding
 
 Here, we process the **timestamps** (i.e., temporal variables) in both the `EMA` and the `baseline` datasets.
+
+#### 2.2.2.1. Timestamps
 
 First, we convert the included timestamps **from character to POSIXct** (the R format for dates and times), using the "GMT" time zone (note that data were collected in the CET/CEST region, but GMT is easier to handle).
 ```{r }
@@ -711,9 +728,9 @@ ESM[is.na(ESM$SubmissionTimestamp),"SubmissionTimestamp"] <- ESM[is.na(ESM$Submi
 
 <br>
 
-#### Daylight saving time
+#### 2.2.2.2. Daylight saving time
 
-Third, we **adjust the temporal coordinates** accounting for **daylight saving time**. Indeed, whereas timestamps were recorded based on the internal clock of participants' mobile phones, which automatically synchronizes based on time changes, such time shifts got lost in the data exporting or the reading, resulting in **one-hour shifts during standard time**. In Italy, during the data collection period, daylight saving time was applied from March 31th to October 27th 2019. Here, we visually inspect the timestamp of the first response for both the `EMA` and the `baseline` datasets.
+Here, we **adjust the temporal coordinates** accounting for **daylight saving time**. Indeed, whereas timestamps were recorded based on the internal clock of participants' mobile phones, which automatically synchronizes based on time changes, such time shifts got lost in the data exporting, resulting in **one-hour shifts during standard time**. In Italy, during the data collection period, daylight saving time was applied from March 31th to October 27th 2019. Here, we visually inspect the timestamp of the first response for both the `EMA` and the `baseline` datasets.
 ```{r fig.width=8,fig.height=3}
 # ESM: computing and plotting time without date
 ESM$daytime <- as.POSIXct(paste(hour(ESM$RunTimestamp),minute(ESM$RunTimestamp)),format="%H %M",tz="GMT")
@@ -736,9 +753,9 @@ ggplot(baseline[,],aes(y=daytime,fill=daylight)) + geom_bar(position=position_do
 
 *Comments:*
 
-- in the `EMA` dataset, the responses recorded during **standard time** were encoded with **one hour behind** the actual time (i.e., the first questionnaire was scheduled at 11:30, whereas most responses were recorded at 10:30), while those recorded during **daylight saving time** showing **one additional hour behind** the actual time (i.e., most responses recorded at 9:30)
+- in the `EMA` dataset, the responses recorded during **standard time** were encoded with **one hour less** than the actual time (i.e., the first questionnaire was scheduled at 11:30, whereas most responses were recorded at 10:30), whereas those recorded during **daylight saving time** showing **one additional hour less** than the actual time (i.e., most responses recorded at 9:30)
 
-- in the `baseline` dataset, the responses recorded during **daylight saving time** were recorded with **one hour behind** the actual time (i.e., baseline questionnaires were administered around 10:30, whereas most responses are around 9:30), while those recorded during **standard time** looks fine
+- in the `baseline` dataset, the responses recorded during **daylight saving time** were recorded with **one hour less** than the actual time (i.e., baseline questionnaires were administered around 10:30, whereas most responses are around 9:30), whereas those recorded during **standard time** look fine
 
 <br>
 
@@ -764,14 +781,19 @@ baseline$daytime <- as.POSIXct(paste(hour(baseline$RunTimestamp),minute(baseline
 ggplot(baseline[,],aes(y=daytime,fill=daylight)) + geom_bar(position=position_dodge(),width=50) +
   scale_y_datetime(labels = date_format("%H:%M"),date_breaks="60 min") +
   ggtitle("baseline$RunTimestamp of the first response for each participant")
+
+# removing daytime and daylight columns
+ESM$daytime <- ESM$daylight <- baseline$daytime <- baseline$daylight <- NULL
 ```
 
 <br>
 
-#### day.of.week & within.day
+#### 2.2.2.3. Days & within.day
 
 Finally, we create two variables to better organize the temporal structure of the datasets: 
+
 - `day.of.week` indicating the weekday indicator (i.e., 1 = Tuesday, 2 = Wednesday, 3 = Thursday)
+
 - `within.day` consisting in a row identifier within each day. For `baseline` responses, we set `within.day = 0`
 ```{r }
 # creating indicator for the weekday 
@@ -780,7 +802,7 @@ baseline$day.of.week <- as.POSIXlt(baseline$RunTimestamp)$wday - 1
 levels(as.factor(c(levels(as.factor(ESM$day.of.week)),levels(as.factor(baseline$day.of.week))))) # sanity check: ok
 
 # creating row identifier within each day
-ESM <- plyr::ddply(ESM,c("ID","day.of.week"),transform,within.day=seq_along(day.of.week))
+ESM <- ddply(ESM,c("ID","day.of.week"),transform,within.day=seq_along(day.of.week))
 baseline$within.day <- 0 # assigning zero to the baseline questionnaires
 
 # showing data structure
@@ -791,7 +813,7 @@ ESM[,c("ID","day.of.week","within.day","RunTimestamp")]
 
 However, the method used above to encode the `within.day` variable counts the survey as they are received (i.e., first, second, third), and not as they were *scheduled* (i.e., based on the `RunTimestamp` variable), neglecting missing responses. 
 
-Here, we use the `within.day.adjust()` function to recode the `within.day` variable accounting for the following **scheduled temporal windows** and the **expiration time** (i.e., after 20 minutes), and we add **10 extra minutes** before and after the following time limits to account for the variability among devices:
+Here, we use the `within.day.adjust()` function showed at the beginning of section 2.2 to recode the `within.day` variable accounting for the following **scheduled temporal windows** and the **expiration time** (i.e., after 20 minutes), and we add **10 extra minutes** before and after the following time limits to account for the variability among devices:
 
 -   *0* = 09:45 \~ 11:00 (*baseline survey*)
 
@@ -821,8 +843,260 @@ ESM[,c("ID","day.of.week","within.day","RunTimestamp")]
 
 ### 2.2.3. Other variables
 
-Qua invece usi le due funzioni recode qui sopra
+Finally, we use the `varsRecoding()` and the `bslRecoding()` functions showed at the beginning of section 2.2 to recode the remaining variables (i.e., renaming and reversing item scores, recoding categorical variables, sorting and renaming columns) in the `ESM` and the `baseline` datasets, respectively.
+```{r }
+# recoding EMA dataset
+ESM <- varsRecoding(ESM)
 
+# recoding baseline dataset
+baseline <- bslRecoding(baseline)
+```
+
+<br>
+
+Here, we conduct a series of sanity checks by inspecting the summary and plots of each variable. In the `ESM` dataset, we can see that 11 cases from the same participant `HRV099` have both `coffe` and `alcohol = "NULL"`, whereas the values of the other confounders look fine. Since this is likely due to unanswered items because the condition was not met, we recode those cases with `coffe` and `alcohol = 0`. Moreover, we can note that in some cases participants selected more than one option for the `people` variable. In these cases, we recode the score in a conservatory way, that is by assigning the higher score.
+```{r }
+# inspecting summary of ESM variables
+summary(ESM)
+
+# cases with coffe or alcohol = "NULL"
+ESM[!is.na(ESM$coffe) & ESM$coffe=="NULL",c(1,20:ncol(ESM))]
+ESM[!is.na(ESM$coffe) & ESM$coffe=="NULL",c("smoke","coffe")] <- "0"
+ESM[,c("smoke","coffe")] <- lapply(lapply(ESM[,c("smoke","coffe")],as.character),as.factor)
+
+# inspecting summary of people
+summary(ESM$people)
+ESM$people <- as.factor(gsub("0,1","0", # replacing multi-option responses with the higher selected score
+                             gsub("0,1,2","2",
+                                  gsub("0,2","2",
+                                       gsub("1,0","1",
+                                            gsub("2,1","2",
+                                                 gsub("2,3","3",
+                                                      gsub("3,0","3",
+                                                           gsub("3,1","3",ESM$people)))))))))
+
+# re-inspecting recoded variables (no more "NULL" and multi-choice responses)
+summary(ESM[,c("smoke","coffe","people")])
+
+# inspecting summary of baseline variables (all look fine)
+summary(baseline)
+```
+
+<br>
+
+#### 2.2.3.1. Binary confounders
+
+From the summary above, we can see that some categorical confounders have only a very small number of ratings for certain levels (i.e., `smoke` has only 11 cases rated as "2" or higher, `coffe` has only 8 cases rated as "2", activity has only 29 cases rated as "2", people has only 3 cases rated as "3"). Here, we simplify such variables by **dichotomizing each of them** (i.e., 0/1).
+```{r fig.width=8,fig.height=1.5}
+# plotting frequency of cases in each level of each confounder
+par(mfrow=c(1,4))
+for(conf in c("smoke","coffe","activity","people")){ plot(ESM[,conf],main=conf) }
+
+# smoke: 2 and 5 --> 1 (i.e., "1+ cigarettes")
+ESM$smoke <- as.factor(gsub("2","1",gsub("5","1",ESM$smoke)))
+
+# coffe: 2 --> 1 (i.e., "1+ coffes")
+ESM$coffe <- as.factor(gsub("2","1",ESM$coffe))
+
+# activity: 2 --> 1 (i.e., "moderate/intense physical activity")
+ESM$activity <- as.factor(gsub("2","1",ESM$activity))
+
+# people: 1 --> 0 (i.e., "alone or with some people not disturbing"); 2 and 3 --> 1 (i.e., "someone disturbing or interrupting the recording")
+ESM$people <- as.factor(gsub("3","1",gsub("2","1",gsub("1","0",ESM$people))))
+
+# re-plotting
+par(mfrow=c(1,4))
+for(conf in c("smoke","coffe","activity","people")){ plot(ESM[,conf],main=conf) }
+
+# re-summarizing
+summary(ESM[,c("smoke","coffe","activity","people")])
+```
+
+<br>
+
+### 2.2.4. Data merging
+
+Finally, we can join the `baseline` dataset with the `ESM` dataset.
+```{r fig.width=8,fig.height=1.5}
+# merging and fixing the last issues
+ESM$within.day <- as.integer(as.character(ESM$within.day)) # within.day as integer for compatibility
+new <- rbind.fill(ESM,baseline) # merging datasets
+cat("sanity check:",nrow(new)==(nrow(ESM)+nrow(baseline))) # sanity check
+ESM <- new[order(new$ID,new$day.of.week,new$within.day),] # sorting by ID, day.of.week, and within.day
+rownames(ESM) <- 1:nrow(ESM)
+
+# showing merged dataset (everithing looks fine)
+ESM
+```
+
+<br>
+
+## 2.3. Cleaning & filtering
+
+Here, we clean and filter the data based on the inclusion criteria. The following packages and functions are used to optimize data filtering:
+```{r warning=FALSE,message=FALSE}
+library(Rmisc)
+```
+
+<details><summary>`respRate`</summary>
+<p>
+```{r }
+respRate <- function(data){ require(Rmisc)
+  
+  # scheduled No. of surveys (1 baseline + 5 ordinary X 3 days)
+  tot <- (1 + 5) * 3
+  bsl <- 1 * 3
+  ord <- 5 * 3
+  
+  # computing No. of responses and response rate
+  data$ID <- as.factor(as.character(data$ID))
+  rr <- data.frame(ID=levels(data$ID),tot=as.numeric(table(data$ID))) # No. of responses per participant
+  rr$tot.RR <- round(100*rr$tot/tot) # total response rate
+  rr$bsl <- as.numeric(table(data[data$within.day==0,"ID"])) # No. of responses to the baseline surveys
+  rr$bsl.RR <- round(100*rr$bsl/bsl) # baseline response rate
+  rr$ord <- as.numeric(table(data[data$within.day!=0,"ID"])) # No. of responses to the ordinary surveys
+  rr$ord.RR <- round(100*rr$ord/ord) # ordinary response rate
+  
+  # function to print response rate info
+  rr.message <- function(dat,what){
+    cat("\n\n",what,"participants: N =",nrow(dat),
+      "\n -",sum(dat$tot),"responses, from",min(dat$tot),"to",max(dat$tot),
+      ", mean =",round(mean(dat$tot),2),"sd =",round(sd(dat$tot),2),
+      ", mean perc =",round(mean(dat$tot.RR),2),"% sd =",round(sd(dat$tot.RR),2),"%",
+      "\n  -",sum(dat$bsl),"baseline, from",min(dat$bsl),"to",max(dat$bsl),
+      ", mean =",round(mean(dat$bsl),2),"sd =",round(sd(dat$bsl),2),
+      ", mean perc =",round(mean(dat$bsl.RR),2),"% sd =",round(sd(dat$bsl.RR),2),"%",
+      "\n  -",sum(dat$ord),"ordinary, from",min(dat$ord),"to",max(dat$ord),
+      ", mean =",round(mean(dat$ord),2),"sd =",round(sd(dat$ord),2),
+      ", mean perc =",round(mean(dat$ord.RR),2),"% sd =",round(sd(dat$ord.RR),2),"%") }
+  rr.message(rr[substr(rr$ID,1,3)=="HRV",],what="Included") # included participants
+  rr.message(rr[substr(rr$ID,1,3)!="HRV",],what="Excluded") # excluded participants
+  
+  return(rr)} # returning response rate dataset
+```
+</p></details>
+
+
+First, we inspect the original number of respondents and observations in the `ESM` dataset. We can see that the questionnaires were completed by a total of **104 respondents**, one less than the 105 participants that were actually invited to participate to the daily protocol. This is because one participant `HRV009` because she dropped out without activating the app.
+```{r }
+cat("Original No. of responses to the ESM/baseline surveys =",nrow(ESM),"from",nlevels(ESM$ID),"participants")
+```
+
+<br>
+
+### 2.3.1. Double responses
+
+First, we inspect and remove cases of **double responses** with the same `ID` and `RunTimestamp` values (N = 10). In these cases, only the first response is included with the exception of `HRV007` on day 1 and `HRV073` on day 2, because of missing values in the first but not in the second response.
+```{r }
+# detecting double responses
+ESM$idday <- paste(ESM$ID,ESM$RunTimestamp,sep="_")
+cat(nrow(ESM[duplicated(ESM$idday),]),"cases of double responses (same ID and RunTimestamp)")
+knitr::kable(ESM[ESM$idday%in%ESM[duplicated(ESM$idday),"idday"],
+    c("ID","day.of.week","within.day","RunTimestamp","v1","v2","v3","t1","t2","t3","NE.int","smoke","coffe","alcohol","activity")])
+
+# excluding second response for HRV007 (day 1) and HRV073 (day 2)
+memory <- ESM
+ESM <- ESM[!(ESM$idday=="HRV007_2018-11-13 16:18:32.769" & is.na(ESM$activity)),]
+ESM <- ESM[!(ESM$idday=="HRV073_2019-05-08 13:42:51.806" & is.na(ESM$activity)),]
+
+# excluding all remaining double responses
+ESM <- ESM[!duplicated(ESM$idday),]
+
+# removing double responses
+cat("Removed",nrow(memory)-nrow(ESM),"double responses")
+```
+
+<br>
+
+Then, we use the same procedure to inspect and remove cases of **double responses** with the same `ID`, `day.of.week` and `within.day` values. We can see 10 further cases of double responses. Since no missing data are included in any of these cases, we can just filter the latest response of each couple.
+```{r }
+# detecting double responses
+ESM$idday <- paste(ESM$ID,ESM$day.of.week,ESM$within.day,sep="_")
+cat(nrow(ESM[duplicated(ESM$idday),]),"cases of double responses (same ID and RunTimestamp)")
+knitr::kable(ESM[ESM$idday%in%ESM[duplicated(ESM$idday),"idday"],
+    c("ID","day.of.week","within.day","RunTimestamp","v1","v2","v3","t1","t2","t3","NE.int","smoke","coffe","alcohol","activity")])
+
+# excluding double responses
+memory2 <- ESM
+ESM <- ESM[!duplicated(ESM$idday),]
+
+# removing double responses
+cat("Removed further",nrow(memory2)-nrow(ESM),"double responses")
+```
+
+<br>
+
+Thus, we removed a total of 20 double responses
+```{r }
+# removing double responses
+cat("Removed a total of",nrow(memory)-nrow(ESM),"double responses; new number of responses =",nrow(ESM))
+```
+
+<br>
+
+### 2.3.2. Inclusion criteria
+
+Second, we inspect the `daily.drugs` and the `drugs.what` variable (i.e., drugs/medications different than those usually taken that were assumed on that morning) considering the inclusion criteria of the study (i.e., not taking medications affecting the nervous or the cardiovascular system). 
+
+Only 14 cases are present in the dataset, of which 7 (4 participants) concerned antiinflammatory medications (Antiinfiammatorio, moment, buscofen), 1 case concerned antibiotics (fosfomicina), 1 case concerned analgesics (paracetamolo), and 3 cases (1 participant) concerned cough syrup (sciroppo per la tosse). None of these cases contrast with our inclusion criteria, but they will be taken into account later, as they can influence some self-reported and physiological variables.
+```{r }
+ESM[substr(ESM$ID,1,3)=="HRV" & ESM$within.day==0 & ESM$drugs==1,c("ID","drugs.which")]
+```
+
+
+<br>
+
+### 2.3.3. Further excluded
+
+Here, we mark the **8 participants that were excluded** for the reasons specified in section 1.3.4. As in that section, such participants are marked as ‘OUT’. As noted above, participant `HRV009` was even not included in the `ESM` dataset because she dropped out before activating the app. Thus, from the initial 104 participants, the number of excluded participants is 7 (6.73%%), whereas the total number of included participants is 97 (93.27%).
+```{r }
+# marking 8 excluded participants as "OUT"
+memory <- ESM
+ESM$ID <- as.character(ESM$ID)
+excl <- c("HRV009","HRV011","HRV015","HRV027","HRV029","HRV046","HRV059","HRV066")
+ESM[ESM$ID%in%excl,"ID"] <- gsub("HRV","OUT",ESM[ESM$ID%in%excl,"ID"]) # marking excluded participants as "OUTXXX"
+ESM$ID <- as.factor(ESM$ID)
+ESM <- ESM[order(ESM$ID,ESM$RunTimestamp),]
+
+# updating number of included participants
+cat(nrow(ESM[substr(ESM$ID,1,3)=="HRV",]),"included observations from",
+    nlevels(as.factor(as.character(ESM[substr(ESM$ID,1,3)=="HRV","ID"]))),"participants out of",
+    nrow(memory),"total observations from",nrow(memory[!duplicated(memory$ID),]),"invited participants")
+```
+
+<br>
+
+### 2.3.4. Flagging participants
+
+Although we did not applied inclusion criteria based on further variables than those specified in section 1.3.2, here we consider the **response rate** and the **coherence of the responses** as further criteria to flag those cases that might bias the results.
+
+#### 2.3.4.1. Response rate
+
+First, we inspect the response rate by using the `respRate` function showed at the beginning of section 2.3. Considering included participants, we can see that **all ‘baseline’ surveys** (i.e., those administered in the lab) were responded each day by each participant, whereas a some **missing data were present in 'ordinary surveys'** (i.e., those administered with the mobile app). Overall, the mean response rate to 'ordinary' surveys was relatively high (**90%**) with no participants showing response rates < 60%. In contrast, excluded participants showed substantially lower response rates..
+```{r }
+(rrate <- respRate(ESM))
+```
+
+<br>
+
+As a potential additional criterion to be considered as a control, we arbitrarily chose to **flag participants with an overall response rate < 80%** (N = 9 among the included participants).
+```{r }
+# flagginng cases with response rate < 80%
+rrate$respRate80 <- 0
+rrate[rrate$ord.RR<80,"respRate80"] <- 1
+ESM <- join(ESM,rrate[,c("ID","ord.RR","respRate80")],by="ID",type="left")
+ESM$respRate80 <- as.factor(ESM$respRate80)
+summary(ESM[!duplicated(ESM$ID) & substr(ESM$ID,1,3)=="HRV","respRate80"])
+
+# showing flagged cases
+rrate[rrate$respRate80==1,]
+```
+
+<br>
+
+#### 2.3.4.2. Careless responses
+
+ARRIVATO QUI
 
 # 3. HRV data
 
