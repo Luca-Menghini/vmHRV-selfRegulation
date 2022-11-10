@@ -66,7 +66,7 @@ Sys.setenv(tz="GMT")
 The following R packages are used in this document (see [References section](#ref)):
 ```{r }
 # required packages
-packages <- c("ggplot2","gridExtra","jsonlite","plyr","lubridate","Rmisc")
+packages <- c("ggplot2","gridExtra","jsonlite","plyr","lubridate","scales","knitr","reshape2","careless")
 
 # generate packages references
 knitr::write_bib(c(.packages(), packages),"packagesProc.bib")
@@ -463,13 +463,13 @@ readSurveyData <- function(data.path,probe.definition,messages=TRUE){ require(js
   for(double in doubles){ subId <- levels(as.factor(data[data$id.t==double,"SubmissionTimestamp"])) # submission time
     if(length(subId)>1){ ndoubles[1] <- ndoubles[1] - 1
       maxDouble <- max(as.POSIXct(subId)) # when the SubmissionTimestamp is different -> splitting responses
-      data[data$id.t==double,"RunTimestamp"] <- maxDouble - 55.92 # 2nd RunTimeStamp = Submission - 55.92 sec (median resp time) 
+      data[data$id.t==double,"RunTimestamp"] <- maxDouble - 61.20 # 2nd RunTimeStamp = Submission - 61.20 sec (median resp time) 
     } else { ndoubles[2] <- ndoubles[2] - 1
       data <- rbind(data[data$id.t!=double,], # when even the SubmissionTimestamp is different -> removing double resp.
                     data[data$id.t==double & !duplicated(data$id.r),]) }}
   cat(" - Removed",ndoubles[1],"double responses (same ID, InputName, RunTimestamp, & SubmissionTimestamp)\n",
       "- Splitted",ndoubles[2],"double responses with different SubmissionTimestamp\n",
-      "  (in these cases, RunTimestamp is recomputed as SubmissionTimestamp - 55.92 sec (average response length)")
+      "  (in these cases, RunTimestamp is recomputed as SubmissionTimestamp - 61.20 sec (average response length)")
   
   # 6. Sorting columns and Reshaping
   # ...............................................................
@@ -494,7 +494,7 @@ readSurveyData <- function(data.path,probe.definition,messages=TRUE){ require(js
   data$RT.tot <- as.numeric(NA) # computing survey total response time (i.e., last - first response of each survey)
   data$survey <- as.factor(paste(data$ID,data$RunTimestamp,sep="_"))
   for(survey in levels(data$survey)){ data[data$survey==survey,"RT.tot"] <-
-    difftime(data[data$survey==survey,"Timestamp"][nrow(data[data$survey==survey,])],
+    difftime(data[data$survey==survey,"SubmissionTimestamp"][1],
              data[data$survey==survey,"Timestamp"][1],units="secs")}
   rt <- reshape(data[,c("ID","RunTimestamp","SubmissionTimestamp","RT.tot","InputId","RT")], # reshaping
                 v.names=c("RT"),timevar=c("InputId"),idvar=c("RunTimestamp","SubmissionTimestamp"),direction=c("wide"),sep="")
@@ -543,7 +543,7 @@ Then, we recode the `ESM` and `baseline` variables to be used for the analyses, 
 
 The following packages and functions are used to optimize the ESM data recoding:
 ```{r warning=FALSE,message=FALSE}
-library(lubridate); library(scales); library(plyr)
+library(lubridate); library(plyr); library(scales)
 ```
 
 <details><summary>`within.day.adjust`</summary>
@@ -734,16 +734,16 @@ ESM[ESM$RunTimestamp < as.POSIXct("2018-11-06") | ESM$RunTimestamp > as.POSIXct(
 grid.arrange(ggplot(ESM[ESM$ID=="HRV046",],aes(RunTimestamp)) + geom_histogram(bins=30) + ggtitle("HRV046"),
              ggplot(ESM[ESM$ID=="HRV048",],aes(RunTimestamp)) + geom_histogram(bins=30) + ggtitle("HRV048"))
 
-# correcting wrongly encoded RunTimestamps (adding 1year) and SubmissionTimestamps (RunTimestamp + 55.92 sec)
+# correcting wrongly encoded RunTimestamps (adding 1year) and SubmissionTimestamps (RunTimestamp + 61.20 sec)
 ESM[substr(ESM$RunTimestamp,1,7)=="2018-01","SubmissionTimestamp"] <-
-  ESM[substr(ESM$RunTimestamp,1,7)=="2018-01","RunTimestamp"] + 55.92
+  ESM[substr(ESM$RunTimestamp,1,7)=="2018-01","RunTimestamp"] + 61.20
 ESM[substr(ESM$RunTimestamp,1,7)=="2018-01",c("RunTimestamp","SubmissionTimestamp")] <-
   ESM[substr(ESM$RunTimestamp,1,7)=="2018-01",c("RunTimestamp","SubmissionTimestamp")] + 24*60*60*365
 c(min(ESM$RunTimestamp),max(ESM$RunTimestamp)) # sanity check: min and max matching with the data collection period
 
-# 2 further cases with missing SubmissionTimestamp (replacing with RunTimestamp + 55.92 sec)
+# 2 further cases with missing SubmissionTimestamp (replacing with RunTimestamp + 61.20 sec)
 ESM[is.na(ESM$SubmissionTimestamp),c("ID","RunTimestamp","SubmissionTimestamp")]
-ESM[is.na(ESM$SubmissionTimestamp),"SubmissionTimestamp"] <- ESM[is.na(ESM$SubmissionTimestamp),"RunTimestamp"] + 55.92
+ESM[is.na(ESM$SubmissionTimestamp),"SubmissionTimestamp"] <- ESM[is.na(ESM$SubmissionTimestamp),"RunTimestamp"] + 61.20
 ```
 
 <br>
@@ -996,6 +996,22 @@ respRate <- function(data){
 ```
 </p></details>
 
+Compute data frame of response rate values and print summary information on response rate.
+
+<details><summary>`plotResp`</summary>
+<p>
+```{r }
+plotResp <- function(data,id,items){
+  long <- melt(data[,c("id",items)],id) # one row per item
+  long <- long[order(long$id,long$variable),]
+  ggplot(long,aes(x=value,y=variable)) + geom_vline(xintercept=4,lwd=0.5,lty=2) + geom_point() + xlim(1,7) +
+  facet_wrap(id) + theme(text=element_text(size=8)) }
+```
+</p></details>
+
+Plot pattern of responses to mood items for a subsample of responses.
+
+<br>
 
 First, we inspect the original number of respondents and observations in the `ESM` dataset. We can see that the questionnaires were completed by a total of **104 respondents**, one less than the 105 participants that were actually invited to participate to the daily protocol. This is because one participant `HRV009` because she dropped out without activating the app.
 ```{r }
@@ -1086,35 +1102,20 @@ cat(nrow(ESM[substr(ESM$ID,1,3)=="HRV",]),"included observations from",
 
 <br>
 
-### 2.3.4. Flagging participants
+### 2.3.4. Flagged cases
 
 Although we did not applied inclusion criteria based on further variables than those specified in section 1.3.2, here we consider the **response rate** and the **coherence of the responses** as further criteria to flag those cases that might bias the results.
 
 #### 2.3.4.1. Response rate
 
-First, we inspect the response rate by using the `respRate` function showed at the beginning of section 2.3. Considering included participants, we can see that **all ‘baseline’ surveys** (i.e., those administered in the lab) were responded each day by each participant, whereas a some **missing data were present in 'ordinary surveys'** (i.e., those administered with the mobile app). Overall, the mean response rate to 'ordinary' surveys was relatively high (**90%**) with no participants showing response rates < 60%. In contrast, excluded participants showed substantially lower response rates..
+First, we inspect the response rate by using the `respRate` function showed at the beginning of section 2.3. Considering included participants, we can see that **all ‘baseline’ surveys** (i.e., those administered in the lab) were responded each day by each participant, whereas a some **missing data were present in 'ordinary surveys'** (i.e., those administered with the mobile app). Overall, the mean response rate to 'ordinary' surveys was relatively high (**90%**) with no participants showing response rates < 60%. Thus, we see **no reasons for excluding or flagging further participants** based on response rate. In contrast, excluded participants showed substantially lower response rates.
 ```{r }
-(rrate <- respRate(ESM))
+rrate <- respRate(ESM)
 ```
 
 <br>
 
-We do not see any reason to exclude participants based on response rate criteria. However, as a potential covariate to be considered as a control, we arbitrarily choose to **flag participants with an overall response rate < 80%** (N = 9 among the included participants).
-```{r }
-# flagginng cases with response rate < 80%
-rrate$respRate80 <- 0
-rrate[rrate$ord.RR<80,"respRate80"] <- 1
-ESM <- join(ESM,rrate[,c("ID","ord.RR","respRate80")],by="ID",type="left")
-ESM$respRate80 <- as.factor(ESM$respRate80)
-summary(ESM[!duplicated(ESM$ID) & substr(ESM$ID,1,3)=="HRV","respRate80"])
-
-# showing flagged cases
-rrate[rrate$respRate80==1,]
-```
-
-<br>
-
-In addition to counting the number of received surveys, we must also consider **missing responses within each survey**. Indeed, a number of surveys was incomplete **due to technical problems** with the app. We can notice that missing responses **mainly concern items on confounder variables** (i.e., activity, alcohol, coffee, smoke and people), which were administered in the last part of each survey and showed from 49 to 58 missing values (about 4%). In contrast, missing data are only about the 2-3% for items measuring stressful events (from 26 to 35), and less than 2% for itmes measuring mood (from 0 to 2).
+In addition to counting the number of received surveys, we must also consider **missing responses within each survey**. Indeed, a number of surveys was incomplete **due to technical problems** with the app. We can notice that missing responses **mainly concern items on confounder variables** (i.e., activity, alcohol, coffee, smoke and people), which were administered in the last part of each survey and showed from 49 to 59 missing values (about 4%). In contrast, missing data are only about the 2-3% for items measuring stressful events (from 26 to 35), and less than 2% for itmes measuring mood (from 0 to 2).
 ```{r }
 miss <- sapply(ESM[ESM$within.day!=0,1:which(colnames(ESM)=="people")], function(x) sum(is.na(x))) # counting missing
 miss <- data.frame(item=names(miss),nMiss=as.numeric(miss), # missing rate
@@ -1135,13 +1136,29 @@ ESM <- ESM[!is.na(ESM$v3),]
 
 <br>
 
-#### 2.3.4.2. Careless responses
+#### 2.3.4.2. Careless responses 
 
-Here, we flag participants and/or single responses that might be considered as **careless respondents/responses**. Following [Curran (2016)](#ref), we consider multiple indicators of potentially careless responses including response times, ...
+Here, we flag participants and/or single responses that might be considered as **careless respondents/responses**. 
 
-##### 2.3.4.2.1. Response times
+##### Indicators and procedure {.tabset .tabset-fade .tabset-pills}
 
-First, we consider item-by-item and overall **survey response times** in the 'ordinary' ESM questionnaires. This information was encoded in the `ESM.RT` dataset in section 2.1. Thus, as a first step, we process those data by cleaning and filtering the same cases cleaned and filtered in the `ESM` dataset.
+Following [Curran (2016)](#ref), we consider multiple indicators of potentially careless responses including:
+
+1. Response times (both item-specific and total)
+
+2. Response consistency (long string proportions)
+
+3. Multivariate outlier patterns (Mahalanobis distance)
+
+4. Response inconsistency (psychometric synonyms)
+
+For each indicator, the numbers between brackets indicates the corresponding number of flagged responses/participants.
+
+###### INDICATORS:
+
+###### ITEM RESPONSE TIMES (33/2, 74/8)
+
+First, we consider item-by-item and overall survey **response times** in the 'ordinary' `ESM` questionnaires. This information was encoded in the `ESM.RT` dataset in section 2.1. Thus, as a first step, we process those data by cleaning and filtering the same cases cleaned and filtered in the `ESM` dataset.
 
 <details><summary>Show code</summary>
 <p>
@@ -1158,9 +1175,9 @@ ESM.RT <- participantID_recoding(ESM.RT)
 ESM.RT[,c("RunTimestamp","SubmissionTimestamp")] <- # no need to specify format since they already are POSIXct
   lapply(ESM.RT[,c("RunTimestamp","SubmissionTimestamp")],function(x) as.POSIXct(x,tz="GMT"))
 
-# correcting wrongly encoded RunTimestamps (adding 1year) and SubmissionTimestamps (RunTimestamp + 55.92 sec)
+# correcting wrongly encoded RunTimestamps (adding 1year) and SubmissionTimestamps (RunTimestamp + 61.20 sec)
 ESM.RT[substr(ESM.RT$RunTimestamp,1,7)=="2018-01","SubmissionTimestamp"] <-
-  ESM.RT[substr(ESM.RT$RunTimestamp,1,7)=="2018-01","RunTimestamp"] + 55.92
+  ESM.RT[substr(ESM.RT$RunTimestamp,1,7)=="2018-01","RunTimestamp"] + 61.20
 ESM.RT[substr(ESM.RT$RunTimestamp,1,7)=="2018-01",c("RunTimestamp","SubmissionTimestamp")] <-
   ESM.RT[substr(ESM.RT$RunTimestamp,1,7)=="2018-01",c("RunTimestamp","SubmissionTimestamp")] + 24*60*60*365
 
@@ -1248,7 +1265,7 @@ nrow(ESM.RT) == nrow(ESM[ESM$within.day!=0,])
 
 Now we can inspect the **item-by-item response times** (seconds) in the `ESM.RT` dataset, computed as the difference between the timestamp of each response and that of the previous one (note: the first response of each questionnaire does not have an associated response time). 
 
-We can see that **responding to a single item required about 2 seconds** in most cases, regardless of the type of item. A small number of items were responded in more than 10 seconds (4.3%) with a very few cases requiring more than 25 seconds (N = 157, 0.69%). Likewise, a small number of items were responded in less than 1 second (2.35%) with a very few cases requiring less than 0.65 seconds (N = 109, 0.48%).
+We can see that **responding to a single item required about 2 seconds** in most cases (median response time = 2.69 sec), regardless of the type of items. A small number of items were responded in more than 10 seconds (4.3%) with a very few cases requiring more than 50 seconds (N = 41, 0.18%). Likewise, a small number of items were responded in less than 1 second (2.4%) with a very few cases requiring less than 0.65 seconds (N = 109, 0.48%).
 ```{r fig.width=12,fig.height=4,warning=FALSE}
 # item-by-item long dataset
 rt <- melt(ESM.RT[,c("ID","RunTimestamp",colnames(ESM.RT)[which(colnames(ESM.RT)=="v1"):which(colnames(ESM.RT)=="people")])],
@@ -1283,7 +1300,7 @@ for(value in c(2,1.5,1,0.65,0.5,0.25,0.1)){ cat("\n-",nrow(rt[rt$value<value,]),
 
 Here, we **flag** all cases with at least one item responded in **more than 50 seconds** with `iRT.slow = 1` and all those responded in **less than 650 ms** with `iRT.fast = 1`. While the first threshold is essentially based on the observed RT distribution, the second criterion was also recommended by [Geeraerts (2020)](#ref). We also compute the number of items meeting each condition, for each survey.
 
-We can see that most cases have only one slow-response-time item (N = 27) with only 7 surveys showing 2 or more items that took more than 50 sec. In contrast, there is a similar proportion of surveys with either 1 (N = 39) or 2 items (N = 35) answered with less than 650 ms. In terms of **careless participants**, we flag slow and fast respondents considering participants with 2+ slow responses (N = 7) and those with 3+ fast responses (N = 9). Particular attention should be posed on participant `HRV099`, showing 11 out of 14 responses with fast response times.
+We can see that most cases have only one slow-response-time item (N = 26) with only 7 surveys showing 2 or more items that took more than 50 sec. In contrast, there is a similar proportion of surveys with either 1 (N = 39) or 2 items (N = 35) answered with less than 650 ms. In terms of **careless participants**, we flag slow and fast respondents considering participants with 3+ slow responses (N = 2) and those with 3+ fast responses (N = 8 + one excluded participant). Particular attention should be posed on participant `HRV099`, showing 11 out of 14 responses with fast response times.
 ```{r }
 ESM.RT$idday <- as.factor(paste(ESM.RT$ID,ESM.RT$RunTimestamp,sep="_"))
 rt$idday <- as.factor(paste(rt$ID,rt$RunTimestamp,sep="_"))
@@ -1294,26 +1311,26 @@ for(idday in levels(ESM.RT$idday)){
   if(any(rt[rt$idday==idday,"value"]<0.65)){ ESM.RT[ESM.RT$idday==idday,"iRT.fast"] <- 1
     ESM.RT[ESM.RT$idday==idday,"NiRT.fast"] <- nrow(rt[rt$idday==idday & !is.na(rt$value) & rt$value<0.65,]) }}
 
-# slow response times (N = 34)
-ESM.RT[ESM.RT$iRT.slow==1,c("ID","RT.tot","NiRT.slow",
-                            colnames(ESM.RT)[which(colnames(ESM.RT)=="v1"):which(colnames(ESM.RT)=="people")])]
+# slow response times (N = 33)
 summary(as.factor(ESM.RT$NiRT.slow)) # summary of number of slow response times
 (s <- summary(as.factor(as.character(ESM.RT[ESM.RT$iRT.slow==1,"ID"])))) # summary of slow respondents
-ESM.RT[ESM.RT$ID %in% names(s[s >= 2]),"slowResp"] <- 1 # flagging slow respondents (i.e., 2+ responses with 1+ items > 50 sec)
+ESM.RT[ESM.RT$ID %in% names(s[s >= 3]),"slowResp"] <- 1 # flagging slow respondents (3+ responses with 1+ items > 50 sec)
+summary(as.factor(ESM.RT[!duplicated(ESM.RT$ID),"slowResp"])) # No. of slow respondents (N = 2)
 
-# fast response times (N = 34)
-ESM.RT[ESM.RT$iRT.fast==1,c("ID","RT.tot","NiRT.fast",
-                            colnames(ESM.RT)[which(colnames(ESM.RT)=="v1"):which(colnames(ESM.RT)=="people")])]
+# fast response times (N = 74)
 summary(as.factor(ESM.RT$NiRT.fast)) # summary of number of fast response times
-(s <- summary(as.factor(as.character(ESM.RT[ESM.RT$iRT.fast==1,"ID"])))) # summary of slow respondents
+(s <- summary(as.factor(as.character(ESM.RT[ESM.RT$iRT.fast==1,"ID"])))) # summary of fast respondents
 ESM.RT[ESM.RT$ID %in% names(s[s >= 3]),"fastResp"] <- 1 # flagging fast respondents (i.e., 3+ responses with 1+ items > 50 sec)
+summary(as.factor(ESM.RT[!duplicated(ESM.RT$ID),"fastResp"])) # No. of fast respondents (N = 8 + 1 excluded)
 ```
 
 <br>
 
-Then, the same procedures are applied by considering the **total response time of each survey** `RT.tot`, computed in section 2.1 as the time between the first and the last response of each survey, here expressed in minutes. Note that for fast total response times we do not consider those cases with missing response to the last item (i.e., from `PE` above).
+###### TOTAL RESPONSE TIMES (29/1, 27/3)
 
-We can see that **responding to the whole questionnaire required about 55 sec** in most cases (median = 55.92 sec). A small number of questionnaires were responded in more than 2 minutes (5.65%) with a very few cases requiring more than 5 min (N = 12, 0.88%, flagged as `tRT.slow = 1`). Likewise, a small number of questionnaires were responded in less than 40 second (14.79%) with a very few cases requiring less than 35 seconds (N = 84, 6.21%, flagged as `iRT.fast = 1`). We also flag **careless participants** as those with 2+ responses that took more than 5 min (flagged as `slowResp.tot = 1`) and 3+ responses that took less than 35 seconds (flagged as `fastResp.tot = 1`).
+Second, the same procedures used with item response times are applied considering the **total response time of each survey** `RT.tot`, computed in section 2.1 as the seconds between the first response and the `SubmissionTimestamp` of each survey. Note that here we do not consider those cases with missing response to the last items (i.e., from `PE` on out).
+
+We can see that **responding to the whole questionnaire required about 1 min** in most cases (median = 61.2 sec). A small number of questionnaires were responded in more than 2 minutes (7.3%) with a very few cases requiring more than 3 min (N = 29, 2.13%, flagged as `tRT.slow = 1`). Likewise, a small number of questionnaires were responded in less than 40 second (8.2%) with a very few cases requiring less than 35 seconds (N = 27, 2%, flagged as `tRT.fast = 1`). We also flag **careless participants** as those with 3+ responses that took more than 5 min (N = 1 flagged as `slowResp.tot = 1`) and 3+ responses that took less than 35 seconds (N = 3 flagged as `fastResp.tot = 1`).
 ```{r fig.width=12,fig.height=2,warning=FALSE}
 # summarizing total response times (in both seconds and minutes)
 ESM.RT$RT.tot.min <- ESM.RT$RT.tot/60
@@ -1326,7 +1343,7 @@ grid.arrange(ggplot(ESM.RT,aes(RT.tot.min))+geom_histogram(bins=300)+ggtitle("To
              nrow=1)
 
 # No. of total response times higher than X minutes
-for(value in c(2,2.5,5,10,20,50)){ cat("\n-",nrow(ESM.RT[ESM.RT$RT.tot.min>value,]),"total RTs >",value,
+for(value in c(2,3,5,10,20,50)){ cat("\n-",nrow(ESM.RT[ESM.RT$RT.tot.min>value,]),"total RTs >",value,
                                                       "min (",round(100*nrow(ESM.RT[ESM.RT$RT.tot.min>value,])/
                                                                       nrow(ESM.RT),2),"% )") }
 
@@ -1336,47 +1353,159 @@ for(value in c(40,35,30,20)){ cat("\n-",nrow(ESM.RT[!is.na(ESM.RT$PE) & ESM.RT$R
                                                                                              ESM.RT$RT.tot<value,])/
                                                                                       nrow(ESM.RT[!is.na(ESM.RT$PE),]),2),"% )") }
 
-# flagging slow and fast total response times
+# flagging slow > 5 min (N = 29) and fast total response times < 35 sec (N = 27)
 ESM.RT$tRT.slow <- ESM.RT$tRT.fast <- ESM.RT$slowResp.tot <- ESM.RT$fastResp.tot <- 0
-ESM.RT[ESM.RT$RT.tot.min > 5,"tRT.slow"] <- 1
+ESM.RT[ESM.RT$RT.tot.min > 3,"tRT.slow"] <- 1
 ESM.RT[!is.na(ESM.RT$PE) & ESM.RT$RT.tot < 35,"tRT.fast"] <- 1
 
 # flagging slow and fast respondents
 (s <- summary(as.factor(as.character(ESM.RT[ESM.RT$tRT.slow==1,"ID"])))) # summary of slow respondents
-ESM.RT[ESM.RT$ID %in% names(s[s >= 2]),"slowResp.tot"] <- 1 # flagging slow respondents (i.e., 2+ responses > 5 min)
+ESM.RT[ESM.RT$ID %in% names(s[s >= 3]),"slowResp.tot"] <- 1 # flagging slow respondents (3+ responses > 5 min)
+summary(as.factor(ESM.RT[!duplicated(ESM.RT$ID),"slowResp.tot"])) # No. of slow respondents (N = 1)
 (s <- summary(as.factor(as.character(ESM.RT[ESM.RT$tRT.fast==1,"ID"])))) # summary of fast respondents
-ESM.RT[ESM.RT$ID %in% names(s[s >= 3]),"fastResp.tot"] <- 1 # flagging fast respondents (i.e., 3+ responses < 35 sec)
-```
-
-
-<br>
-
-##### 2.3.4.2.2. Consistency
-
-ARRIVATO QUI
-
-```{r }
-library(careless)
-
-ratings <- c("v1","v2","v3","t1","t2","t3","f1","f2","f3")
-
-ESM$eo <- evenodd(ESM[,ratings],factors=rep(3,3))
-hist(ESM$eo)
-
-knitr::kable(ESM[!is.na(ESM$eo) & ESM$eo>0.5,c("ID",ratings)])
+ESM.RT[ESM.RT$ID %in% names(s[s >= 3]),"fastResp.tot"] <- 1 # flagging fast respondents (3+ responses < 35 sec)
+summary(as.factor(ESM.RT[!duplicated(ESM.RT$ID),"fastResp.tot"])) # No. of slow respondents (N = 3)
 ```
 
 <br>
 
-##### 2.3.4.2.3. Summary
+###### LONG STRING PROPORTION (57/4)
 
-```{r }
+Third, we examine those cases with extreme **long string of identical responses** to mood items, that is extremely consistent responses with long strings of identical value in consecutive items using the same response scale (see [Curran (2016)](#ref)). This is done using the `careless` package. Note that in section 2.2.3 we recoded mood ratings to have the same polarity. Event items are not considered because most respondents entered no events (i.e., 1, 1).
 
+We can see that in most cases (about 71%) the same rating was entered for up to 3 consecutive items, with the 14% showing strings of consistent responses repeated more than 4 times (i.e., the rule of thumb proposed by [Curran (2016)](#ref) of identical string length > scale range / 2). In a minority of cases (N = 57, 3.4%), respondents entered the same value for 7+ times, and we mark them as `ls = 1`. As done previously, we also flag **careless participants** (N = 4) as those with 3+ responses with long identical strings (N = 18 flagged as `lsResp = 1`).
+```{r fig.width=12,fig.height=2,warning=FALSE}
+# computing the longest string frequency and the average length of identical consecutive responses
+mood <- colnames(ESM)[which(colnames(ESM)=="v1"):which(colnames(ESM)=="f3")]
+ESM.LS <- cbind(ESM[,c("ID","RunTimestamp","within.day")],longstring(ESM[,mood],avg=TRUE))
+
+# plotting longest identical string and average identical string length
+grid.arrange(ggplot(ESM.LS,aes(longstr))+geom_histogram(bins=30)+ggtitle("Longest identical string in each survey"),
+             ggplot(ESM.LS,aes(avgstr))+geom_histogram(bins=30)+ggtitle("Average identical string length"),
+             nrow=1)
+
+# No. of longest identical strings longer than X
+for(value in 3:6){ cat("\n-",nrow(ESM.LS[ESM.LS$longstr>value,]),"longest identical string >",value,
+                       "times (",round(100*nrow(ESM.LS[ESM.LS$longstr>value,])/nrow(ESM.LS),2),"% )") }
+
+# flagging cases with identical strings > 6 (N = 57)
+ESM.LS$lsResp <- ESM.LS$ls <- 0
+ESM.LS[ESM.LS$longstr > 6,"ls"] <- 1
+summary(as.factor(ESM.LS$ls)) # No. of cases with long string (N = 57)
+
+# flagging long string respondents (N = 4)
+(s <- summary(as.factor(as.character(ESM.LS[ESM.LS$ls == 1,"ID"])))) # No. of long string responses per respondent
+ESM.LS[ESM.LS$ID %in% names(s[s >= 3]),"lsResp"] <- 1 # flagging slow respondents (i.e., 2+ identical strings > 5)
+summary(as.factor(ESM.LS[!duplicated(ESM.LS$ID),"lsResp"]))
+```
+
+<br>
+
+###### MAHALANOBIS DISTANCE (72/6)
+
+Fourth, we examine those cases with **unlikely response patterns** by performing a **multivariate outlier analysis** based on the Mahalanobis distance. We can see that 72 responses (4.3%) were flagged as multivariate outliers (`md = 1`) with a confidence level of 99%, with 6 participants showing 3+ flagged responses and thus marked with `mdResp = 1`.
+```{r fig.width=6,fig.height=4,warning=FALSE}
+# computing Mahalanobis distance in mood ratings
+ESM.LS <- cbind(ESM.LS,mahad(ESM[,mood],flag=TRUE))
+
+# plotting Mahalanobis distance and marking flagged cases (N = 72)
+ESM.LS$md <- as.numeric(gsub("FALSE","0",gsub("TRUE","1",ESM.LS$flagged)))
+summary(as.factor(ESM.LS$md)) # No. flagged responses (N = 72)
+ggplot(ESM.LS,aes(d_sq,fill=as.factor(md)))+geom_histogram(bins=30)+ggtitle("Mahalanobis distance")
+
+# flagging outlier respondents (N = 6)
+(s <- summary(as.factor(as.character(ESM.LS[ESM.LS$md == 1,"ID"])))) # No. of flagged responses per respondent
+ESM.LS$mdResp <- 0
+ESM.LS[ESM.LS$ID %in% names(s[s >= 3]),"mdResp"] <- 1 # flagging outlier respondents (i.e., 3+ extreme Mahalanobis dist)
+summary(as.factor(ESM.LS[!duplicated(ESM.LS$ID),"mdResp"])) # No. flagged respondents (N = 6)
+```
+
+<br>
+
+###### PSYCHOMETRIC SYNONIMS (90/4)
+
+Fifth, we examine those cases with **negative correlations among psychometric synonyms**, that is cases where the intra-response correlation is negative, and specifically less than -0.30 between pairs of items that correlate at *r* = .60 or stronger. We can see that 87 responses (5.3%) were flagged as `psychsyn = 1`, with 5 participants showing 3+ flagged responses and thus marked with `psychsynResp = 1`.
+```{r fig.width=7,fig.height=3,warning=FALSE}
+# computing Mahalanobis distance in mood ratings
+ESM.LS <- cbind(ESM.LS,psychsyn(ESM[,mood],diag=TRUE,critval=0.60,resample_na=TRUE))
+
+# note that some cases marked with long identical string have SD = 0 so the intra-response correlation cannot be computed
+head(cbind(ESM.LS[is.na(ESM.LS$cor),c("ID","longstr","avgstr","ls","lsResp")],ESM[is.na(ESM.LS$cor),mood]))
+
+# flagging and plotting correlations < -.30 (N = 90)
+ESM.LS$psychsyn <- 0
+ESM.LS[!is.na(ESM.LS$cor) & ESM.LS$cor < (-.30),"psychsyn"] <- 1
+summary(as.factor(ESM.LS$psychsyn)) # No flagged responses (N = 90)
+ggplot(ESM.LS,aes(cor,fill=as.factor(psychsyn)))+geom_histogram(bins=100)+ggtitle("Indivual corr. among psychometric synonyms")
+
+# flagging psychsyn respondents (N = 5)
+(s <- summary(as.factor(as.character(ESM.LS[ESM.LS$psychsyn == 1,"ID"])))) # No. of flagged responses per respondent
+ESM.LS$psychsynResp <- 0
+ESM.LS[ESM.LS$ID %in% names(s[s >= 3]),"psychsynResp"] <- 1 # flagging outlier respondents (i.e., 3+ flagged responses)
+summary(as.factor(ESM.LS[!duplicated(ESM.LS$ID),"psychsynResp"])) # No. flagged participants (N = 4 + 1 excluded)
+```
+
+<br>
+
+##### Summary of careless responses
+
+Here, we summarize the number of potentially careless responses and participants for each criterion, and we compute an aggregated variable indicating the number of criteria (from 1 to 5) based on which each response and participant is classified as potentially careless. Then, we flag all **responses** classified as potentially careless based on 1+ criteria (N = 317, of which 293 from included participants) with `cLess1 = 1` and those based on 2+ criteria (N = 57, of which 51 from included participants) with `cLess2 = 1`, respectively. Similarly, we flag all **participants** classified as potentially careless based on 1+ criteria (N = 26, of which 23 included participants) with `cLessResp1 = 1`, and those based on 2+ criteria (N = 4, of which 3 included participants) with `cLessResp2 = 1`.
+```{r fig.width=6,fig.height=2,warning=FALSE}
+# joining careless criteria
+ESM.LS$idday <- as.factor(paste(ESM.LS$ID,ESM.LS$RunTimestamp,sep="_"))
+ESM.careless <- join(ESM.LS[,c("ID","within.day","idday","ls","md","psychsyn","lsResp","mdResp","psychsynResp")],
+                     ESM.RT[,c("idday","iRT.fast","tRT.fast","iRT.slow","tRT.slow",
+                               "fastResp","fastResp.tot","slowResp","slowResp.tot")],by="idday",type="left")
+
+# computing aggregate careless scores
+ESM.careless$cLessResp2 <- ESM.careless$cLessResp1 <- ESM.careless$cLess2 <- ESM.careless$cLess1 <- 0
+cr <- c("ls","md","psychsyn","iRT.fast","tRT.fast","iRT.slow","tRT.slow")
+ESM.careless$carelessN <- rowSums(ESM.careless[,cr],na.rm=TRUE)
+ESM.careless[ESM.careless$carelessN>=1,"cLess1"] <- 1 # careless response if meeting 1+ criteria
+ESM.careless[ESM.careless$carelessN>=2,"cLess2"] <- 1 # careless response if meeting 2+ criteria
+crResp <- c("lsResp","mdResp","psychsynResp","fastResp","fastResp.tot","slowResp","slowResp.tot")
+ESM.careless$cLessRespN <- rowSums(ESM.careless[,crResp],na.rm=TRUE)
+ESM.clResp <- ESM.careless[ESM.careless$within.day!=0,]
+ESM.clResp <- ESM.clResp[!duplicated(ESM.clResp$ID),]
+ESM.clResp[ESM.clResp$cLessRespN>=1,"cLessResp1"] <- 1 # careless respondent if meeting 1+ criteria
+ESM.clResp[ESM.clResp$cLessRespN>=2,"cLessResp2"] <- 1 # careless respondent if meeting 1+ criteria
+
+# summarizing criteria of potentially careless responses (N = 51)
+summary(as.data.frame(lapply(ESM.careless[,c(cr,"carelessN","cLess1","cLess2")],as.factor))) # all in
+summary(as.data.frame(lapply(ESM.careless[substr(ESM.careless$ID,1,3)!="OUT",
+                                          c(cr,"carelessN","cLess1","cLess2")],as.factor))) # only included participants
+
+# summarizing criteria of potentially careless respondents (N = 16)
+summary(as.data.frame(lapply(ESM.clResp[,c(crResp,"cLessRespN","cLessResp1","cLessResp2")],as.factor))) # all in
+summary(as.data.frame(lapply(ESM.clResp[substr(ESM.clResp$ID,1,3)!="OUT",
+                                        c(crResp,"cLessRespN","cLessResp1","cLessResp2")],as.factor))) # only included
+
+# joining careless scores to the ESM dataset
+ESM$idday <- as.factor(paste(ESM$ID,ESM$RunTimestamp,sep="_"))
+ESM <- join(ESM,ESM.careless[,c("idday","cLess1","cLess2")],by="idday",type="left")
+ESM <- join(ESM,ESM.clResp[,c("ID","cLessResp1","cLessResp2")],by="ID",type="left")
+```
+
+<br>
+
+Here, we visually inspect all responses marked with `cLess2 = 1`. We can note several cases of long string proportions (e.g., `HRV013_2_3`) as well as cases of inconsistent responses (e.g., `HRV060_1_0` for items `t2` and `t3`).
+```{r fig.width=8,fig.height=10}
+ESM$id <- as.factor(paste(ESM$ID,ESM$day.of.week,ESM$within.day,sep="_"))
+plotResp(ESM[ESM$cLess2==1,],"id",mood)
+```
+
+<br>
+
+Here, we visually inspect all responses from participants marked with `cLessResp2 = 2`. Also in this case, we can note several cases of long string proportions (e.g., `HRV051_2_4`) and especially cases of inconsistent responses (e.g., `HRV051_1_1` for items `f2` and `f3`).
+```{r fig.width=8,fig.height=10}
+plotResp(ESM[ESM$cLessResp2==1,],"id",mood)
 ```
 
 <br>
 
 # 3. HRV data
+
+ARRIVATO QUI
 
 # 4. GNG data
 
