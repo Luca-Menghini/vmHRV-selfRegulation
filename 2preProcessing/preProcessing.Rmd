@@ -66,7 +66,8 @@ Sys.setenv(tz="GMT")
 The following R packages are used in this document (see [References section](#ref)):
 ```{r }
 # required packages
-packages <- c("ggplot2","gridExtra","jsonlite","plyr","lubridate","scales","knitr","reshape2","careless")
+packages <- c("ggplot2","gridExtra","jsonlite","plyr","lubridate","scales","knitr","reshape2","careless",
+              "shiny","pracma","Rmisc","lattice")
 
 # generate packages references
 knitr::write_bib(c(.packages(), packages),"packagesProc.bib")
@@ -98,7 +99,7 @@ PrelQS <- read.csv("qs preliminare/Preliminary_qs.csv")
 
 ## 1.2. Data recoding
 
-Then, we recode the `PrelQS` variables to be used for the analyses.
+Second, we recode the `PrelQS` variables to be used for the analyses.
 
 ### 1.2.1. ID recoding
 
@@ -154,18 +155,9 @@ PrelQS <- PrelQS[order(PrelQS$ID,PrelQS$time),]
 
 <br>
 
-### 1.2.3. Data structure
-
-Here, we display the structure of the `PrelQS` processed dataset.
-```{r }
-str(PrelQS)
-```
-
-<br>
-
 ## 1.3. Cleaning & filtering
 
-Here, we clean and filter the data based on the inclusion criteria and by focusing on those participants that were actually invited to participate to the daily protocol (N = 105).
+Third, we clean and filter the data based on the inclusion criteria and by focusing on those participants that were actually invited to participate to the daily protocol (N = 105).
 
 First, we inspect the original number of cases in the `PrelQS` dataset. The questionnaire was completed by a total of 164 respondents, of which a subsample was invited to participate in the daily protocol. 
 ```{r }
@@ -288,7 +280,7 @@ PrelQS[substr(PrelQS$ID,1,3)=="OUT" & !(PrelQS$ID%in%c("OUT033","OUT053","OUT027
 
 ### 1.3.3. Data filtering
 
-Here, we remove all participants marked as "OUT" from the `Prelqs` dataset.
+Third, we remove all participants marked as "OUT" from the `Prelqs` dataset.
 ```{r }
 new <- PrelQS[!substr(PrelQS$ID,1,3)=="OUT",]
 cat("Filtered",nrow(PrelQS)-nrow(new),"cases; new number of cases =",nrow(new))
@@ -299,7 +291,11 @@ PrelQS <- new
 
 ### 1.3.4. Flagged participants
 
-Some of the **included participants reported suffering from dysfunctions or taking medications** that were considered irrelevant for the current study. Here, we better inspect those conditions (N = 9 and 13, respectively):
+Fourth, we flag further participants that are not excluded but whose inclusion might bias some of the results.
+
+#### 1.3.4.1. Dysfunctions
+
+First, some of the **included participants reported suffering from dysfunctions or taking medications** that were considered irrelevant for the current study. Here, we better inspect those conditions (N = 9 and 13, respectively):
 
 - **6** included participants (4 females, 2 males) reported suffering from **cardiovascular dysfunctions**: arrhythmia, tachycardia episodes, and bicuspid aortic valve
 
@@ -341,9 +337,19 @@ summary(PrelQS[substr(PrelQS$ID,1,3)=="HRV",c("dysfun","drugs")])
 
 <br>
 
+#### 1.3.4.2. Postponed day
+
+Second, four of the included participants (4.1%) lost one protocol day (i.e., day 3 for `HRV013`, `HRV021`, and `HRV091`, day 1 for `HRV021`), which was postponed to a following week. Here, we mark these participants with `postponed = 1`.
+```{r }
+PrelQS$postponed <- 0
+PrelQS[PrelQS$ID %in% c("HRV013","HRV021","HRV067","HRV091"),"postponed"] <- 1
+```
+
+<br>
+
 ### 1.3.5. Further excluded
 
-**8 further participants were excluded** due to dropping-out during the EMA protocol (`009`, F; `059`, M), poor quality of physiological data (`015`, F; `046`, F; `066`, M) or technical problems with the mobile app (`011`, M; `027`, M; `029`, M). Here, we mark these participants as 'OUT'. 
+Finally, **8 further participants were excluded** due to dropping-out during the EMA protocol (`009`, F; `059`, M), poor quality of physiological data (`015`, F; `046`, F; `066`, M) or technical problems with the mobile app (`011`, M; `027`, M; `029`, M). Here, we mark these participants as 'OUT'. 
 ```{r }
 # marking 8 excluded participants as "OUT"
 memory <- PrelQS
@@ -539,7 +545,7 @@ cat("Reading",nrow(baseline),"responses to the baseline questionnaire from",
 
 ## 2.2. Data recoding
 
-Then, we recode the `ESM` and `baseline` variables to be used for the analyses, and we merge the two datasets. 
+Second, we recode the `ESM` and `baseline` variables to be used for the analyses, and we merge the two datasets. 
 
 The following packages and functions are used to optimize the ESM data recoding:
 ```{r warning=FALSE,message=FALSE}
@@ -691,7 +697,7 @@ bslRecoding <- function(data){
 
 ### 2.2.1. ID recoding
 
-As a first step, we **recode participants' identification codes** `ID` (currently corresponding to their e-mail addresses) using the "HRVXXX" format (e.g., from '[john.smith\@gmail.com](mailto:john.smith@gmail.com){.email}' to 'HRV001'). This is done with the `prel.qs_IDrecode()` and the `participantID_recoding_baseline()`  functions. Again, since the participants' e-mail addresses are confidential, both the function and the original dataset are not showed.
+First, we **recode participants' identification codes** `ID` (currently corresponding to their e-mail addresses) using the "HRVXXX" format (e.g., from '[john.smith\@gmail.com](mailto:john.smith@gmail.com){.email}' to 'HRV001'). This is done with the `participantID_recoding()` and the `participantID_recoding_baseline()`  functions. Again, since the participants' e-mail addresses are confidential, both the function and the original dataset are not showed.
 ```{r }
 # loading and using the function to recode the ID variable
 source("participantID_recoding.R"); source("participantID_recoding_baseline.R")
@@ -704,11 +710,11 @@ colnames(baseline)[2] <- "ID"
 
 ### 2.2.2. Time recoding
 
-Here, we process the **timestamps** (i.e., temporal variables) in both the `EMA` and the `baseline` datasets.
+Second, we process the **timestamps** (i.e., temporal variables) in both the `EMA` and the `baseline` datasets.
 
 #### 2.2.2.1. Timestamps
 
-First, we convert the included timestamps **from character to POSIXct** (the R format for dates and times), using the "GMT" time zone (note that data were collected in the CET/CEST region, but GMT is easier to handle).
+Here, we convert the included timestamps **from character to POSIXct** (the R format for dates and times), using the "GMT" time zone (note that data were collected in the CET/CEST region, but GMT is easier to handle).
 ```{r }
 # converting temporal variables as POSIXct in the ESM dataset
 ESM[,c("RunTimestamp","SubmissionTimestamp")] <- # no need to specify format since they already are POSIXct
@@ -721,7 +727,7 @@ baseline$RunTimestamp <- as.POSIXct(baseline$RunTimestamp,format="%Y/%m/%d %I:%M
 
 <br>
 
-Second, we inspect the data for cases of **wrongly encoded timestamps**, considering that data collection started on November 6th, 2018 and ended on November 21th, 2019. Only two cases are detected, whose `RunTimestamp` was recorded with the wrong year.
+Then, we inspect the data for cases of **wrongly encoded timestamps**, considering that data collection started on November 6th, 2018 and ended on November 21th, 2019. Only two cases are detected, whose `RunTimestamp` was recorded with the wrong year.
 ```{r }
 # min and max RunTimestamp
 c(min(ESM$RunTimestamp),max(ESM$RunTimestamp)) # ESM: unexpected values < November 2018
@@ -750,7 +756,9 @@ ESM[is.na(ESM$SubmissionTimestamp),"SubmissionTimestamp"] <- ESM[is.na(ESM$Submi
 
 #### 2.2.2.2. Daylight saving time
 
-Here, we **adjust the temporal coordinates** accounting for **daylight saving time**. Indeed, whereas timestamps were recorded based on the internal clock of participants' mobile phones, which automatically synchronizes based on time changes, such time shifts got lost in the data exporting, resulting in **one-hour shifts during standard time**. In Italy, during the data collection period, daylight saving time was applied from March 31th to October 27th 2019. Here, we visually inspect the timestamp of the first response for both the `EMA` and the `baseline` datasets.
+Second, we **adjust the temporal coordinates** accounting for **daylight saving time**. Indeed, whereas timestamps were recorded based on the internal clock of participants' mobile phones, which automatically synchronizes based on time changes, such time shifts got lost in the data exporting, resulting in **one-hour shifts during standard time**. In Italy, during the data collection period, daylight saving time was applied from March 31th to October 27th 2019. Here, we visually inspect the timestamp of the first response for both the `EMA` and the `baseline` datasets.
+
+We can note that in the `EMA` dataset, the responses recorded during **standard time** were encoded with **one hour less** than the actual time (i.e., the first questionnaire was scheduled at 11:30, whereas most responses were recorded at 10:30), whereas those recorded during **daylight saving time** show **one additional hour less** than the actual time (i.e., most responses recorded at 9:30). In the `baseline` dataset, the responses recorded during **daylight saving time** were recorded with **one hour less** than the actual time (i.e., baseline questionnaires were administered around 10:30, whereas most responses are around 9:30), whereas those recorded during **standard time** look fine.
 ```{r fig.width=8,fig.height=3}
 # ESM: computing and plotting time without date
 ESM$daytime <- as.POSIXct(paste(hour(ESM$RunTimestamp),minute(ESM$RunTimestamp)),format="%H %M",tz="GMT")
@@ -768,14 +776,6 @@ ggplot(baseline[,],aes(y=daytime,fill=daylight)) + geom_bar(position=position_do
   scale_y_datetime(labels = date_format("%H:%M"),date_breaks="60 min") +
   ggtitle("baseline$RunTimestamp")
 ```
-
-<br>
-
-*Comments:*
-
-- in the `EMA` dataset, the responses recorded during **standard time** were encoded with **one hour less** than the actual time (i.e., the first questionnaire was scheduled at 11:30, whereas most responses were recorded at 10:30), whereas those recorded during **daylight saving time** showing **one additional hour less** than the actual time (i.e., most responses recorded at 9:30)
-
-- in the `baseline` dataset, the responses recorded during **daylight saving time** were recorded with **one hour less** than the actual time (i.e., baseline questionnaires were administered around 10:30, whereas most responses are around 9:30), whereas those recorded during **standard time** look fine
 
 <br>
 
@@ -953,7 +953,7 @@ ESM
 
 ## 2.3. Cleaning & filtering
 
-Here, we clean and filter the data based on the inclusion criteria. The following packages and functions are used to optimize data filtering:
+Third, we clean and filter the data based on the inclusion criteria. The following packages and functions are used to optimize data filtering:
 ```{r warning=FALSE,message=FALSE}
 library(plyr); library(knitr); library(reshape2); library(ggplot2); library(gridExtra); library(careless)
 ```
@@ -996,7 +996,7 @@ respRate <- function(data){
 ```
 </p></details>
 
-Compute data frame of response rate values and print summary information on response rate.
+Computes a data frame of response rate values and prints summary information on response rate.
 
 <details><summary>`plotResp`</summary>
 <p>
@@ -1009,11 +1009,11 @@ plotResp <- function(data,id,items){
 ```
 </p></details>
 
-Plot pattern of responses to mood items for a subsample of responses.
+Plots the pattern of responses to mood items for a subsample of responses.
 
 <br>
 
-First, we inspect the original number of respondents and observations in the `ESM` dataset. We can see that the questionnaires were completed by a total of **104 respondents**, one less than the 105 participants that were actually invited to participate to the daily protocol. This is because one participant `HRV009` because she dropped out without activating the app.
+We start by inspecting the original number of respondents and observations in the `ESM` dataset. We can see that the questionnaires were completed by a total of **104 respondents**, one less than the 105 participants that were actually invited to participate to the daily protocol. This is because one participant `HRV009` because she dropped out without activating the app.
 ```{r }
 cat("Original No. of responses to the ESM/baseline surveys =",nrow(ESM),"from",nlevels(ESM$ID),"participants")
 ```
@@ -1084,7 +1084,7 @@ ESM[substr(ESM$ID,1,3)=="HRV" & ESM$within.day==0 & ESM$drugs==1,c("ID","drugs.w
 
 ### 2.3.3. Further excluded
 
-Here, we mark the **8 participants that were excluded** for the reasons specified in section 1.3.4. As in that section, such participants are marked as ‘OUT’. As noted above, participant `HRV009` was even not included in the `ESM` dataset because she dropped out before activating the app. Thus, from the initial 104 participants, the number of excluded participants is 7 (6.73%%), whereas the total number of included participants is 97 (93.27%).
+Third, we mark the **8 participants that were excluded** for the reasons specified in section 1.3.4. As in that section, such participants are marked as ‘OUT’. As noted above, participant `HRV009` was even not included in the `ESM` dataset because she dropped out before activating the app. Thus, from the initial 104 participants, the number of excluded participants is 7 (6.73%%), whereas the total number of included participants is 97 (93.27%).
 ```{r }
 # marking 8 excluded participants as "OUT"
 memory <- ESM
@@ -1104,7 +1104,7 @@ cat(nrow(ESM[substr(ESM$ID,1,3)=="HRV",]),"included observations from",
 
 ### 2.3.4. Flagged cases
 
-Although we did not applied inclusion criteria based on further variables than those specified in section 1.3.2, here we consider the **response rate** and the **coherence of the responses** as further criteria to flag those cases that might bias the results.
+Finally, although we did not applied inclusion criteria based on further variables than those specified in section 1.3.2, here we consider the **response rate** and the **coherence of the responses** as further criteria to flag those cases that might bias the results.
 
 #### 2.3.4.1. Response rate
 
@@ -1138,7 +1138,7 @@ ESM <- ESM[!is.na(ESM$v3),]
 
 #### 2.3.4.2. Careless responses 
 
-Here, we flag participants and/or single responses that might be considered as **careless respondents/responses**. 
+Second, we flag participants and/or single responses that might be considered as **careless respondents/responses**. 
 
 ##### Indicators and procedure {.tabset .tabset-fade .tabset-pills}
 
@@ -1505,13 +1505,777 @@ plotResp(ESM[ESM$cLessResp2==1,],"id",mood)
 
 # 3. HRV data
 
-ARRIVATO QUI
+Here, we describe the steps implemented to pre-process the **pulse interval data** recorded with the E4 wristband ([Empatica, Milan](https://www.empatica.com/en-eu/)). Then, pre-processed pulse intervals are read and used for computing **HR and HRV metrics**, which are subsequently recoded and filtered based on data quality and inclusion criteria.
+
+## 3.1. Signal pre-processing
+
+The following signal pre-processing steps were implemented to **derive pulse intervals from the raw blood volume pulse (BVP)**:
+
+1. We selected the recording segments between each couple of markers signaled by participants by focusing on the **last 2 minutes** of each 3-minute resting interval, and we used consecutive **pulse wave foot points** in the BVP signal to automatically detect pulse intervals. This was done with the [Pulse Intervals Detection App - PIDApp](https://github.com/Luca-Menghini/PIDApp), based on the [`pracma`](#refPack) and the [`shiny`](#refPack) R packages.
+
+2. **Artefacts were removed based on visual inspection** of both the BVP signal and pulse intervals time series, and recording segments with **artefacts in more than the 25% were excluded** from the analyses (marked as `out`). Specifically, a given pulse intervals was classified as artefact and removed if meeting **three out of five criteria**: 
+
+    - clear noise in the related raw BVP signal
+  
+    - clear rise in the amplitude of the corresponding acceleration signal
+  
+    - excessive deviation (i.e., > 300 ms) from the mean pulse interval length of the surrounding 10 pulse intervals
+  
+    - excessive deviation (i.e., > 10 bpm) from the instantaneous HR values preceding and following the pulse interval
+  
+    - excessive deviation (i.e., > 1 ms) between the RMSSD value computed with and without considering the pulse interval
+
+3. The resulting pulse interval time series were **automatically processed** using the freely available [ARTiiFACT software](https://github.com/tobias-kaufmann/ARTiiFACT) (version 2.13) ([Kaufmann et al., 2011](#ref)). Specifically, we **spline interpolated** pulse intervals identified as artefacts based on the **median absolute deviation method**.
+
+4. A **final visual inspection** was performed based on the code showed below (not run), and the pre-processed data were saved in the `HRV/FinalProcessing` folder.
+
+<details><summary>Show code</summary>
+<p>
+```{r, eval=FALSE }
+# Before executing the following code, pulse intervals were pre-processed as described in steps 1-3.
+# Each pre-processed segment was named as "subject_day_interval_Number of artefacts".
+# Intervals discarded due to too many artefacts were marked with the label "out" in place of the number of artefacts.
+# Missing intervals (i.e., not signaled by participants) were marked as "miss"
+
+# ..............................................
+# 4.1. DATA VISUALIZATION AND COMPARISON
+# ..............................................
+
+# Here, we show the code (not run) used for visually inspecting the pulse intervals time series processed with ARTiiFACT.
+# Automatically processed pulse intervals obtained in step 3 were saved in the "HRV/ARTIIFACTcorrected" folder.
+# Automatically processed pulse intervals are also compared them with the original (i.e., manually processed) data.
+# Manually processed pulse intervals obtained in step 2 were saved in the "HRV/clean_noOUT" folder.
+
+# reading file names
+data.path <- "HRV/ARTIIFACTcorrected" # files processed with ARTiiFACT
+paths = list.files(data.path, recursive = TRUE,full.names = TRUE, include.dirs = FALSE, pattern = ".txt")
+data.path.original <- "HRV/clean_noOUT" # original data
+paths.original = list.files(data.path.original, recursive = TRUE,full.names = TRUE, include.dirs = FALSE,pattern=".csv")
+
+# isolating ID x day couples to be plotted 
+IDs <- strsplit(gsub(".txt","",gsub("_ArtifactCorrectedWithMethod_1.txt","",gsub("/","",gsub(data.path,"",paths)))),"_")
+IDdays <- levels(as.factor(paste(rep(levels(as.factor(unlist(IDs)[grep("HRV",unlist(IDs))])),3),
+                                 c(rep(1,length(IDs)),rep(2,length(IDs)),rep(3,length(IDs))),sep="_")))
+
+# reading, processing, plotting, and saving pulse intervals
+for(IDday in IDdays[260:length(IDdays)]){
+  paths.cor <- grep(IDday,paths,value=TRUE)
+  paths.or <- grep(IDday,paths.original,value=TRUE) 
+  
+  # setting plot interface
+  par(mfrow=c(2,4),mar=c(2,2,3,2))
+  
+  # dataset of HR and HRV
+  Summ <- data.frame(interval=NA,RMSSD.cor=NA,RMSSD.or=NA,HR.cor=NA,HR.or=NA)
+  
+  for(i in 1:length(paths.cor)){
+    
+    # matching processed and original data
+    ID <- gsub(".csv","",gsub("_ArtifactCorrectedWithMethod_1.txt","",gsub("/","",gsub(data.path,"",paths.cor[i]))))
+    new.data <- read.csv(paths.cor[i],header=FALSE)
+    colnames(new.data)[1] <- "IBI"
+    original.data <- read.csv(paths.or[i])
+    colnames(original.data)[1] <- "time"
+    
+    # adding info to dataset
+    Summ <- rbind(Summ,data.frame(interval=as.integer(strsplit(ID,"_")[[1]][3]),
+                                  RMSSD.cor=round(sqrt(mean(diff(new.data$IBI)^2)),2),
+                                  RMSSD.or=round(sqrt(mean(diff(original.data$IBI)^2)),2),
+                                  HR.cor=round(mean(60000/new.data$IBI),2),HR.or=round(mean(60000/original.data$IBI),2)))
+    
+    # plotting corrected over original IBIs
+    plot(original.data[1:nrow(original.data),"time"],60000/original.data[1:nrow(original.data),"IBI"],
+         type="o",pch=20,cex=1.5,cex.main=1.2,xlab=NA,ylab=NA,
+         main=paste(ID,"\nRMSSD =",Summ[i+1,3],"-->",Summ[i+1,2],"- HR =",Summ[i+1,5],"-->",Summ[i+1,4]))
+    lines(original.data[1:nrow(original.data),"time"],60000/new.data$IBI,
+          type="o",pch=20,cex=1.5,col="red")
+    
+    # saving corrected data with time information
+    write.csv(data.frame(time=original.data$time,IBI=new.data$IBI),gsub("clean_noOUT","SanityCheck",paths.or[i])) }
+  
+  # plotting RMSSD by interval
+  plot(Summ[2:nrow(Summ),"interval"],Summ[2:nrow(Summ),"RMSSD.or"],main=paste("RMSSD (ms)",IDday),type="o")
+  lines(Summ[2:nrow(Summ),"interval"],Summ[2:nrow(Summ),"RMSSD.cor"],type="o",col="red")
+  
+  # plotting HR by interval
+  plot(Summ[2:nrow(Summ),"interval"],Summ[2:nrow(Summ),"HR.or"],main=paste("HR (bpm)",IDday),type="o")
+  lines(Summ[2:nrow(Summ),"interval"],Summ[2:nrow(Summ),"HR.cor"],type="o",col="red")
+  
+  readline(prompt=cat(IDday,"\nPress [enter]")) }
+
+# Based on this visual inspection, some signal segments were manually re-processed by interpolating artefacted pulse intervals.
+# Specifically, we only kept corrections leading to substantial absolute change (i.e., > 1 ms) in the RMSSD of each segment.
+# Manually re-processed files were saved in the "HRV/SanityCheck2" folder.
+
+# ..............................................
+# 4.2. FINAL VISUAL INSPECTION AND DATA EXPORT
+# ..............................................
+
+# As a final step, we conducted a last visual inspection and we saved the final data in the "HRV/FinalProcessing" folder.
+
+# reading file names (i.e., "subject_day_interval_Number of artefacts")
+data.path <- "HRV/SanityCheck2" # automatically processed & checked data
+paths = list.files(data.path, recursive = TRUE,
+                   full.names = TRUE, include.dirs = FALSE, pattern = ".csv")
+
+# reading files, recoding, plotting, and saving
+for(IDday in IDdays[201:length(IDdays)]){
+  
+  # setting plot interface
+  par(mfrow=c(2,4),mar=c(2,2,3,2))
+  
+  # dataset of HR and HRV
+  Summ <- data.frame(interval=NA,RMSSD=NA,HR=NA)
+  
+  # reading each interval in a given IDday
+  paths.IDday <- grep(IDday,paths,value=TRUE)
+  for(i in 1:length(paths.IDday)){
+    
+    # changing participants' ID
+    ID <- strsplit(gsub(" ","",(gsub("/","",gsub(".csv","",(gsub(data.path,"",paths.IDday[i])))))),split = "_")
+    if(nchar(ID[[1]][1])==5){
+      ID[[1]][1] <- paste("HRV0",substr(ID[[1]][1],4,5),sep="")
+      ID <- paste(ID[[1]][1],ID[[1]][2],ID[[1]][3],ID[[1]][4],sep="_")
+    } else{ ID <- gsub("/","",gsub(".csv","",(gsub(data.path,"",paths.IDday[i])))) }
+    
+    if(strsplit(ID,"_")[[1]][4]!="out" & strsplit(ID,"_")[[1]][4]!="miss"){
+      
+      # changing data format
+      new.data <- read.csv(paths.IDday[i])
+      if(colnames(new.data)[1]=="X"){ new.data <- new.data[,2:3] }
+      if(colnames(new.data)[1]=="time"){colnames(new.data)[1]="t"}
+      
+      # adding info to dataset
+      Summ <- rbind(Summ,data.frame(interval=as.integer(strsplit(ID,"_")[[1]][3]),
+                                    RMSSD=round(sqrt(mean(diff(new.data$IBI)^2)),2),
+                                    HR=round(mean(60000/new.data$IBI),2)))
+      
+      # plotting corrected over original IBIs
+      plot(new.data$t,60000/new.data$IBI,
+           type="o",pch=20,cex=1.5,cex.main=1.2,xlab=NA,ylab=NA,
+           main=paste(ID,"\nRMSSD =",Summ[!is.na(Summ$interval)&Summ$interval==i,2],
+                      ", HR =",Summ[!is.na(Summ$interval)&Summ$interval==i,3]))
+      
+      # saving corrected data with time information
+      write.csv(new.data,paste("HRV/FinalProcessing/",ID,".csv",sep=""),row.names=FALSE)
+    
+      } else{ # cases marked as "out" or "miss"
+      plot(1,main=paste(ID,"\nRMSSD =",Summ[i+1,2],"- HR =",Summ[i+1,3])) }}  # empty plot
+  
+  # plotting RMSSD by interval
+  plot(Summ[2:nrow(Summ),"interval"],Summ[2:nrow(Summ),"RMSSD"],main=paste("RMSSD (ms)",IDday),type="b",pch=20,cex=5)
+  plot(Summ[2:nrow(Summ),"interval"],Summ[2:nrow(Summ),"HR"],main=paste("HR (bpm)",IDday),type="b",pch=20,cex=5)
+  
+  readline(prompt=cat(IDday,"\nPress [enter]")) }
+```
+</p></details>
+
+<br>
+
+## 3.2. Data reading & recoding
+
+Here, we we read the pre-processed **pulse intervals** time series and we compute the following metrics for each two-minute recording segment:
+
+- **Mean pulse interval** `PI`, computed as the mean of the pulse intervals (ms) in a given recording segment
+
+- **Mean heart rate** `HR` (bpm), computed as the mean of `60000/PI`
+
+- **Root mean square of successive differences in N-N intervals** `RMSSD` (ms), computed as the squared root of the squared mean successive differences in consecutive pulse intervals
+
+- **RMSSD coefficient of variation** `RMSSDcv`, computed as `100 * RMSSD / PI`, following [de Geus et al (2019)](#ref)'s recommendation to test and report on how adjusting HRV metrics for chronotropic state affects primary study outcomes
+
+The `readHRV` function is used to process pulse intervals and merge them into the HRV dataset.
+
+<details><summary>`readHRV`</summary>
+<p>
+```{r }
+readHRV <- function(data.path){ 
+  
+  # empty data.frame to be filled
+  HRVdata <- data.frame(ID=NA,day=NA,within.day=NA,PI=NA,HR=NA,RMSSD=NA,RMSSDcv=NA,artefacts=NA,nPI=NA)
+  paths = list.files(data.path, recursive = TRUE, full.names = TRUE, include.dirs = FALSE)
+  
+  # data reading
+  for(path in paths){
+    ID <- gsub("/","",gsub(data.path,"",gsub(".csv","",path)))
+    ID <- strsplit(ID,"_")[[1]]
+    if(ID[4]=="out"|ID[4]=="miss"){ # missing or excluded data
+      HRVdata <- rbind(HRVdata,
+                       data.frame(ID=ID[1],day=ID[2],within.day=ID[3],
+                                  PI=NA,HR=NA,RMSSD=NA,RMSSDcv=NA,
+                                  artefacts=ID[4],nPI=NA))
+    }else{ # complete data
+        new.data <- read.csv(path) 
+        HRVdata <- rbind(HRVdata,
+                         # computing HRV metrics
+                         data.frame(ID=ID[1],day=ID[2],within.day=ID[3],
+                                    PI=mean(new.data$IBI), # mean pulse interval
+                                    HR=mean(60000/new.data$IBI), # mean heart rate
+                                    RMSSD=sqrt(mean(diff(new.data$IBI)^2)), # RMSSD
+                                    RMSSDcv= 100 * sqrt(mean(diff(new.data$IBI)^2)) / mean(new.data$IBI), # RMSSDcv
+                                    artefacts=ID[4],
+                                    nPI=nrow(new.data)))}}
+  
+  # adjusting data
+  HRVdata <- HRVdata[2:nrow(HRVdata),] # removing first empty row
+  HRVdata[,c("ID","day","within.day")] <- lapply(HRVdata[,c("ID","day","within.day")],as.factor)
+  return(HRVdata)}
+```
+</p></details>
+
+```{r }
+(HRV <- readHRV(data.path="HRV/FinalProcessing"))[1:3,] # reading data and showing first three rows
+```
+
+<br>
+
+## 3.3. Data cleaning & filtering
+
+HRV data were already cleaned and filtered in the signal pre-processing step (see section 3.1). Here, we report the details on data quality and we consider some data quality indicators as **further criteria to flag** those cases that might bias the results. The following packages and functions are used to optimize data filtering:
+
+```{r warning=FALSE,message=FALSE}
+library(plyr) # loading required packages
+```
+
+<details><summary>`complRate`</summary><p>
+```{r }
+complRate <- function(data,what=c("compliance","inclusion")){
+  
+  # scheduled No. of surveys (1 baseline + 5 ordinary X 3 days)
+  tot <- (1 + 5) * 3
+  amb <- 5 * 3
+  lab <- 1 * 3
+  
+  # subsetting data
+  data.ok <- data[!(data$artefacts%in%c("out","miss")),] # clean segments
+  data.nmiss <- data[data$artefacts!="miss",] # nonmissing segments
+  data.miss <- data[data$artefacts=="miss",] # missing segments
+  data.out <- data[data$artefacts=="out",] # excluded segments
+  
+  # creating dataset of compliance and inclusion rates
+  cr <- data.frame(ID=levels(data$ID),tot.nmiss=as.numeric(table(data.nmiss$ID))) # No. of nonmissing segments per participant
+  cr$lab.nmiss <- as.numeric(table(data.nmiss[data.nmiss$within.day==6,"ID"])) # No. nonmissing segments in lab
+  cr$amb.nmiss <- as.numeric(table(data.nmiss[data.nmiss$within.day!=6,"ID"])) # No. nonmissing segments outside lab
+  
+  # compliance: nonmissing and missing over scheduled
+  if("compliance" %in% what){
+    
+    # computing compliance rate
+    cr$tot.CR <- round(100*cr$tot.nmiss/tot,1) # compliance rate
+    cr$lab.CR <- round(100*cr$lab.nmiss/lab,1) # compliance rate in lab
+    cr$amb.CR <- round(100*cr$amb.nmiss/amb,1) # compliance rate outside lab
+  
+    cat("\n\nNonmissing segments:",
+        "\n -",sum(cr$tot.nmiss),"nonmissing segments (",
+        round(100*sum(cr$tot.nmiss)/(tot*nlevels(data$ID)),1),"% of tot scheduled ), from",min(cr$tot.nmiss),"to",max(cr$tot.nmiss),
+        ", mean =",round(mean(cr$tot.nmiss),1),"sd =",round(sd(cr$tot.nmiss),1),
+        ", mean perc =",round(mean(cr$tot.CR),1),"% sd =",round(sd(cr$tot.CR),1),"%",
+        "\n -",sum(cr$amb.nmiss),"from outside lab, from",min(cr$amb.nmiss),"to",max(cr$amb.nmiss),
+        ", mean =",round(mean(cr$amb.nmiss),1),"sd =",round(sd(cr$amb.nmiss),1),
+        ", mean perc =",round(mean(cr$amb.CR),1),"% sd =",round(sd(cr$amb.CR),1),"%",
+        "\n -",sum(cr$lab.nmiss),"from lab, from",min(cr$lab.nmiss),"to",max(cr$lab.nmiss),
+        ", mean =",round(mean(cr$lab.nmiss),1),"sd =",round(sd(cr$lab.nmiss),1),
+        ", mean perc =",round(mean(cr$lab.CR),1),"% sd =",round(sd(cr$lab.CR),1),"%")
+  
+    # computing No. of missing segments and missing rate
+    cr$tot.miss <- as.numeric(table(data.miss$ID)) # No. of missing segments per participant
+    cr$tot.MR <- round(100*cr$tot.miss/tot,1) # missing rate
+    cr$lab.miss <- as.numeric(table(data.miss[data.miss$within.day==6,"ID"])) # No. missing segments in lab
+    cr$lab.MR <- round(100*cr$lab.miss/lab,1) # missing rate in lab
+    cr$amb.miss <- as.numeric(table(data.miss[data.miss$within.day!=6,"ID"])) # No. missing segments outside lab
+    cr$amb.MR <- round(100*cr$amb.miss/amb,1) # missing rate outside lab
+  
+    cat("\n\nMissing segments:",
+        "\n -",sum(cr$tot.miss),"missing segments (",
+        round(100*sum(cr$tot.miss)/(tot*nlevels(data$ID)),1),"% of tot scheduled ), from",min(cr$tot.miss),"to",max(cr$tot.miss),
+        ", mean =",round(mean(cr$tot.miss),1),"sd =",round(sd(cr$tot.miss),1),
+        ", mean perc =",round(mean(cr$tot.MR),1),"% sd =",round(sd(cr$tot.MR),1),"%",
+       "\n -",sum(cr$amb.miss),"from outside lab, from",min(cr$amb.miss),"to",max(cr$amb.miss),
+        ", mean =",round(mean(cr$amb.miss),1),"sd =",round(sd(cr$amb.miss),1),
+        ", mean perc =",round(mean(cr$amb.MR),1),"% sd =",round(sd(cr$amb.MR),1),"%",
+        "\n -",sum(cr$lab.miss),"from lab, from",min(cr$lab.miss),"to",max(cr$lab.miss),
+        ", mean =",round(mean(cr$lab.miss),1),"sd =",round(sd(cr$lab.miss),1),
+        ", mean perc =",round(mean(cr$lab.MR),1),"% sd =",round(sd(cr$lab.MR),1),"%")  }
+  
+  # inclusion: excluded and included over nonmissing
+  if("inclusion" %in% what){
+    # computing No. of excluded segments and exclusion rate
+    cr$tot.out <- as.numeric(table(data.out$ID)) # No. of excluded segments per participant
+    cr$tot.ER <- round(100*cr$tot.out/cr$tot.nmiss,1) # exclusion rate
+    cr$lab.out <- as.numeric(table(data.out[data.out$within.day==6,"ID"])) # No. excluded segments in lab
+    cr$lab.ER <- round(100*cr$lab.out/cr$lab.nmiss,1) # exclusion rate in lab
+    cr$amb.out <- as.numeric(table(data.out[data.out$within.day!=6,"ID"])) # No. excluded segments outside lab
+    cr$amb.ER <- round(100*cr$amb.out/cr$amb.nmiss,1) # exclusion rate outside lab
+  
+    cat("\n\nExcluded segments:",
+        "\n -",sum(cr$tot.out),"excluded segments (",
+        round(100*sum(cr$tot.out)/sum(cr$tot.nmiss),1),"% of nonmissing segments), from",min(cr$tot.out),"to",max(cr$tot.out),
+        ", mean =",round(mean(cr$tot.out),1),"sd =",round(sd(cr$tot.out),1),
+        ", mean perc =",round(mean(cr$tot.ER),1),"% sd =",round(sd(cr$tot.ER),1),"%",
+        "\n -",sum(cr$amb.out),"from outside lab, from",min(cr$amb.out),"to",max(cr$amb.out),
+        ", mean =",round(mean(cr$amb.out),1),"sd =",round(sd(cr$amb.out),1),
+        ", mean perc =",round(mean(cr$amb.ER)),"% sd =",round(sd(cr$amb.ER)),"%",
+        "\n -",sum(cr$lab.out),"from lab, from",min(cr$lab.out),"to",max(cr$lab.out),
+        ", mean =",round(mean(cr$lab.out),1),"sd =",round(sd(cr$lab.out),1),
+        ", mean perc =",round(mean(cr$lab.ER),1),"% sd =",round(sd(cr$lab.ER),1),"%")
+  
+    # computing No. of included segments and inclusion rate
+    cr$tot.ok <- as.numeric(table(data.ok$ID)) # No. of included segments per participant
+    cr$tot.IR <- round(100*cr$tot.ok/cr$tot.nmiss,1) # inclusion rate
+    cr$lab.ok <- as.numeric(table(data.ok[data.ok$within.day==6,"ID"])) # No. included segments in lab
+    cr$lab.IR <- round(100*cr$lab.ok/cr$lab.nmiss,1) # inclusion rate in lab
+    cr$amb.ok <- as.numeric(table(data.ok[data.ok$within.day!=6,"ID"])) # No. included segments outside lab
+    cr$amb.IR <- round(100*cr$amb.ok/cr$amb.nmiss,1) # inclusion rate outside lab
+  
+    cat("\n\nIncluded segments:",
+        "\n -",sum(cr$tot.ok),"excluded segments (",
+        round(100*sum(cr$tot.ok)/sum(cr$tot.nmiss),1),"% of nonmissing segments), from",min(cr$tot.ok),"to",max(cr$tot.ok),
+        ", mean =",round(mean(cr$tot.ok),1),"sd =",round(sd(cr$tot.ok),1),
+        ", mean perc =",round(mean(cr$tot.IR),1),"% sd =",round(sd(cr$tot.IR),1),"%",
+        "\n -",sum(cr$amb.ok),"from outside lab, from",min(cr$amb.ok),"to",max(cr$amb.ok),
+        ", mean =",round(mean(cr$amb.ok),1),"sd =",round(sd(cr$amb.ok),1),
+        ", mean perc =",round(mean(cr$amb.IR),1),"% sd =",round(sd(cr$amb.IR),1),"%",
+        "\n -",sum(cr$lab.ok),"from lab, from",min(cr$lab.ok),"to",max(cr$lab.ok),
+        ", mean =",round(mean(cr$lab.ok),1),"sd =",round(sd(cr$lab.ok),1),
+        ", mean perc =",round(mean(cr$lab.IR),1),"% sd =",round(sd(cr$lab.IR),1),"%") }
+  
+  return(cr)}
+```
+</p></details>
+
+Computes a data frame of compliance rate values and prints summary information on compliance and inclusion rate.
+
+<details><summary>**Show function plotPI**</summary>
+<p>
+```{r }
+plotPI <- function(data.path,IDs){
+  paths = list.files(data.path, recursive = TRUE, full.names = TRUE, include.dirs = FALSE)
+  for(ID in IDs){ pathIDs <- paths[substr(paths,21,26)==ID]
+  par(mfrow=c(2,4))
+    for(pathID in pathIDs){ id <- strsplit(gsub("/","",gsub(pathID,"",gsub(".csv","",pathID))),split="_")[[1]][4]
+    if(id!="out" & id!="miss"){ pi <- read.csv(pathID)
+    plot(pi$t,60000/pi$IBI,type="o",pch=20,cex=.5,lwd=.5,cex.main=1.2,xlab="time (sec)",ylab="HR (bpm)",
+         main=gsub(data.path,"",pathID),ylim=c(40,120))}}}}
+```
+</p></details>
+
+Reads and plots the pulse intervals time series from the specified subsample of participants.
+
+<br>
+
+We start by inspecting the original number of respondents and observations in the `HRV` dataset, which corresponds to the total number of scheduled recordings (i.e., No. participants x 3 days x 6 recordings), that is 1,746. We can see that the dataset includes a total of 97 participants, eight less than the 105 participants that were actually invited to participate to the daily protocol. This is because the **eight excluded participants** mentioned in sections 1.3.5 and 2.3.3 were not pre-processed or their pre-processing was interrupted after noticing too low signal quality.
+```{r }
+cat("Total No. of scheduled HRV recordings =",nrow(HRV),"from",nlevels(HRV$ID),"participants")
+```
+
+<br>
+
+### 3.3.1. Double recordings
+
+First, we inspect the data for cases of double recording segments, that is segments with the same `ID`, `day`, and `within.day` value. We can see that **no double recordings** are included in the `HRV` dataset.
+```{r }
+cat(nrow(HRV[duplicated(paste(HRV$ID,HRV$day,HRV$within.day)),]),"double recordings")
+```
+
+<br>
+
+### 3.3.2. Flagged cases
+
+Second, we inspect the compliance ratings and the data quality as further criteria to flag those cases that might bias the results.
+
+#### 3.3.2.1. Compliance rate
+
+First, we inspect the compliance rate, that is the number of recordings that were not marked as "miss" in the file name over the total number of scheduled recordings, by using the `complRate` function showed above. 
+
+We can see that **all lab-based segments** were recorded each day for each participant (compliance = 100%), whereas a some **missing data were present in ambulatory segments** (i.e., those recorded outside the lab). Overall, the mean compliance rate with ambulatory recordings was relatively high (**92%**) with no participants showing response rates < 60%. Thus, we see **no reasons for excluding or flagging further participants** based on compliance rate.
+```{r }
+crate <- complRate(HRV,what="compliance")
+```
+
+<br>
+
+#### 3.3.2.2. Artefact rate
+
+Second, we inspect the **rate of pulse intervals identified as artefacts** in the included segments. Note that recording segments with artefacts in more than the 25% of the pulse intervals were excluded and marked as "out". 
+
+We can note that a few included segments (N = 9, 0.7%) were still presenting artefacts in more than the 25%, and thus we exclude them. Without these cases, the average No. of removed artefacts per segment is 7.34 (5.2%). Here, we consider a more restrictive criterion by **flagging segments with artefacts in more than the 10%** of the pulse intervals (N = 234, with `art10 = 1`, 17%). 
+```{r fig.width=8,fig.height=2}
+# separating "miss" and "out" from the No. of artefacts
+HRV$out <- HRV$miss <- 0
+HRV[HRV$artefacts=="miss","miss"] <- 1
+HRV[HRV$artefacts=="out","out"] <- 1
+HRV$nArtefacts <- HRV$artefacts
+HRV[HRV$artefacts %in% c("miss","out"),"nArtefacts"] <- NA
+HRV$nArtefacts <- as.integer(HRV$nArtefacts) # No. of artefacts
+HRV$pArtefacts <- 100*HRV$nArtefacts/HRV$nPI # artefact rate
+
+# checking for included cases with artefacts in more than the 25%
+cat("Excluding further",nrow(HRV[!is.na(HRV$pArtefacts) & HRV$pArtefacts>25,]),"segments with 25%+ artefacts")
+HRV[!is.na(HRV$pArtefacts) & HRV$pArtefacts>25,"out"] <- 1 # excluding these cases
+HRV[!is.na(HRV$pArtefacts) & HRV$pArtefacts>25,"artefacts"] <- "out"
+HRV[!is.na(HRV$pArtefacts) & HRV$pArtefacts>25,c("PI","HR","RMSSD","RMSSDcv","nPI","nArtefacts","pArtefacts")] <- NA
+cat(nrow(HRV[!is.na(HRV$pArtefacts) & HRV$pArtefacts>25,]),"remaining segments with 25%+ artefacts")
+
+# summarizing and plotting No. of artefacts per segment
+cat(sum(HRV$nArtefacts,na.rm=TRUE),"artefacts removed from included segments (",
+    round(100*sum(HRV$nArtefacts,na.rm=TRUE)/sum(HRV$nPI,na.rm=TRUE),1),"% of pulse intervals )",
+    "\n- No. of artefacts per recording ranging from",min(HRV$nArtefacts,na.rm=TRUE),"to",max(HRV$nArtefacts,na.rm=TRUE),
+    ", mean =",round(mean(HRV$nArtefacts,na.rm=TRUE),2),"sd =",round(sd(HRV$nArtefacts,na.rm=TRUE),2),
+    "\n- Perc. artefacts per recording ranging from",
+    min(100*HRV$nArtefacts/HRV$nPI,na.rm=TRUE),"% to",max(100*HRV$nArtefacts/HRV$nPI,na.rm=TRUE),"%, mean =",
+    round(mean(100*HRV$nArtefacts/HRV$nPI,na.rm=TRUE),1),"% sd =",round(sd(100*HRV$nArtefacts/HRV$nPI,na.rm=TRUE),1),"%")
+par(mfrow=c(1,2)); hist(HRV$nArtefacts,main="No. removed artefacts"); hist(100*HRV$nArtefacts/HRV$nPI,main="% removed artefacts")
+
+# flagging cases with artefacts in more than the 10%
+HRV[!is.na(HRV$pArtefacts),"art10"] <- 0
+HRV[!is.na(HRV$pArtefacts) & HRV$pArtefacts>10,"art10"] <- 1
+summary(as.factor(HRV$art10))
+```
+
+<br>
+
+#### 3.3.2.3. Inclusion rate
+
+Third, we inspect the quality of the recorded signal in terms of **number of segment excluded due to excessive artefacts** (i.e., segments with artefacts in more than the 25% of the pulse intervals were marked as "out" in the file name) **over the number of nonmissing segments**. This is done with the same `complRate` function showed above.
+
+We can see that only **a few lab-based segments** (N = 30 out of 291, 10.3%) were excluded due to excessive artefacts, whereas a higher percentage of ambulatory segments (N = 243 our of 1,338, 18.7%) were excluded for the same reasons. Overall, 280 segments (17.2% of the nonmissing segments) were excluded due to excessive artefacts, resulting in a total of **1,349 included segments**. Here, a number of participants (N = 14, 14.4%) showed **inclusion rates < 60% and are flagged** with `inclRate60 = 1`.
+```{r }
+# computing inclusion rate
+irate <- complRate(HRV,what="inclusion")
+
+# flagging participants with IR < 60% (N = 14)
+irate$inclRate60 <- 0
+irate[irate$tot.IR < 60,"inclRate60"] <- 1
+HRV <- join(HRV,irate[,c("ID","inclRate60")],by="ID",type="left")
+summary(as.factor(irate$inclRate60))
+```
+
+<br>
+
+#### 3.3.2.4. 'Noisy' signal {.tabset .tabset-fade .tabset-pills}
+
+Finally, we inspect the data of **10 included participants (10.3%) whose signal was overall classified as 'noisy'** due to higher uncertainty of pulse interval detection. The `plotPI` function showed at the beginning of section 3.3 is used to visualize the pulse intervals time series for these participants and to compare them with a random subsample of 5 'clean-signal' participants.
+
+We can note that, compared to 'clean-signal' participants, flagged participants tended to show **less variable** pulse intervals. Some cases (e.g., HRV032) tend to show **'fixed' pulse intervals** values (i.e., certain values were highly frequent), as partially due to the sampling frequency of the E4 PPG sensor and can be also seen for some unflagged participant. Other cases (e.g., HRV054) show frequent **steep changes** of about 10-20 bpm.
+
+##### FLAGGED PARTICIPANTS
+
+Here, we flag the 10 participants showing a 'noisy' signal with `noisyPI = 1`. We can note that the `noisyPI` variable looks quite indepentend from the previously created `art10` and `inclRate60` variables.
+```{r }
+noisy <- c("HRV018","HRV020","HRV021","HRV032","HRV033","HRV050","HRV054","HRV063","HRV070","HRV076")
+HRV$noisyPI <- 0
+HRV[HRV$ID %in% noisy,"noisyPI"] <- 1
+summary(as.factor(HRV[!duplicated(HRV$ID),"noisyPI"]))
+
+# crossing noisyPI cases with art10
+table(HRV[,c("noisyPI","art10")])
+
+# crossing noisyPI participants with inclRate60
+table(HRV[!duplicated(HRV$ID),c("noisyPI","inclRate60")])
+```
+
+<br>
+
+##### PLOT OF 'NOISY' SIGNAL
+
+Here, we visualize the pulse intervals of all segments recorded by participants flagged with `noisyPI = 1`.
+```{r fig.width=11,fig.height=6}
+plotPI(data.path="HRV/FinalProcessing",IDs=noisy)
+```
+
+##### PLOT OF 'CLEAN' SIGNAL
+
+Here, we visualize the pulse intervals of all segments recorded by a random subsample of 5 participants not flagged with `noisyPI = 1`.
+```{r fig.width=11,fig.height=6}
+plotPI(data.path="HRV/FinalProcessing",IDs=sample(levels(HRV$ID)[!(levels(HRV$ID) %in% noisy)],size=10))
+```
+
+<br>
 
 # 4. GNG data
 
+Here, the raw behavioral data from **Go/No-Go task** exported from E-Prime (version 2.0.10) (Psychology Software Tools, Inc., Sharpsburg, PA) are read and saved in the `GNG` dataset, recoded, and filtered based in inclusion criteria.
+
+## 4.1. Data reading
+
+First, we read the CSV data files exported from the E-Prime software. Specifically, we used E-Merge to join the data from all the 105 participants invited to participate to the daily protocol, in a single data file `Merged_105_final.csv`. Here, we read that long-form trial-by-trial dataset. 
+```{r warning=FALSE,message=FALSE}
+# reading data
+GNG <- read.csv2("GONOGO/Merged_105_final.csv",header=TRUE)
+```
+
+<br>
+
+## 4.2. Data recoding
+
+Then, we recode the `GNG` variables to be used for the analyses.
+
+The following packages and functions are used to optimize the ESM data recoding:
+```{r warning=FALSE, message=FALSE}
+library(Rmisc)
+```
+
+<details><summary>`GNGrecoding`</summary>
+<p>
+```{r }
+GNGrecoding <- function(data){
+  
+  # VARIABLE RECORDING
+  # .............................................................
+  
+  # keeping only columns of interest
+  data <- data[c("ID","Session","Procedure.Block.","SessionDate","SessionTime","TrialType","Image","Jitter", # session info
+                 paste("Stimulus",rep(1:6,each=2),".",rep(c("ACC","RT"),6),sep=""))] # accuracy and reaction times
+  
+  # recoding block information
+  colnames(data)[which(names(data)=="Procedure.Block.")] <-"block"
+  data <- data[data$block!="TRAINING",] # excluding training data
+  data$block <- as.integer(substr(data$block,6,6)) # block as integer from 1 to 6
+  
+  # merging performance data into single variables (RT and ACC)
+  data[is.na(data)] <- 0 # missing data (NA) as 0 to be summed
+  data$ACC <- rowSums(data[,which(substr(colnames(data),11,13)=="ACC")]) # accuracy
+  data$RT <- rowSums(data[,which(substr(colnames(data),11,12)=="RT")]) # reaction time
+  data[,paste("Stimulus",rep(1:6,each=2),".",rep(c("ACC","RT"),6),sep="")] <- NULL # removing stimulus-related columns
+  
+  # letter stimulus
+  data$Image <- as.factor(gsub(".png","",data$Image))
+  colnames(data)[which(names(data)=="Image")] <-"letter"
+  
+  # TrialType as factor
+  data$TrialType <- as.factor(data$TrialType)
+  
+  # FIXING PROBLEMS WITH SINGLE PARTICIPANTS
+  # .............................................................
+  
+  # # checks cases with No. of trials per block != 109
+  # for(ID in levels(as.factor(paste(data$ID,data$block)))){
+  #     if(nrow(data[paste(data$ID,data$block)==ID,])!=108){
+  #       print(paste(ID,nrow(data[paste(data$ID,data$block)==ID,]))) }}
+  
+  # blocks 5 and 6 of HRV001 were saved as HRV003
+  data[data$ID=="HRV003" & data$block==5,][109:216,"ID"] <- "HRV001"
+  data[data$ID=="HRV003" & data$block==6,][109:216,"ID"] <- "HRV001"
+  
+  # HRV031 performed block 6 before block 5, then again block 6 (invalid), then block 5 twice (second invalid)
+  data <- rbind(data[!(data$ID=="HRV031" & data$block==5),],
+                  data[data$ID=="HRV031" & data$block==5,][1:108,]) # taking only 1st
+  data <- rbind(data[!(data$ID=="HRV031" & data$block==6),],
+                  data[data$ID=="HRV031" & data$block==6,][1:108,]) # taking only 1st
+  data[data$ID=="HRV031" & data$block==5, "block"] <- 9 # inverting 5 and 6
+  data[data$ID=="HRV031" & data$block==6, "block"] <- 5
+  data[data$ID=="HRV031" & data$block==9, "block"] <- 6
+  
+  # HRV042 made block 6 twice (first time invalid)
+  data <- rbind(data[!(data$ID=="HRV042" & data$block==6),],
+                  data[data$ID=="HRV042" & data$block==6,][109:216,]) # taking only 2nd
+  
+  # HRV060 made block 4 twice (first time invalid)
+  data <- rbind(data[!(data$ID=="HRV060" & data$block==4),],
+                  data[data$ID=="HRV060" & data$block==4,][109:216,]) # taking only 2nd
+  
+  # Block 1 is invalid for HRV066 (technical problem) --> marking everything as NA
+  data[data$ID=="HRV066" & data$block==1,c("ACC","RT")] <- NA
+  
+  # HRV086 made block 5 twice (first time invalid)
+  data <- rbind(data[!(data$ID=="HRV086" & data$block==5),],
+                data[data$ID=="HRV086" & data$block==5,][109:216,]) # taking only 2nd
+  
+  # FINAL RECODING AND SAVING
+  # .............................................................
+  
+  # renaming Session as "day" and recoding block as either 1 (i.e., 1, 3, and 5) or 2 (i.e., 2, 4, and 6)
+  colnames(data)[which(names(data)=="Session")] <-"day"
+  data[data$block==3|data$block==5,"block"] <- 1
+  data[data$block==4|data$block==6,"block"] <- 2
+  
+  return(data[order(data$ID,data$SessionDate),])
+}
+```
+</p></details>
+
+<br>
+
+### 4.2.1. ID recoding
+
+First, we **recode participants’ identification codes** `ID` (currently corresponding to their e-mail addresses) using the “HRVXXX” format (e.g., from ‘john.smith@gmail.com’ to ‘HRV001’). This is done with the `participantID_recoding_GONOGO()`  function. Again, since the participants’ e-mail addresses are confidential, both the function and the original dataset are not showed.
+```{r }
+# loading and using the function to recode the ID variable
+source("participantID_recoding_GONOGO.R")
+(GNG <- participantID_recoding_GONOGO(GNG))[1:3,] # recoding GNG IDs and showing first three rows
+```
+
+<br>
+
+### 4.2.2. Time recoding
+
+Second, we recode the `SessionDate` and `SessionTime` variables so that they indicate the date and time and the time within day of each session, respectively. We can note that all sessions were recorded within the data collection period (i.e., between November 2018 and November 2019). In terms of time within day, we can note that most sessions were recorded between 16:15 and 18:15, with only three sessions recorded before 15:30.
+```{r fig.width=11,fig.height=2.5}
+# SessionDate as date and time
+GNG$sd <- as.POSIXct(NA)
+GNG[substr(GNG$SessionDate,3,3)=="/","sd"] <- # SessionDate format as d/m/y
+  as.POSIXct(paste(GNG[substr(GNG$SessionDate,3,3)=="/","SessionDate"],
+                   substr(GNG[substr(GNG$SessionDate,3,3)=="/","SessionTime"],12,19)),format="%m/%d/%Y %H:%M:%S",tz="GMT")
+GNG[substr(GNG$SessionDate,3,3)=="-","sd"] <- # SessionDate format as m-d-y
+  as.POSIXct(paste(GNG[substr(GNG$SessionDate,3,3)=="-","SessionDate"],
+                   substr(GNG[substr(GNG$SessionDate,3,3)=="-","SessionTime"],12,19)),format="%m-%d-%Y %H:%M:%S",tz="GMT")
+GNG$SessionDate <- GNG$sd
+
+# plotting SessionDate and SessionTime
+par(mfrow=c(1,2))
+hist(GNG[!duplicated(paste(GNG$ID,GNG$Session)),"SessionDate"],breaks="months",freq=TRUE,main="SessionDate")
+hist(GNG[!duplicated(paste(GNG$ID,GNG$Session)),"SessionTime"],breaks="min",freq=TRUE,main="SessionTime")
+```
+
+<br>
+
+### 4.2.3. Other variables
+
+Third, we use the `GNGrecoding()` function showed above to recode the other variables in the `GNG` dataset, to filter unuseful columns, and to correct some issues with specific participants (see function details at the beginning of section 4.2).
+```{r }
+(GNG <- GNGrecoding(GNG))[1:3,] # recoding GNG and showing first three rows
+```
+
+<br>
+
+### 4.2.4. Block-level dataset
+
+Fourth, we create the **wide-form block-level** `BLOCK` dataset by averaging accuracy `ACC` and reaction times `RT` across blocks. Indeed, each participant performed the task once per `day`, for three consecutive days, and each `day` the session was divided into two 108-trial `block`s with identical stimuli but different NoGo stimulus. Thus, whereas the `GNG` data has one row per trial (i.e., 108 * 6 rows per participant), the `BLOCK` dataset will have one row per block (i.e., 6 rows per participant). Note that mean `RT` are computed by only considering “Go” trials with ACC = 1.
+```{r }
+# aggregating values by block (mean)
+BLOCK <- cbind(summarySE(GNG[GNG$TrialType=="Go",], # accuracy for Go trials
+                         measurevar="ACC",groupvars=c("ID","day","block"))[,c("ID","day","block","ACC")],
+               summarySE(GNG[GNG$TrialType=="No-go",], # accuracy for NoGo trials
+                         measurevar="ACC",groupvars=c("ID","day","block"))[,"ACC"], # reaction times to Go trials
+               summarySE(GNG[GNG$TrialType=="Go" & (GNG$ACC==1 | is.na(GNG$ACC)),],
+                         measurevar="RT",groupvars=c("ID","day","block"))[,c("RT","sd")]) # also keeping RT.sd
+colnames(BLOCK)[4:ncol(BLOCK)] <-  c("Go.ACC","NoGo.ACC","RT","RT.sd")
+BLOCK[1:3,] # showing first three rows
+```
+
+<br>
+
+### 4.2.5. ICV
+
+Finally, we use the variables computed in the `BLOCK` dataset to compute the **intra-individual coefficient of variation** `ICV` as the ratio between the standard deviation `RT.sd` and the mean reaction time `RT` in each block. Again, this is done by only considering “Go” trials with ACC = 1.
+```{r }
+BLOCK$ICV <- BLOCK$RT.sd/BLOCK$RT # ICV = RT.sd / mean RT
+```
+
+<br>
+
+## 4.3. Data cleaning & filtering
+
+Here, we clean and filter the data based on the inclusion criteria. 
+
+First, we inspect the original number of respondents and observations in the `GNG` dataset. We can note that the Go/NoGo task was performed by the whole sample of 105 participants that were actually invited to participate to the daily protocol. We can also note that the number of trials and blocks do not match with the protocol for two participants (see section 4.3.3).
+```{r }
+cat("Original No. of trial-by-trial data =",nrow(GNG),"in",nrow(BLOCK),"blocks from",nlevels(GNG$ID),"participants")
+
+# participants with less than 648 trials
+for(ID in levels(GNG$ID)){ if(nrow(GNG[GNG$ID==ID,])!=648){ print(paste(ID,nrow(GNG[GNG$ID==ID,]),"trials"))} }
+
+# participants with less than 6 blocks
+for(ID in levels(BLOCK$ID)){ if(nrow(BLOCK[BLOCK$ID==ID,])!=6){ print(paste(ID,nrow(BLOCK[BLOCK$ID==ID,]),"blocks"))} }
+```
+
+<br>
+
+### 4.3.1. Double responses
+
+First, we inspect the data for cases of double trials and blocks, that is blocks with the same `ID`, `day`, and `block` value or with more than 108 trials. We can see that **no double blocks or double trials** are included in the `HRV` dataset.
+```{r }
+# double blocks
+cat(nrow(BLOCK[duplicated(paste(BLOCK$ID,BLOCK$day,BLOCK$block)),]),"double blocks")
+
+# double trials
+BLOCK$nTrials <- summarySE(GNG,measurevar="ACC",groupvars=c("ID","day","block"))[,"N"]
+cat(nrow(BLOCK[BLOCK$nTrials > 108,]),"blocks with double trials")
+```
+
+<br>
+
+### 4.3.2. Inclusion criteria
+
+Second, we apply our inclusion criteria to the task performance, that is we **consider reaction times to "Go" trials < 150 ms as anticipations**, and we recode them by setting `ACC = 0`.
+```{r }
+# detecting and filtering anticipations
+cat("Recoding",nrow(GNG[GNG$TrialType=="Go" & !is.na(GNG$ACC) & GNG$RT > 0 & GNG$RT < 150,]),"anticipations (",
+    round(100*nrow(GNG[GNG$TrialType=="Go" & !is.na(GNG$ACC) & GNG$RT > 0 & GNG$RT < 150,])/
+            nrow(GNG[GNG$TrialType=="Go" & !is.na(GNG$ACC) & GNG$ACC==1,]),2),"% ) by setting ACC = 0")
+GNG[GNG$TrialType=="Go" & !is.na(GNG$ACC) & GNG$RT > 0 & GNG$RT < 150,"ACC"] <- 0
+
+# updating BLOCK dataset
+BLOCK$Go.ACC <- summarySE(GNG[GNG$TrialType=="Go" & (GNG$ACC==1 | is.na(GNG$ACC)),],
+                          measurevar="ACC",groupvars=c("ID","day","block"))[,"ACC"]
+BLOCK[,c("RT","RT.sd")] <- summarySE(GNG[GNG$TrialType=="Go" & (GNG$ACC==1 | is.na(GNG$ACC)),],
+                                     measurevar="RT",groupvars=c("ID","day","block"))[,c("RT","sd")]
+BLOCK$ICV <- BLOCK$RT.sd/BLOCK$RT # ICV = RT.sd / mean RT
+```
+
+<br>
+
+### 4.3.3. Further excluded
+
+Third, we mark the **8 participants that were excluded** for the reasons specified in section 1.3.4. As in that section, such participants are marked as ‘OUT’. Thus, from the initial 105 participants, the number of excluded participants is 8 (7.62%%), whereas the total number of included participants is 97 (92.38%).
+```{r }
+# marking 8 excluded participants as "OUT"
+memory <- GNG
+GNG$ID <- as.character(GNG$ID)
+excl <- c("HRV009","HRV011","HRV015","HRV027","HRV029","HRV046","HRV059","HRV066")
+GNG[GNG$ID%in%excl,"ID"] <- gsub("HRV","OUT",GNG[GNG$ID%in%excl,"ID"]) # marking excluded participants as "OUTXXX"
+GNG$ID <- as.factor(GNG$ID)
+GNG <- GNG[order(GNG$ID,GNG$SessionDate),]
+
+# same thing with the BLOCK dataset
+memory.BLOCK <- BLOCK
+BLOCK$ID <- as.character(BLOCK$ID)
+BLOCK[BLOCK$ID%in%excl,"ID"] <- gsub("HRV","OUT",BLOCK[BLOCK$ID%in%excl,"ID"]) # marking excluded participants as "OUTXXX"
+BLOCK$ID <- as.factor(BLOCK$ID)
+BLOCK <- BLOCK[order(BLOCK$ID,BLOCK$day,BLOCK$block),]
+
+# updating number of included participants
+cat(nrow(GNG[substr(GNG$ID,1,3)=="HRV",]),"included observations in",nrow(BLOCK[substr(BLOCK$ID,1,3)=="HRV",]),"blocks from",
+    nlevels(as.factor(as.character(GNG[substr(GNG$ID,1,3)=="HRV","ID"]))),"included participants \nout of",
+    nrow(memory),"total observations in",nrow(memory.BLOCK),"blocks from",nrow(memory[!duplicated(memory$ID),]),
+    "invited participants")
+```
+
+<br>
+
+### 4.3.4. Flagged cases
+
+No further criteria are considered to flag potentially confounding cases in relation to the Go/NoGo data.
+
+<br>
+
 # 5. Data merging
 
-# 6. Data dictionary
+Now that we read, recoded, and filtered the four datasets collected in the study, we can merge them into the final datasets to be used for the analyses. Specifically, we create four final datasets:
+
+1. `ema` includes data from the `ESM`, `HRV`, and `PrelQS` dataset, with **one row per measurement** of either `HRV` (5 ambulatory + 1 lab) or `ESM` ratings (1 ‘baseline’ + 5 ambulatory), whereas `PrelQS` information is identically repeated in each row of a given participant
+
+2. `between` includes all the collected variables, with **one row per participant** and by including the participant averages (e.g., mean, median, SD) of each variable
+
+3. `gng` includes all the collected variables, with **one row per trial** of the Go/NoGo task, only including the values from the last daily measurement from the `ESM` and the `HRV` datasets
+
+4. `BLOCK` includes all the collected variables, with **one row per block** of the Go/NoGo task, only including the values from the last daily measurement from the `ESM` and the `HRV` datasets
+
+<br>
+
+## 5.1. ESM & HRV
+
+First, ... ARRIVATO QUI
+
+## 5.2. ESM-HRV & PrelQS
+
+## 5.3. ESM-HRV-PrelQS & GNG
+
+## 5.3. ESM-HRV-PrelQS & BLOCK
+
+<br>
+
+# 6. Data structure & dictionary
 
 # 7. Data export
 
@@ -1524,12 +2288,18 @@ nel valutare la distribuzione da usare:
    e vedi se la variabilità aumenta con la media dell'RMSSD
 - nota: però la Gamma inizia a zero!
 
+<br>
+
 # References {#ref}
 
 - Curran, P. G. (2016). Methods for the detection of carelessly invalid responses in survey data. Journal of Experimental Social Psychology, 66, 4-19. https://doi.org/10.1016/j.jesp.2015.07.006
 
+- de Geus, E. J., Gianaros, P. J., Brindle, R. C., Jennings, J. R., & Berntson, G. G. (2019). Should heart rate variability be “corrected” for heart rate? Biological, quantitative, and interpretive considerations. *Psychophysiology, 56*(2), e13287. https://doi.org/10.1111/psyp.13287
+
 - Geeraerts, J. (2020, May 20). Investigating careless responding detection techniques in experience sampling methods. Retrieved from https://osf.io/d798j/
+
+- Kaufmann, T., Sütterlin, S., Schulz, S. M., & Vögele, C. (2011). ARTiiFACT: A tool for heart rate artifact processing and heart rate variability analysis. Behavior Research Methods, 43(4), 1161–1170. https://doi.org/10.3758/s13428-011-0107-7
 
 - Xiong, H., Huang, Y., Barnes, L. E., & Gerber, M. S. (2016). Sensus: a cross-platform, general-purpose system for mobile crowdsensing in human-subject studies. *Proceedings of the 2016 ACM International Joint Conference on Pervasive and Ubiquitous Computing*, 415–426. https://doi.org/10.1145/2971648.2971711
 
-## R packages
+## R packages {#refPack}
