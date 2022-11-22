@@ -67,7 +67,7 @@ The following R packages are used in this document (see [References section](#re
 ```{r }
 # required packages
 packages <- c("ggplot2","gridExtra","jsonlite","plyr","lubridate","scales","knitr","reshape2","careless",
-              "shiny","pracma","Rmisc","lattice")
+              "shiny","pracma","lattice")
 
 # generate packages references
 knitr::write_bib(c(.packages(), packages),"packagesProc.bib")
@@ -213,7 +213,7 @@ Here, we better evaluate the reasons for the exclusion of the remaining 56 parti
 
 <br>
 
-Here, we compare the demographic and retrospective variables between included and excluded participants. Most participants that were not invited to take part in the daily protocol were **female** (probably due to the higher No. of female compared to undergraduates participating to psychological studies, and our goal of having a balanced sample), with no marked differences in terms of `gender`, `age`, `BMI`
+Here, we compare the demographic and retrospective variables between included and excluded participants. Most participants that were not invited to take part in the daily protocol were **female** (i.e., due to the higher No. of female compared to undergraduates participating to psychological studies, and our goal of having a balanced sample), with no marked differences in terms of `gender`, `age`, `BMI`
 ```{r fig.width=10,fig.height=2}
 # preparing data
 PrelQS$excl <- "IN" # creating excl variable (factor)
@@ -280,7 +280,7 @@ PrelQS[substr(PrelQS$ID,1,3)=="OUT" & !(PrelQS$ID%in%c("OUT033","OUT053","OUT027
 
 ### 1.3.3. Data filtering
 
-Third, we remove all participants marked as "OUT" from the `Prelqs` dataset.
+Third, we remove all participants that were not invited to the daily protocol (marked as "OUT") from the `Prelqs` dataset.
 ```{r }
 new <- PrelQS[!substr(PrelQS$ID,1,3)=="OUT",]
 cat("Filtered",nrow(PrelQS)-nrow(new),"cases; new number of cases =",nrow(new))
@@ -349,19 +349,31 @@ PrelQS[PrelQS$ID %in% c("HRV013","HRV021","HRV067","HRV091"),"postponed"] <- 1
 
 ### 1.3.5. Further excluded
 
-Finally, **8 further participants were excluded** due to dropping-out during the EMA protocol (`009`, F; `059`, M), poor quality of physiological data (`015`, F; `046`, F; `066`, M) or technical problems with the mobile app (`011`, M; `027`, M; `029`, M). Here, we mark these participants as 'OUT'. 
-```{r }
+Finally, **8 further participants were excluded** due to dropping-out during the EMA protocol (`009`, F; `059`, M), poor quality of physiological data (`015`, F; `046`, F; `066`, M) or technical problems with the mobile app (`011`, M; `027`, M; `029`, M). Here, we mark these participants as 'OUT' and we inspect again the differences between included and excluded participants. We can note that excluded participants do not substantially deviate from the distributions of the included participants. Then, we remove them from the `PrelQS` dataset.
+```{r fig.width=10,fig.height=2}
 # marking 8 excluded participants as "OUT"
 memory <- PrelQS
 PrelQS$ID <- as.character(PrelQS$ID)
 excl <- c("HRV009","HRV011","HRV015","HRV027","HRV029","HRV046","HRV059","HRV066")
 PrelQS[PrelQS$ID%in%excl,"ID"] <- gsub("HRV","OUT",PrelQS[PrelQS$ID%in%excl,"ID"]) # marking excluded participants as "OUTXXX"
-PrelQS$ID <- as.factor(PrelQS$ID)
-PrelQS <- PrelQS[order(PrelQS$ID),]
+
+# plotting
+PrelQS$excl <- "IN" # creating excl variable (factor)
+PrelQS[substr(PrelQS$ID,1,3)=="OUT","excl"] <- "OUT"
+PrelQS$excl <- as.factor(PrelQS$excl)
+grid.arrange(ggplot(PrelQS,aes(x=excl,fill=gender)) + geom_bar(),
+             ggplot(PrelQS,aes(x=excl,y=age,fill=excl)) + geom_violin(),
+             ggplot(PrelQS,aes(x=excl,y=BMI,fill=excl)) + geom_violin(),nrow=1) 
 
 # updating number of included participants
 cat(nrow(PrelQS[substr(PrelQS$ID,1,3)=="HRV",]),"included participants out of",
     nrow(memory[substr(memory$ID,1,3)=="HRV",]),"invited participants")
+
+# removing excluded participants
+PrelQS <- PrelQS[substr(PrelQS$ID,1,3)=="HRV",]
+PrelQS$ID <- as.factor(PrelQS$ID) # ID as factor
+PrelQS <- PrelQS[order(PrelQS$ID),] # sorting by ID
+PrelQS$excl <- NULL # removing excl variable
 ```
 
 <br>
@@ -593,8 +605,8 @@ within.day.adjust <- function(data){
                                                                                                            format="%H:%M:%S")){
       data[i,"within.day"] = 5 }}
   
-  # sorting dataset based on ID, day.of.week and within.day
-  data <- data[order(data$ID,data$day.of.week,data$within.day),]
+  # sorting dataset based on ID, day and within.day
+  data <- data[order(data$ID,data$day,data$within.day),]
   data$within.day <- as.factor(data$within.day)
   rownames(data) <- 1:nrow(data)
   cat("Creating/Adjusting within.day variable...\n Printing summary of cases:\n")
@@ -639,7 +651,7 @@ varsRecoding <- function(data){
   data[,c("smoke","coffe")] <- lapply(data[,c("smoke","coffe")],as.factor) # remaining confounders as factor 0/1
   
   # Sorting and renaming columns
-  data <- data[,c("ID","os","gender","day.of.week","within.day","RunTimestamp", # response information
+  data <- data[,c("ID","os","gender","day","within.day","RunTimestamp", # response information
                   "v1.male.bene","v2.insoddisfatto.soddisfatto","v3.positivo.negativo", # hedonic tone
                   "t1.rilassato.teso","t2.agitato.calmo","t3.nervoso.tranquillo", # calmness
                   "e1.stanco.sveglio","e2.pieno.privodenergia","e3.affaticato.fresco", # energetic arousal
@@ -649,6 +661,8 @@ varsRecoding <- function(data){
                                     "PE","PE.int","NE","NE.int","smoke","coffe","alcohol","activity","people")
   
   # final sorting and returning data
+  data[,which(colnames(data)=="v1"):which(colnames(data)=="NE.int")] <-
+    lapply(data[,which(colnames(data)=="v1"):which(colnames(data)=="NE.int")],as.integer) # slider ratings as integer
   data$sort <- as.numeric(substr(data$ID,4,6))
   data <- data[order(data$sort,data$RunTimestamp),] # sorting by ID and timestamp
   data$sort <- NULL # removing sort column
@@ -663,12 +677,14 @@ Recodes slider and multiple-choice responses collected with the Sensus protocols
 ```{r }
 bslRecoding <- function(data){ 
   
-  # renaming and sorting columns
-  colnames(data) <- c("RunTimestamp","ID","v1","t1","f1","v2","t2","f2","v3","t3","f3",
-                          "PE","PE.int","NE","NE.int","Sleep1","Sleep2","Sleep3","daybefore.ex","drugs","drugs.which","day.of.week","within.day")
-  data <- data[,c("ID","day.of.week","within.day","RunTimestamp",
+  # selecting included variables, renaming and sorting columns
+  colnames(data) <- c("RunTimestamp","ID","v1","t1","f1","v2","t2","f2","v3","t3","f3","PE","PE.int","NE","NE.int",
+                      "Sleep1","Sleep2","Sleep3", # baseline sleep ratings are not considered
+                      "daybefore.ex","drugs","drugs.which",
+                      "day","within.day")
+  data <- data[,c("ID","day","within.day","RunTimestamp",
                   "v1","v2","v3","t1","t2","t3","f1","f2","f3", # renaming columns
-                  "PE","PE.int","NE","NE.int","Sleep1","Sleep2","Sleep3","daybefore.ex","drugs","drugs.which")]
+                  "PE","PE.int","NE","NE.int","daybefore.ex","drugs","drugs.which")]
 
   # ID as factor
   data$ID <- as.factor(data$ID)
@@ -679,8 +695,6 @@ bslRecoding <- function(data){
   data$t2 <- 8 - data$t2 # t.arousal = negative
   data$t3 <- 8 - data$t3
   data$f2 <- 8 - data$f2 # e.arousal = positive
-  data$Sleep2 <- 8 - data$Sleep2 # sleep quality = positive
-  data$Sleep3 <- 8 - data$Sleep3
 
   # other confounding variables
   data$drugs <- as.factor(gsub("Sì","1",gsub("No","0",data$drugs))) # drugs
@@ -808,25 +822,25 @@ ESM$daytime <- ESM$daylight <- baseline$daytime <- baseline$daylight <- NULL
 
 <br>
 
-#### 2.2.2.3. Days & within.day
+#### 2.2.2.3. day & within.day
 
 Finally, we create two variables to better organize the temporal structure of the datasets: 
 
-- `day.of.week` indicating the weekday indicator (i.e., 1 = Tuesday, 2 = Wednesday, 3 = Thursday)
+- `day` indicating the weekday indicator (i.e., 1 = Tuesday, 2 = Wednesday, 3 = Thursday)
 
 - `within.day` consisting in a row identifier within each day. For `baseline` responses, we set `within.day = 0`
 ```{r }
 # creating indicator for the weekday 
-ESM$day.of.week <- as.POSIXlt(ESM$RunTimestamp)$wday - 1
-baseline$day.of.week <- as.POSIXlt(baseline$RunTimestamp)$wday - 1
-levels(as.factor(c(levels(as.factor(ESM$day.of.week)),levels(as.factor(baseline$day.of.week))))) # sanity check: ok
+ESM$day <- as.POSIXlt(ESM$RunTimestamp)$wday - 1
+baseline$day <- as.POSIXlt(baseline$RunTimestamp)$wday - 1
+levels(as.factor(c(levels(as.factor(ESM$day)),levels(as.factor(baseline$day))))) # sanity check: ok
 
 # creating row identifier within each day
-ESM <- ddply(ESM,c("ID","day.of.week"),transform,within.day=seq_along(day.of.week))
+ESM <- ddply(ESM,c("ID","day"),transform,within.day=seq_along(day))
 baseline$within.day <- 0 # assigning zero to the baseline questionnaires
 
 # showing data structure
-ESM[,c("ID","day.of.week","within.day","RunTimestamp")]
+ESM[,c("ID","day","within.day","RunTimestamp")]
 ```
 
 <br>
@@ -856,7 +870,7 @@ ESM <- within.day.adjust(ESM)
 ESM[is.na(ESM$within.day),"within.day"] <- 5
 
 # showing data structure
-ESM[,c("ID","day.of.week","within.day","RunTimestamp")]
+ESM[,c("ID","day","within.day","RunTimestamp")]
 ```
 
 <br>
@@ -942,7 +956,7 @@ Finally, we can join the `baseline` dataset with the `ESM` dataset.
 ESM$within.day <- as.integer(as.character(ESM$within.day)) # within.day as integer for compatibility
 new <- rbind.fill(ESM,baseline) # merging datasets
 cat("sanity check:",nrow(new)==(nrow(ESM)+nrow(baseline))) # sanity check
-ESM <- new[order(new$ID,new$day.of.week,new$within.day),] # sorting by ID, day.of.week, and within.day
+ESM <- new[order(new$ID,new$day,new$within.day),] # sorting by ID, day, and within.day
 rownames(ESM) <- 1:nrow(ESM)
 
 # showing merged dataset (everithing looks fine)
@@ -977,20 +991,17 @@ respRate <- function(data){
   rr$ord <- as.numeric(table(data[data$within.day!=0,"ID"])) # No. of responses to the ordinary surveys
   rr$ord.RR <- round(100*rr$ord/ord) # ordinary response rate
   
-  # function to print response rate info
-  rr.message <- function(dat,what){
-    cat("\n\n",what,"participants: N =",nrow(dat),
-      "\n -",sum(dat$tot),"responses, from",min(dat$tot),"to",max(dat$tot),
-      ", mean =",round(mean(dat$tot),2),"sd =",round(sd(dat$tot),2),
-      ", mean perc =",round(mean(dat$tot.RR),2),"% sd =",round(sd(dat$tot.RR),2),"%",
-      "\n  -",sum(dat$bsl),"baseline, from",min(dat$bsl),"to",max(dat$bsl),
-      ", mean =",round(mean(dat$bsl),2),"sd =",round(sd(dat$bsl),2),
-      ", mean perc =",round(mean(dat$bsl.RR),2),"% sd =",round(sd(dat$bsl.RR),2),"%",
-      "\n  -",sum(dat$ord),"ordinary, from",min(dat$ord),"to",max(dat$ord),
-      ", mean =",round(mean(dat$ord),2),"sd =",round(sd(dat$ord),2),
-      ", mean perc =",round(mean(dat$ord.RR),2),"% sd =",round(sd(dat$ord.RR),2),"%") }
-  rr.message(rr[substr(rr$ID,1,3)=="HRV",],what="Included") # included participants
-  rr.message(rr[substr(rr$ID,1,3)!="HRV",],what="Excluded") # excluded participants
+  # print response rate info
+  cat(nrow(rr),"included participants",
+      "\n -",sum(rr$tot),"responses, from",min(rr$tot),"to",max(rr$tot),
+      ", mean =",round(mean(rr$tot),2),"sd =",round(sd(rr$tot),2),
+      ", mean perc =",round(mean(rr$tot.RR),2),"% sd =",round(sd(rr$tot.RR),2),"%",
+      "\n  -",sum(rr$bsl),"baseline, from",min(rr$bsl),"to",max(rr$bsl),
+      ", mean =",round(mean(rr$bsl),2),"sd =",round(sd(rr$bsl),2),
+      ", mean perc =",round(mean(rr$bsl.RR),2),"% sd =",round(sd(rr$bsl.RR),2),"%",
+      "\n  -",sum(rr$ord),"ordinary, from",min(rr$ord),"to",max(rr$ord),
+      ", mean =",round(mean(rr$ord),2),"sd =",round(sd(rr$ord),2),
+      ", mean perc =",round(mean(rr$ord.RR),2),"% sd =",round(sd(rr$ord.RR),2),"%")
   
   return(rr)} # returning response rate dataset
 ```
@@ -1028,7 +1039,7 @@ First, we inspect and remove cases of **double responses** with the same `ID` an
 ESM$idday <- paste(ESM$ID,ESM$RunTimestamp,sep="_")
 cat(nrow(ESM[duplicated(ESM$idday),]),"cases of double responses (same ID and RunTimestamp)")
 kable(ESM[ESM$idday%in%ESM[duplicated(ESM$idday),"idday"],
-    c("ID","day.of.week","within.day","RunTimestamp","v1","v2","v3","t1","t2","t3","NE.int","smoke","coffe","alcohol","activity")])
+    c("ID","day","within.day","RunTimestamp","v1","v2","v3","t1","t2","t3","NE.int","smoke","coffe","alcohol","activity")])
 
 # excluding second response for HRV007 (day 1) and HRV073 (day 2)
 memory <- ESM
@@ -1044,13 +1055,13 @@ cat("Removed",nrow(memory)-nrow(ESM),"double responses")
 
 <br>
 
-Then, we use the same procedure to inspect and remove cases of **double responses** with the same `ID`, `day.of.week` and `within.day` values. We can see 10 further cases of double responses. Since no missing data are included in any of these cases, we can just filter the latest response of each couple.
+Then, we use the same procedure to inspect and remove cases of **double responses** with the same `ID`, `day` and `within.day` values. We can see 10 further cases of double responses. Since no missing data are included in any of these cases, we can just filter the latest response of each couple.
 ```{r }
 # detecting double responses
-ESM$idday <- paste(ESM$ID,ESM$day.of.week,ESM$within.day,sep="_")
+ESM$idday <- paste(ESM$ID,ESM$day,ESM$within.day,sep="_")
 cat(nrow(ESM[duplicated(ESM$idday),]),"cases of double responses (same ID and RunTimestamp)")
 kable(ESM[ESM$idday%in%ESM[duplicated(ESM$idday),"idday"],
-    c("ID","day.of.week","within.day","RunTimestamp","v1","v2","v3","t1","t2","t3","NE.int","smoke","coffe","alcohol","activity")])
+    c("ID","day","within.day","RunTimestamp","v1","v2","v3","t1","t2","t3","NE.int","smoke","coffe","alcohol","activity")])
 
 # excluding double responses
 memory2 <- ESM
@@ -1084,20 +1095,37 @@ ESM[substr(ESM$ID,1,3)=="HRV" & ESM$within.day==0 & ESM$drugs==1,c("ID","drugs.w
 
 ### 2.3.3. Further excluded
 
-Third, we mark the **8 participants that were excluded** for the reasons specified in section 1.3.4. As in that section, such participants are marked as ‘OUT’. As noted above, participant `HRV009` was even not included in the `ESM` dataset because she dropped out before activating the app. Thus, from the initial 104 participants, the number of excluded participants is 7 (6.73%%), whereas the total number of included participants is 97 (93.27%).
-```{r }
+Third, we mark the **8 participants that were excluded** for the reasons specified in section 1.3.4. As in that section, such participants are marked as ‘OUT’. As noted above, participant `HRV009` was even not included in the `ESM` dataset because she dropped out before activating the app. Thus, from the initial 104 participants, the number of excluded participants is 7 (6.73%%), whereas the total number of included participants is 97 (93.27%). Again, we can note that the variables measured from these participants do not substantially deviate from the distribution of the included participants, and we remove them from the `ESM` dataset.
+```{r fig.width=10,fig.height=4}
 # marking 8 excluded participants as "OUT"
 memory <- ESM
 ESM$ID <- as.character(ESM$ID)
 excl <- c("HRV009","HRV011","HRV015","HRV027","HRV029","HRV046","HRV059","HRV066")
 ESM[ESM$ID%in%excl,"ID"] <- gsub("HRV","OUT",ESM[ESM$ID%in%excl,"ID"]) # marking excluded participants as "OUTXXX"
-ESM$ID <- as.factor(ESM$ID)
-ESM <- ESM[order(ESM$ID,ESM$RunTimestamp),]
+
+# plotting
+ESM$excl <- "IN" # creating excl variable (factor)
+ESM[substr(ESM$ID,1,3)=="OUT","excl"] <- "OUT"
+ESM$excl <- as.factor(ESM$excl)
+grid.arrange(ggplot(ESM[!is.na(ESM$v1),],aes(x=excl,y=v1,fill=excl)) + geom_violin(),
+             ggplot(ESM[!is.na(ESM$t1),],aes(x=excl,y=t1,fill=excl)) + geom_violin(),
+             ggplot(ESM[!is.na(ESM$f1),],aes(x=excl,y=f1,fill=excl)) + geom_violin(),
+             ggplot(ESM[!is.na(ESM$PE),],aes(x=excl,y=PE,fill=excl)) + geom_violin(),
+             ggplot(ESM[!is.na(ESM$NE),],aes(x=excl,y=NE,fill=excl)) + geom_violin(),
+             ggplot(ESM[!is.na(ESM$smoke),],aes(x=excl,fill=smoke)) + geom_bar(),
+             ggplot(ESM[!is.na(ESM$activity),],aes(x=excl,fill=activity)) + geom_bar(),
+             ggplot(ESM[!is.na(ESM$people),],aes(x=excl,fill=people)) + geom_bar(),nrow=2)
 
 # updating number of included participants
 cat(nrow(ESM[substr(ESM$ID,1,3)=="HRV",]),"included observations from",
     nlevels(as.factor(as.character(ESM[substr(ESM$ID,1,3)=="HRV","ID"]))),"participants out of",
     nrow(memory),"total observations from",nrow(memory[!duplicated(memory$ID),]),"invited participants")
+
+# removing excluded participants
+ESM <- ESM[substr(ESM$ID,1,3)=="HRV",]
+ESM$ID <- as.factor(ESM$ID) # ID as factor
+ESM <- ESM[order(ESM$ID,ESM$RunTimestamp),] # sorting by ID & RunTimestamp
+ESM$excl <- NULL # removing excl variable
 ```
 
 <br>
@@ -1108,14 +1136,14 @@ Finally, although we did not applied inclusion criteria based on further variabl
 
 #### 2.3.4.1. Response rate
 
-First, we inspect the response rate by using the `respRate` function showed at the beginning of section 2.3. Considering included participants, we can see that **all ‘baseline’ surveys** (i.e., those administered in the lab) were responded each day by each participant, whereas a some **missing data were present in 'ordinary surveys'** (i.e., those administered with the mobile app). Overall, the mean response rate to 'ordinary' surveys was relatively high (**90%**) with no participants showing response rates < 60%. Thus, we see **no reasons for excluding or flagging further participants** based on response rate. In contrast, excluded participants showed substantially lower response rates.
+First, we inspect the response rate by using the `respRate` function showed at the beginning of section 2.3. We can note that **all ‘baseline’ surveys** (i.e., those administered in the lab) were responded each day by each participant, whereas a some **missing data were present in 'ordinary surveys'** (i.e., those administered with the mobile app). Overall, the mean response rate to 'ordinary' surveys was relatively high (**90%**) with no participants showing response rates < 60%. Thus, we see **no reasons for excluding or flagging further participants** based on response rate.
 ```{r }
 rrate <- respRate(ESM)
 ```
 
 <br>
 
-In addition to counting the number of received surveys, we must also consider **missing responses within each survey**. Indeed, a number of surveys was incomplete **due to technical problems** with the app. We can notice that missing responses **mainly concern items on confounder variables** (i.e., activity, alcohol, coffee, smoke and people), which were administered in the last part of each survey and showed from 49 to 59 missing values (about 4%). In contrast, missing data are only about the 2-3% for items measuring stressful events (from 26 to 35), and less than 2% for itmes measuring mood (from 0 to 2).
+In addition to counting the number of received surveys, we must also consider **missing responses within each survey**. Indeed, a number of surveys was incomplete **due to technical problems** with the app. We can notice that missing responses **mainly concern items on confounder variables** (i.e., activity, alcohol, coffee, smoke and people), which were administered in the last part of each survey and showed from 31 to 39 missing values (about 3%). In contrast, missing data are only about the 2-3% for items measuring stressful events (from 8 to 18), and 1% or less for items measuring mood (from 0 to 1).
 ```{r }
 miss <- sapply(ESM[ESM$within.day!=0,1:which(colnames(ESM)=="people")], function(x) sum(is.na(x))) # counting missing
 miss <- data.frame(item=names(miss),nMiss=as.numeric(miss), # missing rate
@@ -1125,9 +1153,9 @@ kable(miss) # showing No. and percentage of missing cases
 
 <br>
 
-Here, we **remove further 14 surveys (1.0%)** due to missing data in almost all items (i.e., those data entries with missing data in the first items), of which only 7 (0.5%) were entered by included participants
+Here, we **remove further 7 surveys (0.4%)** due to missing data in almost all items (i.e., those data entries with missing data in the first items).
 ```{r }
-# showing 14 cases with missing response to item v3
+# showing 7 cases with missing response to item v3
 ESM[is.na(ESM$v3),c(1,which(colnames(ESM)=="v1"):ncol(ESM)),]
 
 # excluding 14 cases with missing response to item v3
@@ -1156,7 +1184,7 @@ For each indicator, the numbers between brackets indicates the corresponding num
 
 ###### INDICATORS:
 
-###### ITEM RESPONSE TIMES (33/2, 74/8)
+###### ITEM RESPONSE TIMES (32/2, 66/8)
 
 First, we consider item-by-item and overall survey **response times** in the 'ordinary' `ESM` questionnaires. This information was encoded in the `ESM.RT` dataset in section 2.1. Thus, as a first step, we process those data by cleaning and filtering the same cases cleaned and filtered in the `ESM` dataset.
 
@@ -1193,11 +1221,11 @@ ESM.RT[ESM.RT$RunTimestamp > as.POSIXct("2019-04-01") & ESM.RT$RunTimestamp < as
 ESM.RT[ESM.RT$daylight=="daylight",c("RunTimestamp","SubmissionTimestamp")] <- 
   ESM.RT[ESM.RT$daylight=="daylight",c("RunTimestamp","SubmissionTimestamp")] + 1*60*60
 
-# creating day.of.week
-ESM.RT$day.of.week <- as.POSIXlt(ESM.RT$RunTimestamp)$wday - 1
+# creating day
+ESM.RT$day <- as.POSIXlt(ESM.RT$RunTimestamp)$wday - 1
 
 # creating within.day
-ESM.RT <- ddply(ESM.RT,c("ID","day.of.week"),transform,within.day=seq_along(day.of.week))
+ESM.RT <- ddply(ESM.RT,c("ID","day"),transform,within.day=seq_along(day))
 ESM.RT <- within.day.adjust(ESM.RT)
 
 # recoding other variables
@@ -1207,7 +1235,7 @@ ESM.RT <- within.day.adjust(ESM.RT)
 ESM.RT$ID <- as.factor(ESM.RT$ID)
 
 # Sorting and renaming columns
-ESM.RT <- ESM.RT[,c("ID","day.of.week","within.day","RunTimestamp","SubmissionTimestamp","RT.tot",
+ESM.RT <- ESM.RT[,c("ID","day","within.day","RunTimestamp","SubmissionTimestamp","RT.tot",
                     "v1.male.bene","v2.soddisfatto.insoddisfatto","v3.positivo.negativo", # hedonic tone
                     "t1.rilassato.teso","t2.agitato.calmo","t3.nervoso.tranquillo", # calmness
                     "e1.stanco.sveglio","e2.pieno.privodenergia","e3.affaticato.fresco", # energetic arousal
@@ -1226,19 +1254,19 @@ ESM.RT <- ESM.RT[!(ESM.RT$idday=="HRV007_2018-11-13 16:18:32.769" & is.na(ESM.RT
 ESM.RT <- ESM.RT[!(ESM.RT$idday=="HRV073_2019-05-08 13:42:51.806" & is.na(ESM.RT$activity)),]
 ESM.RT <- ESM.RT[!duplicated(ESM.RT$idday),] # excluding all remaining double responses
 
-# by day.of.week and within.day
-ESM.RT$idday <- paste(ESM.RT$ID,ESM.RT$day.of.week,ESM.RT$within.day,sep="_")
+# by day and within.day
+ESM.RT$idday <- paste(ESM.RT$ID,ESM.RT$day,ESM.RT$within.day,sep="_")
 cat(nrow(ESM.RT[duplicated(ESM.RT$idday),]),"cases of double responses (same ID and RunTimestamp)") # 6 (4 less than ESM (?))
 ESM.RT <- ESM.RT[!duplicated(ESM.RT$idday),] # excluding all double responses
 
 # marking further excluded
 # ..................................................
 
-# marking 8 excluded participants as "OUT"
+# excluding further 8 participants as "OUT"
 ESM.RT$ID <- as.character(ESM.RT$ID)
 excl <- c("HRV009","HRV011","HRV015","HRV027","HRV029","HRV046","HRV059","HRV066")
-ESM.RT[ESM.RT$ID%in%excl,"ID"] <- gsub("HRV","OUT",ESM.RT[ESM.RT$ID%in%excl,"ID"]) # marking excluded participants as "OUTXXX"
-ESM.RT$ID <- as.factor(ESM.RT$ID)
+ESM.RT <- ESM.RT[!(ESM.RT$ID%in%excl),]
+ESM.RT$ID <- as.factor(as.character(ESM.RT$ID))
 ESM.RT <- ESM.RT[order(ESM.RT$ID,ESM.RT$RunTimestamp),]
 
 # excluding cases with missing response to most items
@@ -1265,7 +1293,7 @@ nrow(ESM.RT) == nrow(ESM[ESM$within.day!=0,])
 
 Now we can inspect the **item-by-item response times** (seconds) in the `ESM.RT` dataset, computed as the difference between the timestamp of each response and that of the previous one (note: the first response of each questionnaire does not have an associated response time). 
 
-We can see that **responding to a single item required about 2 seconds** in most cases (median response time = 2.69 sec), regardless of the type of items. A small number of items were responded in more than 10 seconds (4.3%) with a very few cases requiring more than 50 seconds (N = 41, 0.18%). Likewise, a small number of items were responded in less than 1 second (2.4%) with a very few cases requiring less than 0.65 seconds (N = 109, 0.48%).
+We can see that **responding to a single item required about 2 seconds** in most cases (median response time = 2.69 sec), regardless of the type of items. A small number of items were responded in more than 10 seconds (4.4%) with a very few cases requiring more than 50 seconds (N = 39, 0.18%). Likewise, a small number of items were responded in less than 1 second (2.3%) with a very few cases requiring less than 0.65 seconds (N = 98, 0.44%).
 ```{r fig.width=12,fig.height=4,warning=FALSE}
 # item-by-item long dataset
 rt <- melt(ESM.RT[,c("ID","RunTimestamp",colnames(ESM.RT)[which(colnames(ESM.RT)=="v1"):which(colnames(ESM.RT)=="people")])],
@@ -1300,7 +1328,7 @@ for(value in c(2,1.5,1,0.65,0.5,0.25,0.1)){ cat("\n-",nrow(rt[rt$value<value,]),
 
 Here, we **flag** all cases with at least one item responded in **more than 50 seconds** with `iRT.slow = 1` and all those responded in **less than 650 ms** with `iRT.fast = 1`. While the first threshold is essentially based on the observed RT distribution, the second criterion was also recommended by [Geeraerts (2020)](#ref). We also compute the number of items meeting each condition, for each survey.
 
-We can see that most cases have only one slow-response-time item (N = 26) with only 7 surveys showing 2 or more items that took more than 50 sec. In contrast, there is a similar proportion of surveys with either 1 (N = 39) or 2 items (N = 35) answered with less than 650 ms. In terms of **careless participants**, we flag slow and fast respondents considering participants with 3+ slow responses (N = 2) and those with 3+ fast responses (N = 8 + one excluded participant). Particular attention should be posed on participant `HRV099`, showing 11 out of 14 responses with fast response times.
+We can see that most cases have only one slow-response-time item (N = 26) with only 6 surveys showing 2 or more items that took more than 50 sec. In contrast, there is a similar proportion of surveys with either 1 (N = 34) or 2 items (N = 32) answered with less than 650 ms. In terms of **careless participants**, we flag slow and fast respondents considering participants with 3+ slow responses (N = 2) and those with 3+ fast responses (N = 8). Particular attention should be posed on participant `HRV099`, showing 11 out of 14 responses with fast response times.
 ```{r }
 ESM.RT$idday <- as.factor(paste(ESM.RT$ID,ESM.RT$RunTimestamp,sep="_"))
 rt$idday <- as.factor(paste(rt$ID,rt$RunTimestamp,sep="_"))
@@ -1311,13 +1339,13 @@ for(idday in levels(ESM.RT$idday)){
   if(any(rt[rt$idday==idday,"value"]<0.65)){ ESM.RT[ESM.RT$idday==idday,"iRT.fast"] <- 1
     ESM.RT[ESM.RT$idday==idday,"NiRT.fast"] <- nrow(rt[rt$idday==idday & !is.na(rt$value) & rt$value<0.65,]) }}
 
-# slow response times (N = 33)
+# slow response times (N = 32)
 summary(as.factor(ESM.RT$NiRT.slow)) # summary of number of slow response times
 (s <- summary(as.factor(as.character(ESM.RT[ESM.RT$iRT.slow==1,"ID"])))) # summary of slow respondents
 ESM.RT[ESM.RT$ID %in% names(s[s >= 3]),"slowResp"] <- 1 # flagging slow respondents (3+ responses with 1+ items > 50 sec)
 summary(as.factor(ESM.RT[!duplicated(ESM.RT$ID),"slowResp"])) # No. of slow respondents (N = 2)
 
-# fast response times (N = 74)
+# fast response times (N = 66)
 summary(as.factor(ESM.RT$NiRT.fast)) # summary of number of fast response times
 (s <- summary(as.factor(as.character(ESM.RT[ESM.RT$iRT.fast==1,"ID"])))) # summary of fast respondents
 ESM.RT[ESM.RT$ID %in% names(s[s >= 3]),"fastResp"] <- 1 # flagging fast respondents (i.e., 3+ responses with 1+ items > 50 sec)
@@ -1326,11 +1354,11 @@ summary(as.factor(ESM.RT[!duplicated(ESM.RT$ID),"fastResp"])) # No. of fast resp
 
 <br>
 
-###### TOTAL RESPONSE TIMES (29/1, 27/3)
+###### TOTAL RESPONSE TIMES (27/1, 23/2)
 
 Second, the same procedures used with item response times are applied considering the **total response time of each survey** `RT.tot`, computed in section 2.1 as the seconds between the first response and the `SubmissionTimestamp` of each survey. Note that here we do not consider those cases with missing response to the last items (i.e., from `PE` on out).
 
-We can see that **responding to the whole questionnaire required about 1 min** in most cases (median = 61.2 sec). A small number of questionnaires were responded in more than 2 minutes (7.3%) with a very few cases requiring more than 3 min (N = 29, 2.13%, flagged as `tRT.slow = 1`). Likewise, a small number of questionnaires were responded in less than 40 second (8.2%) with a very few cases requiring less than 35 seconds (N = 27, 2%, flagged as `tRT.fast = 1`). We also flag **careless participants** as those with 3+ responses that took more than 5 min (N = 1 flagged as `slowResp.tot = 1`) and 3+ responses that took less than 35 seconds (N = 3 flagged as `fastResp.tot = 1`).
+We can see that **responding to the whole questionnaire required about 1 min** in most cases (median = 61.3 sec). A small number of questionnaires were responded in more than 2 minutes (7.4%) with a very few cases requiring more than 3 min (N = 27, 2.06%, flagged as `tRT.slow = 1`). Likewise, a small number of questionnaires were responded in less than 40 second (7.8%) with a very few cases requiring less than 35 seconds (N = 23, 1.8%, flagged as `tRT.fast = 1`). We also flag **careless participants** as those with 3+ responses that took more than 5 min (N = 1 flagged as `slowResp.tot = 1`) and 3+ responses that took less than 35 seconds (N = 2 flagged as `fastResp.tot = 1`).
 ```{r fig.width=12,fig.height=2,warning=FALSE}
 # summarizing total response times (in both seconds and minutes)
 ESM.RT$RT.tot.min <- ESM.RT$RT.tot/60
@@ -1353,7 +1381,7 @@ for(value in c(40,35,30,20)){ cat("\n-",nrow(ESM.RT[!is.na(ESM.RT$PE) & ESM.RT$R
                                                                                              ESM.RT$RT.tot<value,])/
                                                                                       nrow(ESM.RT[!is.na(ESM.RT$PE),]),2),"% )") }
 
-# flagging slow > 5 min (N = 29) and fast total response times < 35 sec (N = 27)
+# flagging slow > 5 min (N = 27) and fast total response times < 35 sec (N = 23)
 ESM.RT$tRT.slow <- ESM.RT$tRT.fast <- ESM.RT$slowResp.tot <- ESM.RT$fastResp.tot <- 0
 ESM.RT[ESM.RT$RT.tot.min > 3,"tRT.slow"] <- 1
 ESM.RT[!is.na(ESM.RT$PE) & ESM.RT$RT.tot < 35,"tRT.fast"] <- 1
@@ -1364,16 +1392,16 @@ ESM.RT[ESM.RT$ID %in% names(s[s >= 3]),"slowResp.tot"] <- 1 # flagging slow resp
 summary(as.factor(ESM.RT[!duplicated(ESM.RT$ID),"slowResp.tot"])) # No. of slow respondents (N = 1)
 (s <- summary(as.factor(as.character(ESM.RT[ESM.RT$tRT.fast==1,"ID"])))) # summary of fast respondents
 ESM.RT[ESM.RT$ID %in% names(s[s >= 3]),"fastResp.tot"] <- 1 # flagging fast respondents (3+ responses < 35 sec)
-summary(as.factor(ESM.RT[!duplicated(ESM.RT$ID),"fastResp.tot"])) # No. of slow respondents (N = 3)
+summary(as.factor(ESM.RT[!duplicated(ESM.RT$ID),"fastResp.tot"])) # No. of slow respondents (N = 2)
 ```
 
 <br>
 
-###### LONG STRING PROPORTION (57/4)
+###### LONG STRING PROPORTION (56/4)
 
 Third, we examine those cases with extreme **long string of identical responses** to mood items, that is extremely consistent responses with long strings of identical value in consecutive items using the same response scale (see [Curran (2016)](#ref)). This is done using the `careless` package. Note that in section 2.2.3 we recoded mood ratings to have the same polarity. Event items are not considered because most respondents entered no events (i.e., 1, 1).
 
-We can see that in most cases (about 71%) the same rating was entered for up to 3 consecutive items, with the 14% showing strings of consistent responses repeated more than 4 times (i.e., the rule of thumb proposed by [Curran (2016)](#ref) of identical string length > scale range / 2). In a minority of cases (N = 57, 3.4%), respondents entered the same value for 7+ times, and we mark them as `ls = 1`. As done previously, we also flag **careless participants** (N = 4) as those with 3+ responses with long identical strings (N = 18 flagged as `lsResp = 1`).
+We can see that in most cases (about 71%) the same rating was entered for up to 3 consecutive items, with the 14.3% showing strings of consistent responses repeated more than 4 times (i.e., the rule of thumb proposed by [Curran (2016)](#ref) of identical string length > scale range / 2). In a minority of cases (N = 56, 3.5%), respondents entered the same value for 7+ times, and we mark them as `ls = 1`. As done previously, we also flag **careless participants** (N = 4) as those with 3+ responses with long identical strings (N = 18 flagged as `lsResp = 1`).
 ```{r fig.width=12,fig.height=2,warning=FALSE}
 # computing the longest string frequency and the average length of identical consecutive responses
 mood <- colnames(ESM)[which(colnames(ESM)=="v1"):which(colnames(ESM)=="f3")]
@@ -1388,10 +1416,10 @@ grid.arrange(ggplot(ESM.LS,aes(longstr))+geom_histogram(bins=30)+ggtitle("Longes
 for(value in 3:6){ cat("\n-",nrow(ESM.LS[ESM.LS$longstr>value,]),"longest identical string >",value,
                        "times (",round(100*nrow(ESM.LS[ESM.LS$longstr>value,])/nrow(ESM.LS),2),"% )") }
 
-# flagging cases with identical strings > 6 (N = 57)
+# flagging cases with identical strings > 6 (N = 56)
 ESM.LS$lsResp <- ESM.LS$ls <- 0
 ESM.LS[ESM.LS$longstr > 6,"ls"] <- 1
-summary(as.factor(ESM.LS$ls)) # No. of cases with long string (N = 57)
+summary(as.factor(ESM.LS$ls)) # No. of cases with long string
 
 # flagging long string respondents (N = 4)
 (s <- summary(as.factor(as.character(ESM.LS[ESM.LS$ls == 1,"ID"])))) # No. of long string responses per respondent
@@ -1401,9 +1429,9 @@ summary(as.factor(ESM.LS[!duplicated(ESM.LS$ID),"lsResp"]))
 
 <br>
 
-###### MAHALANOBIS DISTANCE (72/6)
+###### MAHALANOBIS DISTANCE (68/6)
 
-Fourth, we examine those cases with **unlikely response patterns** by performing a **multivariate outlier analysis** based on the Mahalanobis distance. We can see that 72 responses (4.3%) were flagged as multivariate outliers (`md = 1`) with a confidence level of 99%, with 6 participants showing 3+ flagged responses and thus marked with `mdResp = 1`.
+Fourth, we examine those cases with **unlikely response patterns** by performing a **multivariate outlier analysis** based on the Mahalanobis distance. We can see that 68 responses (4.2%) were flagged as multivariate outliers (`md = 1`) with a confidence level of 99%, with 6 participants showing 3+ flagged responses and thus marked with `mdResp = 1`.
 ```{r fig.width=6,fig.height=4,warning=FALSE}
 # computing Mahalanobis distance in mood ratings
 ESM.LS <- cbind(ESM.LS,mahad(ESM[,mood],flag=TRUE))
@@ -1422,9 +1450,9 @@ summary(as.factor(ESM.LS[!duplicated(ESM.LS$ID),"mdResp"])) # No. flagged respon
 
 <br>
 
-###### PSYCHOMETRIC SYNONIMS (90/4)
+###### PSYCHOMETRIC SYNONIMS (83/5)
 
-Fifth, we examine those cases with **negative correlations among psychometric synonyms**, that is cases where the intra-response correlation is negative, and specifically less than -0.30 between pairs of items that correlate at *r* = .60 or stronger. We can see that 87 responses (5.3%) were flagged as `psychsyn = 1`, with 5 participants showing 3+ flagged responses and thus marked with `psychsynResp = 1`.
+Fifth, we examine those cases with **negative correlations among psychometric synonyms**, that is cases where the intra-response correlation is negative, and specifically less than -0.30 between pairs of items that correlate at *r* = .60 or stronger. We can see that 83 responses (5.2%) were flagged as `psychsyn = 1`, with 5 participants showing 3+ flagged responses and thus marked with `psychsynResp = 1`.
 ```{r fig.width=7,fig.height=3,warning=FALSE}
 # computing Mahalanobis distance in mood ratings
 ESM.LS <- cbind(ESM.LS,psychsyn(ESM[,mood],diag=TRUE,critval=0.60,resample_na=TRUE))
@@ -1442,14 +1470,14 @@ ggplot(ESM.LS,aes(cor,fill=as.factor(psychsyn)))+geom_histogram(bins=100)+ggtitl
 (s <- summary(as.factor(as.character(ESM.LS[ESM.LS$psychsyn == 1,"ID"])))) # No. of flagged responses per respondent
 ESM.LS$psychsynResp <- 0
 ESM.LS[ESM.LS$ID %in% names(s[s >= 3]),"psychsynResp"] <- 1 # flagging outlier respondents (i.e., 3+ flagged responses)
-summary(as.factor(ESM.LS[!duplicated(ESM.LS$ID),"psychsynResp"])) # No. flagged participants (N = 4 + 1 excluded)
+summary(as.factor(ESM.LS[!duplicated(ESM.LS$ID),"psychsynResp"])) # No. flagged participants (N = 5)
 ```
 
 <br>
 
 ##### Summary of careless responses
 
-Here, we summarize the number of potentially careless responses and participants for each criterion, and we compute an aggregated variable indicating the number of criteria (from 1 to 5) based on which each response and participant is classified as potentially careless. Then, we flag all **responses** classified as potentially careless based on 1+ criteria (N = 317, of which 293 from included participants) with `cLess1 = 1` and those based on 2+ criteria (N = 57, of which 51 from included participants) with `cLess2 = 1`, respectively. Similarly, we flag all **participants** classified as potentially careless based on 1+ criteria (N = 26, of which 23 included participants) with `cLessResp1 = 1`, and those based on 2+ criteria (N = 4, of which 3 included participants) with `cLessResp2 = 1`.
+Here, we summarize the number of potentially careless responses and participants for each criterion, and we compute an aggregated variable indicating the number of criteria (from 1 to 5) based on which each response and participant is classified as potentially careless. Then, we flag all **responses** classified as potentially careless based on 1+ criteria (N = 295) with `cLess1 = 1` and those based on 2+ criteria (N = 53) with `cLess2 = 1`, respectively. Similarly, we flag all **participants** classified as potentially careless based on 1+ criteria (N = 24) with `cLessResp1 = 1`, and those based on 2+ criteria (N = 3) with `cLessResp2 = 1`.
 ```{r fig.width=6,fig.height=2,warning=FALSE}
 # joining careless criteria
 ESM.LS$idday <- as.factor(paste(ESM.LS$ID,ESM.LS$RunTimestamp,sep="_"))
@@ -1470,15 +1498,11 @@ ESM.clResp <- ESM.clResp[!duplicated(ESM.clResp$ID),]
 ESM.clResp[ESM.clResp$cLessRespN>=1,"cLessResp1"] <- 1 # careless respondent if meeting 1+ criteria
 ESM.clResp[ESM.clResp$cLessRespN>=2,"cLessResp2"] <- 1 # careless respondent if meeting 1+ criteria
 
-# summarizing criteria of potentially careless responses (N = 51)
-summary(as.data.frame(lapply(ESM.careless[,c(cr,"carelessN","cLess1","cLess2")],as.factor))) # all in
-summary(as.data.frame(lapply(ESM.careless[substr(ESM.careless$ID,1,3)!="OUT",
-                                          c(cr,"carelessN","cLess1","cLess2")],as.factor))) # only included participants
+# summarizing criteria of potentially careless responses (N = 295/53)
+summary(as.data.frame(lapply(ESM.careless[,c(cr,"carelessN","cLess1","cLess2")],as.factor)))
 
-# summarizing criteria of potentially careless respondents (N = 16)
-summary(as.data.frame(lapply(ESM.clResp[,c(crResp,"cLessRespN","cLessResp1","cLessResp2")],as.factor))) # all in
-summary(as.data.frame(lapply(ESM.clResp[substr(ESM.clResp$ID,1,3)!="OUT",
-                                        c(crResp,"cLessRespN","cLessResp1","cLessResp2")],as.factor))) # only included
+# summarizing criteria of potentially careless respondents (N = 24/3)
+summary(as.data.frame(lapply(ESM.clResp[,c(crResp,"cLessRespN","cLessResp1","cLessResp2")],as.factor)))
 
 # joining careless scores to the ESM dataset
 ESM$idday <- as.factor(paste(ESM$ID,ESM$RunTimestamp,sep="_"))
@@ -1490,7 +1514,7 @@ ESM <- join(ESM,ESM.clResp[,c("ID","cLessResp1","cLessResp2")],by="ID",type="lef
 
 Here, we visually inspect all responses marked with `cLess2 = 1`. We can note several cases of long string proportions (e.g., `HRV013_2_3`) as well as cases of inconsistent responses (e.g., `HRV060_1_0` for items `t2` and `t3`).
 ```{r fig.width=8,fig.height=10}
-ESM$id <- as.factor(paste(ESM$ID,ESM$day.of.week,ESM$within.day,sep="_"))
+ESM$id <- as.factor(paste(ESM$ID,ESM$day,ESM$within.day,sep="_"))
 plotResp(ESM[ESM$cLess2==1,],"id",mood)
 ```
 
@@ -1718,7 +1742,8 @@ readHRV <- function(data.path){
   
   # adjusting data
   HRVdata <- HRVdata[2:nrow(HRVdata),] # removing first empty row
-  HRVdata[,c("ID","day","within.day")] <- lapply(HRVdata[,c("ID","day","within.day")],as.factor)
+  HRVdata$ID <- as.factor(HRVdata$ID) # setting class for ID, day and within.day
+  HRVdata[,c("within.day","day")] <- lapply(HRVdata[,c("within.day","day")],as.numeric)
   return(HRVdata)}
 ```
 </p></details>
@@ -2010,10 +2035,7 @@ GNG <- read.csv2("GONOGO/Merged_105_final.csv",header=TRUE)
 
 Then, we recode the `GNG` variables to be used for the analyses.
 
-The following packages and functions are used to optimize the ESM data recoding:
-```{r warning=FALSE, message=FALSE}
-library(Rmisc)
-```
+The following functions are used to optimize the ESM data recoding:
 
 <details><summary>`GNGrecoding`</summary>
 <p>
@@ -2094,6 +2116,33 @@ GNGrecoding <- function(data){
 ```
 </p></details>
 
+Recodes behavioral data exported from E-Prime, rename and sort the column,s and fix problems with specific participants.
+
+<details><summary>`trials2blocks`</summary>
+<p>
+```{r }
+trials2blocks <- function(data){
+  
+  # aggregating values by block (mean)
+  block <- cbind(aggregate(ACC ~ ID*day*block, # mean accuracy to Go trials
+                           data=data[data$TrialType=="Go",],FUN="mean",na.action=na.pass),
+                 aggregate(ACC ~ ID*day*block, # mean accuracy to No-Go trials
+                           data=data[data$TrialType=="No-go",],FUN="mean",na.action=na.pass)[,4],
+                 aggregate(RT ~ ID*day*block, # mean RT to accurate Go trials
+                           data=data[data$TrialType=="Go" & (GNG$ACC==1 | is.na(GNG$ACC)),],FUN="mean",na.action=na.pass)[,4],
+                 aggregate(RT ~ ID*day*block, # sd RT to accurate Go trials
+                           data=data[data$TrialType=="Go" & (GNG$ACC==1 | is.na(GNG$ACC)),],FUN="sd",na.action=na.pass)[,4])
+  
+  # sorting dataset, renaming columns and rows
+  block <- block[order(block$ID,block$day,block$block),]
+  colnames(block)[4:ncol(block)] <- c("Go.ACC","NoGo.ACC","RT","RT.sd")
+  rownames(block) <- 1:nrow(block)
+  return(block) }
+```
+</p></details>
+
+Recodes behavioral data exported from E-Prime, rename and sort the column,s and fix problems with specific participants.
+
 <br>
 
 ### 4.2.1. ID recoding
@@ -2140,17 +2189,9 @@ Third, we use the `GNGrecoding()` function showed above to recode the other vari
 
 ### 4.2.4. Block-level dataset
 
-Fourth, we create the **wide-form block-level** `BLOCK` dataset by averaging accuracy `ACC` and reaction times `RT` across blocks. Indeed, each participant performed the task once per `day`, for three consecutive days, and each `day` the session was divided into two 108-trial `block`s with identical stimuli but different NoGo stimulus. Thus, whereas the `GNG` data has one row per trial (i.e., 108 * 6 rows per participant), the `BLOCK` dataset will have one row per block (i.e., 6 rows per participant). Note that mean `RT` are computed by only considering “Go” trials with ACC = 1.
+Fourth, we create the **wide-form block-level** `BLOCK` dataset by using the `trials2blocks` function to average accuracy `ACC` and reaction times `RT` across blocks. Indeed, each participant performed the task once per `day`, for three consecutive days, and each `day` the session was divided into two 108-trial `block`s with identical stimuli but different NoGo stimulus. Thus, whereas the `GNG` data has one row per trial (i.e., 108 * 6 rows per participant), the `BLOCK` dataset will have one row per block (i.e., 6 rows per participant). Note that mean `RT` are computed by only considering “Go” trials with ACC = 1.
 ```{r }
-# aggregating values by block (mean)
-BLOCK <- cbind(summarySE(GNG[GNG$TrialType=="Go",], # accuracy for Go trials
-                         measurevar="ACC",groupvars=c("ID","day","block"))[,c("ID","day","block","ACC")],
-               summarySE(GNG[GNG$TrialType=="No-go",], # accuracy for NoGo trials
-                         measurevar="ACC",groupvars=c("ID","day","block"))[,"ACC"], # reaction times to Go trials
-               summarySE(GNG[GNG$TrialType=="Go" & (GNG$ACC==1 | is.na(GNG$ACC)),],
-                         measurevar="RT",groupvars=c("ID","day","block"))[,c("RT","sd")]) # also keeping RT.sd
-colnames(BLOCK)[4:ncol(BLOCK)] <-  c("Go.ACC","NoGo.ACC","RT","RT.sd")
-BLOCK[1:3,] # showing first three rows
+(BLOCK <- trials2blocks(GNG))[1:3,] # recoding and showing the first three rows
 ```
 
 <br>
@@ -2189,7 +2230,7 @@ First, we inspect the data for cases of double trials and blocks, that is blocks
 cat(nrow(BLOCK[duplicated(paste(BLOCK$ID,BLOCK$day,BLOCK$block)),]),"double blocks")
 
 # double trials
-BLOCK$nTrials <- summarySE(GNG,measurevar="ACC",groupvars=c("ID","day","block"))[,"N"]
+BLOCK$nTrials <- as.integer(table(as.factor(paste(GNG$ID,GNG$day,GNG$block))))
 cat(nrow(BLOCK[BLOCK$nTrials > 108,]),"blocks with double trials")
 ```
 
@@ -2206,10 +2247,7 @@ cat("Recoding",nrow(GNG[GNG$TrialType=="Go" & !is.na(GNG$ACC) & GNG$RT > 0 & GNG
 GNG[GNG$TrialType=="Go" & !is.na(GNG$ACC) & GNG$RT > 0 & GNG$RT < 150,"ACC"] <- 0
 
 # updating BLOCK dataset
-BLOCK$Go.ACC <- summarySE(GNG[GNG$TrialType=="Go" & (GNG$ACC==1 | is.na(GNG$ACC)),],
-                          measurevar="ACC",groupvars=c("ID","day","block"))[,"ACC"]
-BLOCK[,c("RT","RT.sd")] <- summarySE(GNG[GNG$TrialType=="Go" & (GNG$ACC==1 | is.na(GNG$ACC)),],
-                                     measurevar="RT",groupvars=c("ID","day","block"))[,c("RT","sd")]
+BLOCK <- trials2blocks(GNG)
 BLOCK$ICV <- BLOCK$RT.sd/BLOCK$RT # ICV = RT.sd / mean RT
 ```
 
@@ -2217,41 +2255,66 @@ BLOCK$ICV <- BLOCK$RT.sd/BLOCK$RT # ICV = RT.sd / mean RT
 
 ### 4.3.3. Further excluded
 
-Third, we mark the **8 participants that were excluded** for the reasons specified in section 1.3.4. As in that section, such participants are marked as ‘OUT’. Thus, from the initial 105 participants, the number of excluded participants is 8 (7.62%%), whereas the total number of included participants is 97 (92.38%).
-```{r }
+Third, we mark the **8 participants that were excluded** for the reasons specified in section 1.3.4. As in that section, such participants are marked as ‘OUT’. Thus, from the initial 105 participants, the number of excluded participants is 8 (7.62%%), whereas the total number of included participants is 97 (92.38%). From `BLOCK` data, we can note that excluded participants **performed slightly worse** than included participants (i.e., showing lower `ACC` to NoGo trials and lower `ICV`, but also lower `RT`). Then, we remove excluded participants from the `GNG` and the `BLOCK` datasets.
+```{r fig.width=10,fig.height=2,warning=FALSE,message=FALSE}
 # marking 8 excluded participants as "OUT"
 memory <- GNG
 GNG$ID <- as.character(GNG$ID)
 excl <- c("HRV009","HRV011","HRV015","HRV027","HRV029","HRV046","HRV059","HRV066")
 GNG[GNG$ID%in%excl,"ID"] <- gsub("HRV","OUT",GNG[GNG$ID%in%excl,"ID"]) # marking excluded participants as "OUTXXX"
-GNG$ID <- as.factor(GNG$ID)
-GNG <- GNG[order(GNG$ID,GNG$SessionDate),]
+
+# plotting
+GNG$excl <- "IN" # creating excl variable (factor)
+GNG[substr(GNG$ID,1,3)=="OUT","excl"] <- "OUT"
+GNG$excl <- as.factor(GNG$excl)
+grid.arrange(ggplot(GNG[GNG$TrialType=="Go" & GNG$ACC==1 & !is.na(GNG$RT),],aes(x=excl,y=RT,fill=excl)) + geom_violin(),
+             ggplot(GNG[GNG$TrialType=="Go",],aes(x=excl,y=ACC,fill=excl)) + geom_violin(),
+             ggplot(GNG[GNG$TrialType=="No-go",],aes(x=excl,y=ACC,fill=excl)) + geom_violin(),nrow=1) 
 
 # same thing with the BLOCK dataset
 memory.BLOCK <- BLOCK
 BLOCK$ID <- as.character(BLOCK$ID)
 BLOCK[BLOCK$ID%in%excl,"ID"] <- gsub("HRV","OUT",BLOCK[BLOCK$ID%in%excl,"ID"]) # marking excluded participants as "OUTXXX"
-BLOCK$ID <- as.factor(BLOCK$ID)
-BLOCK <- BLOCK[order(BLOCK$ID,BLOCK$day,BLOCK$block),]
+BLOCK$excl <- "IN" # creating excl variable (factor)
+BLOCK[substr(BLOCK$ID,1,3)=="OUT","excl"] <- "OUT"
+BLOCK$excl <- as.factor(BLOCK$excl)
+grid.arrange(ggplot(BLOCK,aes(x=excl,y=RT,fill=excl)) + geom_violin(),
+             ggplot(BLOCK,aes(x=excl,y=RT.sd,fill=excl)) + geom_violin(),
+             ggplot(BLOCK,aes(x=excl,y=ICV,fill=excl)) + geom_violin(),
+             ggplot(BLOCK,aes(x=excl,y=Go.ACC,fill=excl)) + geom_violin(),
+             ggplot(BLOCK,aes(x=excl,y=NoGo.ACC,fill=excl)) + geom_violin(),nrow=1) 
 
 # updating number of included participants
 cat(nrow(GNG[substr(GNG$ID,1,3)=="HRV",]),"included observations in",nrow(BLOCK[substr(BLOCK$ID,1,3)=="HRV",]),"blocks from",
     nlevels(as.factor(as.character(GNG[substr(GNG$ID,1,3)=="HRV","ID"]))),"included participants \nout of",
     nrow(memory),"total observations in",nrow(memory.BLOCK),"blocks from",nrow(memory[!duplicated(memory$ID),]),
     "invited participants")
+
+# removing excluded participants
+GNG <- GNG[substr(GNG$ID,1,3)=="HRV",]
+GNG$ID <- as.factor(GNG$ID) # ID as factor
+GNG <- GNG[order(GNG$ID,GNG$SessionDate),] # sorting by ID and SessionDate
+BLOCK <- BLOCK[substr(BLOCK$ID,1,3)=="HRV",]
+BLOCK$ID <- as.factor(BLOCK$ID)
+BLOCK <- BLOCK[order(BLOCK$ID,BLOCK$day,BLOCK$block),]
+GNG$excl <- BLOCK$excl <- NULL # removing excl variable
 ```
 
 <br>
 
 ### 4.3.4. Flagged cases
 
-No further criteria are considered to flag potentially confounding cases in relation to the Go/NoGo data.
+No further criteria are considered to flag potentially confounding cases in relation to the Go/NoGo data. No missing responses are shown by included participants, and no particular cases are highlighted.
+```{r fig.width=10,fig.height=2,warning=FALSE,message=FALSE}
+summary(GNG) # summary of GNG (no missing data)
+summary(BLOCK) # summary of BLOCK (no missing data)
+```
 
 <br>
 
 # 5. Data merging
 
-Now that we read, recoded, and filtered the four datasets collected in the study, we can merge them into the final datasets to be used for the analyses. Specifically, we create four final datasets:
+Now that we read, recoded, and filtered the four datasets collected in the study (all including the data from the **97 included participants**), we can merge them into the final datasets to be used for the analyses. Specifically, we create four final datasets:
 
 1. `ema` includes data from the `ESM`, `HRV`, and `PrelQS` dataset, with **one row per measurement** of either `HRV` (5 ambulatory + 1 lab) or `ESM` ratings (1 ‘baseline’ + 5 ambulatory), whereas `PrelQS` information is identically repeated in each row of a given participant
 
@@ -2259,38 +2322,541 @@ Now that we read, recoded, and filtered the four datasets collected in the study
 
 3. `gng` includes all the collected variables, with **one row per trial** of the Go/NoGo task, only including the values from the last daily measurement from the `ESM` and the `HRV` datasets
 
-4. `BLOCK` includes all the collected variables, with **one row per block** of the Go/NoGo task, only including the values from the last daily measurement from the `ESM` and the `HRV` datasets
+4. `block` includes all the collected variables, with **one row per block** of the Go/NoGo task, only including the values from the last daily measurement from the `ESM` and the `HRV` datasets
+
+The following packages are used to optimize the data pre-processing
+```{r warning=FALSE,message=FALSE}
+library(plyr)
+```
 
 <br>
 
-## 5.1. ESM & HRV
+## 5.1. HRV & ESM
 
-First, ... ARRIVATO QUI
+First, we merge the `HRV` and the `ESM` by the `ID`, `day`, and `within.day` variables. Note that the `within.day` variable ranges from 0 to 5 for `ESM` data (0 = baseline, 1-5 = ordinary questionnaires) and from 1 to 6 for `HRV` data (1-5 = ambulatory recordings, 6 = laboratory recordings), with only those measurements associated with `within.day` values from 1 to 5 being matched between the two datasets.
+```{r }
+# merging HRV and ESM
+ESM[,c("id","idday")] <- HRV$artefacts <- NULL # removing unnecessary variables
+HRVESM <- join(HRV,ESM,by=c("ID","day","within.day"),type="full") # merging datasets
+HRVESM <- HRVESM[order(HRVESM$ID,HRVESM$day,HRVESM$within.day),] # sorting
+row.names(HRVESM) <- 1:nrow(HRVESM) # row names
 
-## 5.2. ESM-HRV & PrelQS
+# sanity check: no HRV when within.day=0, no ESM when within.day=6
+cat("Sanity check:",nrow(HRVESM[(HRVESM$within.day==0 & !is.na(HRVESM$RMSSD)) | 
+                                  (HRVESM$within.day==6 & !is.na(HRVESM$v1)),]) == 0)
 
-## 5.3. ESM-HRV-PrelQS & GNG
+# sanity check: 97 included participants x 3 days x 7 occasions
+cat("Sanity check:",nrow(HRVESM)==97*3*7)
 
-## 5.3. ESM-HRV-PrelQS & BLOCK
+# showing first three lines
+HRVESM[1:3,]
+```
 
+<br>
+
+Here, we inspect the number of cases from included participants with `within.day` ranging from 1 to 5 but with missing `HRV` (N = 7) or `ESM` values (N = 36).
+```{r }
+# missing HRV, nonmising ESM
+nrow(HRVESM[HRVESM$within.day %in% 1:5 & HRVESM$miss==1 & !is.na(HRVESM$v1),]) # 7
+
+# missing ESM, nonmising HRV
+nrow(HRVESM[HRVESM$within.day %in% 1:5 & HRVESM$miss!=1 & is.na(HRVESM$v1),]) # 36
+
+# both missing
+nrow(HRVESM[HRVESM$within.day %in% 1:5 & HRVESM$miss==1 & is.na(HRVESM$v1),]) # 110
+```
+
+<br>
+
+## 5.2. HRV, ESM, & PrelQS
+
+Second, we merge the `HRVESM` dataset created above with the `PrelQS` dataset.
+
+### 5.2.1. ema
+
+The first merged dataset `ema` has a **long form** with one row per measurement, so that `PrelQS` information is identically repeated over all rows associated with a given participant.
+```{r }
+# merging HRV and ESM
+colnames(HRVESM)[which(colnames(HRVESM)%in%c("gender","drugs"))] <- c("gender.ESM","drugs.ESM") # renaming matching variables
+ema <- join(HRVESM,PrelQS,by="ID",type="left")
+ema <- ema[order(ema$ID,ema$day,ema$within.day),] # sorting rows
+row.names(ema) <- 1:nrow(ema) # row names
+
+# sanity check: same nrow and No. of participants than HRVESM
+cat("Sanity check:",nrow(HRVESM) == nrow(ema))
+cat("Sanity check:",nlevels(HRVESM$ID) == nlevels(ema$ID))
+
+# sorting and showing first three lines
+(ema <- ema[order(ema$ID,ema$day,ema$within.day),])[1:3,]
+```
+
+<br>
+
+### 5.2.2. between
+
+The second merged dataset `between` has a **wide form** with one row per participant, so that the aggregated values of those `HRVESM` that are meaningful at the between level are joined to the `PrelQS`. Specifically, we compute the mean for each continuous variable renaming it as "varName.cm", whereas we compute both the mean and the median for `RMSSD` and `RMSSDcv` due to their skewed distribution. Raw `ESM` ratings are not averaged since we firstly plan to compute the aggregated scores based on the assessment of their psychometric properties (see the [related report](https://luca-menghini.github.io/vmHRV-selfRegulation/4psychomeDesc/psychomeDesc.html)). As a sanity check, we can see that only 1 participant chose a Sensus protocol gender different from what reported in the preliminary questionnaire (likely due to their mistake in selecting the Sensus protocol).
+```{r }
+# computing mean and/or median for quantitative variables
+between <- PrelQS
+Vars <- c("PI","HR","RMSSD","RMSSDcv","nArtefacts")
+for(Var in Vars){ colnames(ema)[which(colnames(ema)==Var)] <- "Var"
+  between <- join(between,aggregate(Var ~ ID,data=ema,FUN="mean"),by="ID",type="left") # mean of all vars
+  colnames(between)[ncol(between)] <- paste(Var,"cm",sep=".")
+  if(Var %in% c("RMSSD","RMSSDcv")){
+    between <- join(between,aggregate(Var ~ ID,data=ema,FUN="median",na.action=na.omit),by="ID",type="left") # median for skewed
+    colnames(between)[ncol(between)] <- paste(Var,"cMed",sep=".") } 
+  colnames(ema)[which(colnames(ema)=="Var")] <- Var }
+
+# joining categorical variables (i.e., flag criteria)
+between <- join(between,HRV[!duplicated(HRV$ID),c("ID","inclRate60","noisyPI")],by="ID",type="left") # HRV
+between <- join(between,ESM[!duplicated(ESM$ID),c("ID","cLessResp1","cLessResp2")],by="ID",type="left") # ESM
+between$smoker <- 0
+for(ID in levels(between$ID)){
+  if(nrow(ESM[ESM$ID==ID,])>0){ 
+    between[between$ID==ID,"os"] <- ESM[ESM$ID==ID & !is.na(ESM$os),"os"][1] # OS
+    between[between$ID==ID,"gender.ESM"] <- ESM[ESM$ID==ID & !is.na(ESM$gender),"gender"][1] # gender
+    if(any(ESM[ESM$ID==ID & !is.na(ESM$smoke),"smoke"]=="1")){ between[between$ID==ID,"smoker"] <- 1 } # smokers
+    }}
+  
+# sanity check:
+cat("No. cases with PrelQS gender != ESM gender =",nrow(between[between$gender!=between$gender.ESM,]))
+between$gender.ESM <- ema$gender.ESM <-  NULL # removing gender.ESM (trusting PrelQs)
+
+# sorting and showing first three lines
+(between <- between[order(between$ID),])[1:3,]
+```
+
+<br>
+
+## 5.3. GNG & ema
+
+Third, we integrate `ema` information (including `HRV`, `ESM`, and `PrelQS` variables) to the `GNG` dataset.
+
+### 5.3.1. gng
+
+The first merged dataset `gng` has a **long form** with one row for each trial of the Go/NoGo task, so that `between` information is identically repeated over all rows associated with the same participant. Similarly, `HRV` and `EMA` values are identically repeated over all `gng` rows associated with the same `day`, but here we only considered the values of the last daily recording (i.e., `within.day = 6` for `HRV` and `within.day = 5` for `ESM`). Again, raw `ESM` item scores are not included now but will be after the evaluation of their psychometric properties (see the [related report](https://luca-menghini.github.io/vmHRV-selfRegulation/4psychomeDesc/psychomeDesc.html)).
+```{r }
+# merging GNG and HRV (last measurement)
+gng <- join(GNG,HRV[HRV$within.day==6,],by=c("ID","day"),type="left")
+colnames(gng)[which(colnames(gng)=="within.day")] <- "time.HRV"
+
+# merging gng and ESM (last measurement)
+gng <- join(gng,ESM[ESM$within.day==5,],by=c("ID","day"),type="left")
+colnames(gng)[which(colnames(gng)=="within.day")] <- "time.ESM"
+
+# merging gng and PrelQS
+gng <- join(gng,PrelQS,by="ID",type="left")
+
+# sanity check: time.HRV can only be = 6 and time.ESM can only be = 5
+summary(as.factor(gng$time.HRV))
+summary(as.factor(gng$time.ESM))
+gng$time.ESM <- gng$time.HRV <- NULL
+cat("Sanity check:",nrow(gng)==nrow(GNG)) # same nrow than GNG
+
+# sorting and showing first three lines
+(gng <- gng[order(gng$ID,gng$day,gng$block),])[1:3,]
+```
+
+<br>
+
+### 5.3.2. between
+
+The second merged dataset is just the same **wide-form** `between` dataset created above, integrated with the aggregated `GNG` data.
+```{r }
+# computing aggregated values
+between <- join(between,aggregate(RT ~ ID,data=GNG[GNG$TrialType=="Go" & GNG$ACC==1,],FUN="mean"), # mean RT to Go trials
+                by="ID",type="left")
+between <- join(between,aggregate(ACC ~ ID,data=GNG[GNG$TrialType=="Go",],FUN="mean"), # mean ACC to Go trials
+                by="ID",type="left")
+between <- join(between,aggregate(ACC ~ ID,data=GNG[GNG$TrialType=="No-go",],FUN="mean"), # mean ACC to No-go trials
+                by="ID",type="left")
+colnames(between)[(ncol(between)-2):ncol(between)] <- paste(c("RT","Go.ACC","NoGo.ACC"),"cm",sep=".") # renaming columns
+
+# sorting and showing first three lines
+(between <- between[order(between$ID),])[1:3,]
+```
+
+<br>
+
+## 5.4. BLOCK & ema
+
+Finally, we integrate `ema` information (including `HRV`, `ESM`, and `PrelQS` variables) to the `BLOCK` dataset.
+
+### 5.4.1. block
+
+The first merged dataset `block` has a **long form** with one row for each block of the Go/NoGo task, so that `between` information is identically repeated over all rows associated with the same participant. Similarly, `HRV` and `EMA` values are identically repeated over all `block` rows associated with the same `day`, but here we only considered the values of the last daily recording (i.e., `within.day = 6` for `HRV` and `within.day = 5` for `ESM`). Again, raw `ESM` item scores are not included now but will be after the evaluation of their psychometric properties (see the [related report](https://luca-menghini.github.io/vmHRV-selfRegulation/4psychomeDesc/psychomeDesc.html)).
+```{r }
+# merging BLOCK and HRV (last measurement)
+block <- join(BLOCK,HRV[HRV$within.day==6,],by=c("ID","day"),type="left")
+colnames(block)[which(colnames(block)=="within.day")] <- "time.HRV"
+
+# merging gng and ESM (last measurement)
+block <- join(block,ESM[ESM$within.day==5,],by=c("ID","day"),type="left")
+colnames(block)[which(colnames(block)=="within.day")] <- "time.ESM"
+
+# merging gng and PrelQS
+block <- join(block,PrelQS,by="ID",type="left")
+
+# sanity check: time.HRV can only be = 6 and time.ESM can only be = 5
+summary(as.factor(block$time.HRV))
+summary(as.factor(block$time.ESM))
+cat("Sanity check:",nrow(block)==nrow(BLOCK)) # same nrow than GNG
+
+# sorting and showing first three lines
+(block <- block[order(block$ID,block$day,block$block),])[1:3,]
+```
+
+<br>
+
+### 5.4.2. between
+
+Finally, we aggregate the `RT.sd` and `ICV` data from the `BLOCK` dataset by computing their mean by participant, and we integrate this information into the `between` dataset.
+```{r }
+# computing aggregated values
+between <- join(between,aggregate(RT.sd ~ ID,data=BLOCK,FUN="mean"), # mean RT SD to Go trials
+                by="ID",type="left")
+between <- join(between,aggregate(ICV ~ ID,data=BLOCK,FUN="mean"), # mean ICV to Go trials
+                by="ID",type="left")
+colnames(between)[(ncol(between)-1):ncol(between)] <- paste(c("RT.sd","ICV"),"cm",sep=".") # renaming columns
+
+# sorting and showing first three lines
+(between <- between[order(between$ID),])[1:3,]
+```
+
+<br>
 <br>
 
 # 6. Data structure & dictionary
 
+Here, we show the structure of each of the final pre-processed datasets and we provide a data dictionary for each of them.
+
+## 6.1. ema
+
+The `ema` dataset includes `HRV`, `ESM`, and `PrelQS` information with **one row for each measurement** of either `HRV` (5 ambulatory + 1 lab) or `ESM` (1 'baseline' + 5 ambulatory).
+
+### 6.1.1. Data structure
+```{r }
+str(ema)
+```
+
+<br>
+
+### 6.1.2. Data dictionary
+
+1. Recording identification:
+
+- `ID` = participant identification code
+
+- `day` = day of assessment (1, 2 or 3)
+
+- `within.day` = scheduled recording number (0 = first ESM laboratory measurements; 1-5 = ambulatory measurements; 6 = last HRV laboratory measurement)
+
+<br>
+
+2. HRV data
+
+- `PI` = mean pulse interval (ms), computed as the mean of the PIs in a given recording segment
+
+- `HR` = mean heart rate (bpm), computed as 60,000/`PI`
+
+- `RMSSD` = root mean square of successive differences in normal-to-normal intervals (ms)
+
+- `RMSSDcv` = RMSSD coefficient of variation, computed as 100 × `RMSSD` / `PI` following [Geus et al (2019)](#ref)
+
+- `nPI` = number of pulse intervals considered for each segment
+
+- `miss` = flagging missing segments (i.e., not recorded) (1 = missing, 0 = nonmissing)
+
+- `out` = flagging excluded segments due to artefacts in more than the 25% (1 = excluded; 0 = included)
+
+- `nArtefacts` = number of artefacts
+
+- `pArtefacts` = percentage of artefacts computed as `100 * nArtefacts / nPI`
+
+- `art10` = flagging segments with `pArtefacts` > 10% (0 = no, 1 = yes)
+
+- `inclRate60` = flagging participants with a rate of included segments < 60% than the total number of scheduled segments (0 = no, 1 = yes)
+
+- `noisyPIs` = flagging participants with a relatively ‘noisy’ BVP or PI signal (0 = no, 1 = yes)
+
+<br>
+
+2. ESM data
+
+- `os` = operating system (either Android or iOS)
+
+- `RunTimestamp` = ESM questionnaire opening timestamp (yyyy-mm-dd hh:mm:ss)
+
+- `v1`, ... `f3` = ratings at the Multidimensional Mood Questionnaire items (1-7)
+
+- `PE`, ... `NE.int` = events ratings (1-7)
+
+- `smoke` = cigarette smoking over the 20 min before the recording (0 = no, 1 = yes)
+
+- `coffe` = coffee drinking over the 60 min before the recording (0 = no, 1 = yes)
+
+- `alcohol` = alcohol over the 60 min before the recording (0 = no, 1 = yes)
+
+- `activity` = activity intensity before the recording (0 = low/inactivity, 1 = moderate or intense)
+
+- `people` = interferences during the recording (0 = alone or with someone not disturbing, 2 = people disturbing or interrupting)
+
+- `daybefore.ex` = intense exercise during the day before (0 = no, 1 = yes)
+
+- `drugs` = drugs consumed on that day (0 = no, 1 = yes)
+
+- `drugs.which` = which drugs has been used on that day (open-ended responses)
+
+- `cLess1` = flagging potentially careless responses based on 1+ criteria
+
+- `cLess2` = flagging potentially careless responses based on 2+ criteria
+
+- `cLessResp1` = flagging potentially careless respondents based on 1+ criteria
+
+- `cLessResp2` = flagging potentially careless respondents based on 2+ criteria
+
+<br>
+
+2. Preliminary questionnaire data
+
+- `time` = questionnaire opening timestamp (yyyy-mm-dd hh:mm:ss)
+
+- `age` = participants’ age (years)
+
+- `gender` = participants’ sex (“F” or “M”)
+
+- `BMI` = participants’ body mass index (kg/m2)
+
+- `drugs` = flagging participants reporting taking some medication (0 = no, 1 = yes)
+
+- `dysfun` = flagging participants reporting minor cardiovascular and/or other dysfunctions (0 = no, 1 = yes)
+
+- `postponed` = flagging participants that postponed one protocol day
+
+<br>
+
+## 6.2. between
+
+The `between` dataset includes all collected variables, with one row for each participant. `HRV`, `ESM`, `GNG`, and `BLOCK` data are averaged by participant.
+
+### 6.2.1. Data structure
+```{r }
+str(between)
+```
+
+<br>
+
+### 6.2.2. Data dictionary
+
+1. Recording identification:
+
+- `ID` = participant identification code
+
+<br>
+
+2. Preliminary questionnaire data
+
+- `time` = questionnaire opening timestamp (yyyy-mm-dd hh:mm:ss)
+
+- `age` = participants’ age (years)
+
+- `gender` = participants’ sex (“F” or “M”)
+
+- `BMI` = participants’ body mass index (kg/m2)
+
+- `drugs` = flagging participants reporting taking some medication (0 = no, 1 = yes)
+
+- `dysfun` = flagging participants reporting minor cardiovascular and/or other dysfunctions (0 = no, 1 = yes)
+
+- `postponed` = flagging participants that postponed one protocol day
+
+<br>
+
+3. HRV data
+
+- `PI.cm` = participant's mean pulse interval (ms), computed as the mean of the PIs in a given recording segment
+
+- `HR.cm` = participant's mean heart rate (bpm), computed as 60,000/`PI`
+
+- `RMSSD.cm` = participant's mean root mean square of successive differences in normal-to-normal intervals (ms)
+
+- `RMSSD.cMed` = participant's median root mean square of successive differences in normal-to-normal intervals (ms)
+
+- `RMSSDcv.cm` = participant's mean RMSSD coefficient of variation, computed as 100 × `RMSSD` / `PI` following [Geus et al (2019)](#ref)
+
+- `RMSSDcv.cMed` = participant's median RMSSD coefficient of variation, computed as 100 × `RMSSD` / `PI` following [Geus et al (2019)](#ref)
+
+- `nArtefacts.cm` = participant's mean number of artefacts
+
+- `inclRate60` = flagging participants with a rate of included segments < 60% than the total number of scheduled segments (0 = no, 1 = yes)
+
+- `noisyPIs` = flagging participants with a relatively ‘noisy’ BVP or PI signal (0 = no, 1 = yes)
+
+<br>
+
+4. ESM data
+
+- `cLessResp1` = flagging potentially careless respondents based on 1+ criteria (1 = Yes, 0 = No)
+
+- `cLessResp2` = flagging potentially careless respondents based on 2+ criteria (1 = Yes, 0 = No)
+
+- `smoker` = flagging smokers (1 = Yes, 0 = No)
+
+- `os` = operating system (either Android or iOS)
+
+<br>
+
+5. Go/No-go data
+
+- `RT.cm` = participant's mean reaction time (ms) to accurate "Go" trials
+
+- `Go.ACC.cm` = participant's mean accuracy (0-1) to "Go" trials
+
+- `NoGo.ACC.cm` = participant's mean accuracy (0-1) to "No-go" trials
+
+- `RT.sd.cm` = participant's mean reaction time (ms) standard deviation to accurate "Go" trials
+
+- `ICV.cm` = participant's mean intraindividual coefficient of variation in accurate "Go" trials
+
+<br>
+
+## 6.3. gng
+
+The `gng` dataset includes all collected variables, with one row for each trial of the go/no-go task. `HRV` data is included only for the segments recorded in the lab (`within.day` = 6`), whereas `ESM` information is included only as the last ESM data entry (`within.day = 5`).
+
+### 6.3.1. Data structure
+```{r }
+str(gng)
+```
+
+<br>
+
+### 6.3.2. Data dictionary
+
+1. Recording identification:
+
+- `ID` = participant identification code
+
+- `day` = day of assessment (1, 2 or 3)
+
+- `block` = daily task block (1 or 2)
+
+<br>
+
+2. Go/NoGo data
+
+- `SessionDate` = date of the task session (yyyy-mm-dd hh:mm:ss)
+
+- `SessionTime` = time within day of each task session (hh:mm:ss)
+
+- `TrialType` = trial type (Go = trials requiring to answer, No-go = trials requiring not to answer)
+
+- `letter` = trial letter stimulus
+
+- `Jitter` = ms randomly added to the inter-stimulus interval (ISI) for each trial (base ISI = 400ms)
+
+- `ACC` = trial accuracy (Go trials: 1 = response, 0 = omission; No-go trials: 1 = inhibition, 0 = commission)
+
+- `RT` = trial reaction time (ms) (i.e., RT = 0 when ACC = 0)
+
+<br>
+
+3. HRV data
+
+Same variables included in the `ema` dataset but only those referred to the last HRV recording segment (i.e., `within.day = 6`)
+
+<br>
+
+4. ESM data
+
+Same variables included in the `ema` dataset but only those referred to the last ESM recording segment (i.e., `within.day = 5`)
+
+<br>
+
+5. Preliminary questionnaire data
+
+Same variables included in the `ema` and the `between` dataset
+
+<br>
+
+## 6.4. block
+
+The `block` dataset includes all collected variables, with one row for each block of the go/no-go task. Again, `HRV` data is included only for the segments recorded in the lab (`within.day` = 6`), whereas `ESM` information is included only as the last ESM data entry (`within.day = 5`).
+
+### 6.4.1. Data structure
+```{r }
+str(block)
+```
+
+<br>
+
+### 6.4.2. Data dictionary
+
+1. Recording identification:
+
+- `ID` = participant identification code
+
+- `day` = day of assessment (1, 2 or 3)
+
+- `block` = daily task block (1 or 2)
+
+<br>
+
+2. Go/NoGo data
+
+- `Go.ACC` = block-related mean accuracy to Go trials (0-1)
+
+- `NoGo.ACC` = block-related mean accuracy to No-go trials (0-1)
+
+- `RT` = block-related mean reaction time (ms) to accurate Go trials
+
+- `RT.sd` = block-related standard deviation of reaction times (ms) to accurate Go trials (0-1)
+
+- `ICV` = block-related intraindividual coefficient of variation (0-1)
+
+
+<br>
+
+3. HRV data
+
+Same variables included in the `ema` dataset but only those referred to the last HRV recording segment (i.e., `within.day = 6`)
+
+<br>
+
+4. ESM data
+
+Same variables included in the `ema` dataset but only those referred to the last ESM recording segment (i.e., `within.day = 5`)
+
+<br>
+
+5. Preliminary questionnaire data
+
+Same variables included in the `ema` and the `between` dataset
+
+<br>
+<br>
+
 # 7. Data export
 
+Finally, we export the final pre-processed datasets to be used in the subsequent analyses. Each dataset is saved both in the RData and the CSV file format.
+```{r }
+# saving as RData
+save(ema,file="3data/ema_preProcessed.RData")
+save(between,file="3data/between_preProcessed.RData")
+save(gng,file="3data/gng_preProcessed.RData")
+save(block,file="3data/block_preProcessed.RData")
+
+# saving as CSV
+write.csv(ema,file="3data/ema_preProcessed.CSV",row.names=FALSE)
+write.csv(between,file="3data/between_preProcessed.CSV",row.names=FALSE)
+write.csv(gng,file="3data/gng_preProcessed.CSV",row.names=FALSE)
+write.csv(block,file="3data/block_preProcessed.CSV",row.names=FALSE)
+```
+
+<br>
 <br>
 
-NOTE PER LE ANALISI:
-nel valutare la distribuzione da usare:
-- ex-Gaussian, quasi normale con coda positiva (positively skewed), ma mu e sigma sono indipendenti
-- Gamma: come sopra ma mu e sigma sono correlate -> per vederlo conviene plottare RMSSD per diverse categorie di X
-   e vedi se la variabilità aumenta con la media dell'RMSSD
-- nota: però la Gamma inizia a zero!
-
-<br>
-
-# References {#ref}
+# 8. References {#ref}
 
 - Curran, P. G. (2016). Methods for the detection of carelessly invalid responses in survey data. Journal of Experimental Social Psychology, 66, 4-19. https://doi.org/10.1016/j.jesp.2015.07.006
 
@@ -2302,4 +2868,4 @@ nel valutare la distribuzione da usare:
 
 - Xiong, H., Huang, Y., Barnes, L. E., & Gerber, M. S. (2016). Sensus: a cross-platform, general-purpose system for mobile crowdsensing in human-subject studies. *Proceedings of the 2016 ACM International Joint Conference on Pervasive and Ubiquitous Computing*, 415–426. https://doi.org/10.1145/2971648.2971711
 
-## R packages {#refPack}
+## 8.1 R packages {#refPack}
