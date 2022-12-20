@@ -17,7 +17,7 @@ The repository includes the following materials:
     - `long`: long-form dataset with time-varying variables and repeatedly recorded time-invariant variables
     - `wide`: wide-form dataset with demographic variables and individual averages of time-varying variables
 
-4. `psychomeDesc`: R code and generated report  with full outputs of the psychometric and descriptive analyses applied to the pre-processed data, including the inspection of univariate and bivariate distributions. The **psychometrics and descriptives report** is [depicted at this page](https://Luca-Menghini/vmHRV-selfRegulation/) and can be reproduced by running the .Rmd script on the two datasets in `3data`.
+4. `psychomeDesc`: R code and generated report  with full outputs of the psychometric and descriptive analyses applied to the pre-processed data, including the inspection of univariate and bivariate distributions. The **psychometrics and descriptives report** is [depicted at this page](https://Luca-Menghini/vmHRV-selfRegulation/4psychomeDesc/psychomeDesc.html) and can be reproduced by running the .Rmd script on the two datasets in `3data`.
 
 5. `regModels`: R code and generated report with full outputs of the generalized linear mixed-effects regression (GLMER) analysis of the pre-processed data. The **data analysis report** is [depicted at this page](https://Luca-Menghini/vmHRV-selfRegulation/) and can be reproduced by running the .Rmd script on the two datasets generated with the `4psychomeDesc` script.
 
