@@ -692,8 +692,7 @@ bslRecoding <- function(data){
   # recoding item scores
   data$v2 <- 8 - data$v2 # hedonic tone = positive
   data$v3 <- 8 - data$v3
-  data$t2 <- 8 - data$t2 # t.arousal = negative
-  data$t3 <- 8 - data$t3
+  data$t1 <- 8 - data$t1 # calmness = positive
   data$f2 <- 8 - data$f2 # e.arousal = positive
 
   # other confounding variables
@@ -1184,7 +1183,7 @@ Following [Curran (2016)](#ref), we consider multiple indicators of potentially 
 
 For each indicator, the numbers between brackets indicates the corresponding number of flagged responses/participants.
 
-###### SUMMARY
+###### SELECT INDICATOR:
 
 ###### ITEM RESPONSE TIMES (32/2, 66/8)
 
@@ -1476,6 +1475,8 @@ summary(as.factor(ESM.LS[!duplicated(ESM.LS$ID),"psychsynResp"])) # No. flagged 
 ```
 
 <br>
+
+##### Summary
 
 Here, we summarize the number of potentially careless responses and participants for each criterion, and we compute an aggregated variable indicating the number of criteria (from 1 to 5) based on which each response and participant is classified as potentially careless. Then, we flag all **responses** classified as potentially careless based on 1+ criteria (N = 293) with `cLess1 = 1` and those based on 2+ criteria (N = 53) with `cLess2 = 1`, respectively. Similarly, we flag all **participants** classified as potentially careless based on 1+ criteria (N = 23) with `cLessResp1 = 1`, and those based on 2+ criteria (N = 3) with `cLessResp2 = 1`.
 ```{r fig.width=6,fig.height=2,warning=FALSE}
@@ -2722,7 +2723,7 @@ str(between)
 
 ## 6.3. gng
 
-The `gng` dataset includes all collected variables, with one row for each trial of the go/no-go task. `HRV` data is included only for the segments recorded in the lab (`within.day` = 6`), whereas `ESM` information is included only as the last ESM data entry (`within.day = 5`).
+The `gng` dataset includes all collected variables, with one row for each trial of the go/no-go task. `HRV` data is included only for the segments recorded in the lab (`within.day` = 6), whereas `ESM` information is included only as the last ESM data entry (`within.day = 5`).
 
 ### 6.3.1. Data structure
 ```{r }
@@ -2781,7 +2782,7 @@ Same variables included in the `ema` and the `between` dataset
 
 ## 6.4. block
 
-The `block` dataset includes all collected variables, with one row for each block of the go/no-go task. Again, `HRV` data is included only for the segments recorded in the lab (`within.day` = 6`), whereas `ESM` information is included only as the last ESM data entry (`within.day = 5`).
+The `block` dataset includes all collected variables, with one row for each block of the go/no-go task. Again, `HRV` data is included only for the segments recorded in the lab (`within.day` = 6), whereas `ESM` information is included only as the last ESM data entry (`within.day = 5`).
 
 ### 6.4.1. Data structure
 ```{r }
