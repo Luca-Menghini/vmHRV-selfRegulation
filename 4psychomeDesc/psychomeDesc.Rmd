@@ -209,8 +209,8 @@ Print the standardized factor loadings of an ordinary or a multilevel CFA model.
 <details><summary>`fit.ind()`</summary>
 <p>
 ```{r }
-fit.ind <- function(model=NA,from_summary=FALSE,type="multilevel",models.names=NA,
-                    fits=c("npar","chisq","df","pvalue","rmsea","cfi","srmr_within","srmr_between")){ require(lavaan); require(MuMIn)
+fit.ind <- function(model=NA,from_summary=FALSE,type="multilevel",models.names=NA,infocrit=TRUE,digits=3,
+                    fits=c("npar","chisq","df","rmsea","cfi","srmr_within","srmr_between")){ require(lavaan); require(MuMIn)
   # removing level-specific fit indices when model is "monolevel"
   if(type=="monolevel"){
       fits <- gsub("srmr_within","srmr",fits)
@@ -221,10 +221,13 @@ fit.ind <- function(model=NA,from_summary=FALSE,type="multilevel",models.names=N
       fit.indices <- fitmeasures(model[[1]])[fits]
       for(i in 2:length(model)){
         fit.indices <- rbind(fit.indices,fitmeasures(model[[i]])[fits]) }
-      if(!is.na(models.names[1])){
-        row.names(fit.indices) <- models.names }
-      return(as.data.frame(fit.indices))
-      } else { return(fitmeasures(model)[fits]) }
+      if(infocrit==TRUE){ 
+        fit.indices <- cbind(fit.indices,
+                             AICw=Weights(sapply(model,AIC)),BICw=Weights(sapply(model,BIC)))  }
+      if(!is.na(models.names[1])){ row.names(fit.indices) <- models.names }
+      fit.indices <- round(as.data.frame(fit.indices),digits)
+      return(fit.indices[order(fit.indices$rmsea),])
+      } else { return(round(as.data.frame(fitmeasures(model)[fits]),2)) }
     
     } else { # in some cases the fit indices are available only from the model's summary 
       quiet <- function(fit) { # this was written by Alicia FRANCO MARTÍNEZ on the lavaan Google group
@@ -234,7 +237,7 @@ fit.ind <- function(model=NA,from_summary=FALSE,type="multilevel",models.names=N
         } 
       sum <- quiet(model)
       fit.indices <- sum$FIT[fits]
-      return(fit.indices)}}
+      return(round(as.data.frame(fit.indices[order(fit.indices$rmsea),]),digits))}}
 ```
 </p>
 </details>
@@ -292,13 +295,13 @@ Generate the pooled within-subject covariance matrix. Note: function created by 
 influential.analysis <- function(data=NA,cluster="ID",parameter="var",st="st.all",
                                  n.items=9,item.labels=c("v1", "v2", "v3", "t1", "t2", "t3", "f1", "f2","f3"),
                                  m = 'level: 1
-                                      NV_w =~ v1 + v2 + v3
-                                      TA_w =~ t1 + t2 + t3
-                                      FA_w =~ f1 + f2 + f3
+                                      hedTone_W =~ v1 + v2 + v3
+                                      Calmness_W =~ t1 + t2 + t3
+                                      enArousal_W =~ f1 + f2 + f3
                                       level: 2
-                                      NV_b =~ v1 + v2 + v3
-                                      TA_b =~ t1 + t2 + t3
-                                      FA_b =~ f1 + f2 + f3'){ require(lavaan); require(tcltk)
+                                      hedTone_B =~ v1 + v2 + v3
+                                      Calmness_B =~ t1 + t2 + t3
+                                      enArousal_B =~ f1 + f2 + f3'){ require(lavaan); require(tcltk)
   # storing results on the whole sample
   m.res <- cfa(model=m,data=data,cluster=cluster,std.lv=TRUE)
   
@@ -420,16 +423,16 @@ plot.influential <- function(data,parameter="var",variable,level=2,threshold_low
     if(!is.na(threshold_lower) & is.na(threshold_upper)){
       p <- p + geom_text(data=data[data$X==variable & 
                                      data$par < threshold_lower,],
-                         aes(label=ID),nudge_x=-5,size=3)
+                         aes(label=substr(ID,5,6)),nudge_x=-2,size=3)
       } else if(is.na(threshold_lower) & !is.na(threshold_upper)){
         p <- p + geom_text(data=data[data$X==variable &
                                        data$par > threshold_upper,],
-                           aes(label=ID),nudge_x=-5,size=3)
+                           aes(label=substr(ID,5,6)),nudge_x=-2,size=3)
         } else if(!is.na(threshold_lower) & !is.na(threshold_upper)){
           p <- p + geom_text(data=data[data$X==variable & 
                                          (data$par > threshold_upper |
                                             data$par < threshold_lower),],
-                             aes(label=ID),nudge_x=-5,size=3) }
+                           aes(label=substr(ID,5,6)),nudge_x=-2,size=3) }
   
   return(p) } 
 ```
@@ -519,16 +522,44 @@ plot.traj <- function(data,var="Mood",ID){ require(ggplot2); require(gridExtra)
 
 plots the item scores' temporal trajectories of a given participant
 
+<details><summary>`MCFArel`</summary><p>
+```{r echo=TRUE}
+#' @title Computing composite reliability index from a MCFA model
+#' @param fit = multileve CFA model.
+#' @param level = level of interest (either 1 or 2)
+#' @param items = numeric string indicating the items of interest (e.g., 1:3 for items 1, 2 and 3)
+#' @param item.labels = character string indicating the names of the items of interest
+MCFArel <- function(fit,level,items,item.labels){ require(lavaan)
+  if(level==1){ 
+    sl <- standardizedsolution(fit)[1:(nrow(standardizedSolution(fit))/2),] # pars within
+  } else if(level==2){ 
+    sl <- standardizedsolution(fit)[(nrow(standardizedSolution(fit))/2):nrow(standardizedsolution(fit)),] # pars between
+  } else { stop("Error: level can be either 1 or 2") }
+  sl <- sl$est.std[sl$op == "=~"][items] # standardized loadings of the selected items
+  names(sl) <- item.labels # item names
+  re <- 1 - sl^2 # residual variances of items
+  
+  omega <- sum(sl)^2 / (sum(sl)^2 + sum(re)) # composite reliability index
+  return(round(omega,2))}
+```
+</p></details>
+
+Compute level-specific indices of composite reliability from a MCFA model (see Geldhof et al., 2014).
+
 <br>
 
 ## 2.1. Mood
 
-Mood was measured using the Italian adaptation of the Multidimensional Mood Questionnaire (MDMQ) ([Wilhelm & Schoebi, 2007; Menghini et al., 2022](#ref)), using 9 bipolar items to measure three hypothesized correlated dimension, namely Hedonic Tone, Calmness, and Energetic Arousal. Item scores were recoded so that higher scores indicate more positive ratings.
+Mood was measured using the Italian adaptation of the Multidimensional Mood Questionnaire (MDMQ) ([Wilhelm & Schoebi, 2007; Menghini et al., 2022](#ref)), using 9 bipolar items to measure three hypothesized correlated dimension, namely Hedonic Tone, Calmness, and Energetic Arousal. Item scores were recoded so that higher scores indicate more positive ratings. Here, we prepare the data to be used in the analysis by selecting all cases with complete responses to any mood item, which we call `Mood`.
 ```{r }
 # selecting mood item labels
 mood <- c("v1","v2","v3", # hedonic tone
           "t1","t2","t3", # calmness
           "f1","f2","f3") # energetic arousal
+
+# selecting dataset of complete responses (listwise deletion)
+Mood <- na.omit(ema[,c("ID",mood)])
+cat("Analysing",nrow(Mood),"complete responses from",nlevels(as.factor(as.character(Mood$ID))),"participants")
 ```
 
 <br>
@@ -541,17 +572,17 @@ First, we consider descriptive statistics in raw item scores, in terms of score 
 
 First, we inspect the score distribution of each mood item using the `MVN` package. We can note that mood items are **quite normally distributed**, with a little skewness on the left (especially for items `t1`, `t2`, and `t3`).  Although Mood items show the typical "discrete" patterns of ordinal scales, no drastic deviations from normality are detected and we are confident using them for confirmatory factor analysis (see below).
 ```{r }
-mvn(data=ema[,mood],univariatePlot="histogram")[4] # histogram mood
-mvn(data=ema[,mood],univariatePlot="qqplot")[4] # qqnorm mood
+mvn(data=Mood[,mood],univariatePlot="histogram")[4] # histogram mood
+mvn(data=Mood[,mood],univariatePlot="qqplot")[4] # qqnorm mood
 ```
 
 <br>
 
 #### 2.1.1.2. ICC
 
-Second, we evaluate the balance between inter- and intraindividual variability in each item score by computing the intraclass correlation coefficients (ICC) with the `itemsICC` function showed above. We can note that all ICCs are equal to or below .42, suggesting that **most variance is at level 1 (within)** but there is still substantial interindividual variability to consider multilevel modeling. Items `v1`, `v2`, and `v3` show the highest variance between participants, whereas `t1`, `t2`, and `t3` show the highest variance within participant.
+Second, we evaluate the balance between inter- and intraindividual variability in each item score by computing the intraclass correlation coefficients (ICC) with the `itemsICC` function showed above. We can note that all ICCs are equal to or below .42, suggesting that **most variance is at level 1 (within)** but there is still substantial interindividual variability to consider multilevel modeling. Items `v1` and `v2` show the highest variance between participants, whereas `f3` shows the highest variance within participant.
 ```{r }
-itemsICC(data=ema,items=mood)
+itemsICC(data=Mood,items=mood)
 ```
 
 <br>
@@ -560,7 +591,7 @@ itemsICC(data=ema,items=mood)
 
 Third, we visualize the correlation matrices of mood item scores with the `corr.matrices` function showed above. Three matrices are generated, all showing plausible values coherently with the hypothesized measurement model, and proportional across matrices (suggesting that cross-level invariance is plausible):
 
-1. The **pooled** matrix showing the correlations across all observations, that are considered as they were independent. We can note that correlations are in the expected directions, with all mood items being strongly intercorrelated, but with stronger correlations among items associated with the same mood dimension.
+1. The **pooled** matrix showing the correlations across all observations, that are considered as they were independent. We can note that correlations are in the expected directions, with all mood items being strongly intercorrelated, but with stronger correlations among items associated with the same mood dimension, although it is difficult to discriminate Hedonic Tone from Calmness.
 ```{r }
 corr.matrices(data=ema,vars=mood,matrix.type="pooled")
 ```
@@ -595,24 +626,15 @@ The following analytical pipeline is implemented:
 
 <br>
 
-#### 2.1.2.1. Data preparation
-
-First, we prepare the data to be used in the analysis. That is, we select the dataset of complete responses to any mood item, which we call `Mood`.
-```{r }
-Mood <- na.omit(ema[,c("ID",mood)])
-cat("Analysing",nrow(Mood),"complete responses from",nlevels(as.factor(as.character(Mood$ID))),"participants")
-```
-
-<br>
-
-#### 2.1.2.2. Data preparation
+#### 2.1.2.1. Benchmark models
 
 Here, we conduct the preliminary steps suggested by [Hox (2010, chapter 14)](#ref) for **MCFA full maximum likelihood estimation**. Similarly to what recommended by [Muthén (1994)](#ref), the idea is to specify a set of models to separately assess the factor structure on Level 1 (within) and 2 (between), and to compare those models with the hypothesized multilevel model.
 
-***1) Within***
+<br>
 
-The first step evaluates the **within-cluster factor structure**. Following [Muthén (1994)](#ref), we conduct a conventional (one-level) CFA of the **pooled within-cluster covariance matrix** `poolCov`, obtained with a function created by [Huang (2018)](#ref). We can note that all standardized loadings estimated from the pooled within-cluster covariance matrix are significant and higher than .60. Item `v2` shows the lowest loading (.61), whereas the highest loading is showed by `t2` (.90).
-The model shows satisfactory fit indices, suggesting that **the within-cluster structure holds**.
+##### Within
+
+The first step evaluates the **within-cluster factor structure**. Following [Muthén (1994)](#ref), we conduct a conventional (one-level) CFA of the **pooled within-cluster covariance matrix** `poolCov`, obtained with a function created by [Huang (2018)](#ref). We can note that all standardized loadings estimated from the pooled within-cluster covariance matrix are significant and equal to or higher than .60. Item `v2` shows the lowest loading (.60), whereas the highest loading is showed by `t2` (.90). The model shows roughtly acceptable fit indices, suggesting that **the within-cluster structure holds**.
 ```{r message=FALSE,warning=FALSE}
 # poolend covariance matrix (using function by Huang)
 poolCov <- mcfa.Huang(dat=Mood,gp="ID")$pw.cov
@@ -623,12 +645,12 @@ m.withinPool_Mood <- cfa('hedTone =~ v1 + v2 + v3
                           enArousal =~ f1 + f2 + f3',sample.cov=poolCov,sample.nobs=nrow(Mood),missing="fiml",std.lv=TRUE)
 
 loadings(m.withinPool_Mood,st="st.all") # standardized loadings
-round(fit.ind(m.withinPool_Mood,type="monolevel"),3) # fit indices
+fit.ind(m.withinPool_Mood,type="monolevel") # fit indices
 ```
 
 <br>
 
-***2) Between***
+##### Between
 
 The second step is to evaluate the **between-cluster factor structure** by specifying a set of benchmark models for the group level ([Hox, 2010](#ref)). This is done to test whether there is a between-cluster structure to be modeled.
 
@@ -636,10 +658,10 @@ The second step is to evaluate the **between-cluster factor structure** by speci
 
 **a) Null model**
 
-First, we specify a **null model with no specification on level 2**. If this model holds, it will mean that *there is no cluster-level structure at all* (all covariances in the between-clusters matrix are the result of individual sampling variation), and we can continue using a conventional (mono-level) analysis. We can note that the null model converges with no problems, although one participant `HRV068` shows no intraindividual variability for item `v2` and `v3`
+First, we specify a **null model with no specification on level 2**. If this model holds, it will mean that *there is no cluster-level structure at all* (all covariances in the between-clusters matrix are the result of individual sampling variation), and we can continue using a conventional (mono-level) analysis. We can note that the null model converges with no problems, although one participant `HRV068` shows no intraindividual variability for item `v2`, `v3`, and `t3`, and a further participant `HRV084` shows no intraindividual variability for item `t3`.
 ```{r }
 # one-factor within model + null between model
-m.null_Mood <- cfa('level: 1
+m.null <- cfa('level: 1
                     hedTone_W =~ v1 + v2 + v3
                     Calmness_W =~ t1 + t2 + t3
                     enArousal_W =~ f1 + f2 + f3
@@ -655,17 +677,18 @@ m.null_Mood <- cfa('level: 1
                     f3 ~~ 0*f3', data=Mood,cluster='ID',std.lv=TRUE)
 ```
 ```{r warning=FALSE,message=FALSE,fig.width=6,fig.height=2}
-plot.traj(ema,var="HT","HRV068") # checking participant HRV068
+plot.traj(ema,var="HT","HRV068") # checking items v1-v3 HRV068
+plot.traj(ema,var="CA","HRV068") # checking item t3 HRV068
 ```
 
 <br>
 
 **b) Independence model**
 
-Second, we specify an **independence model on level 2**, by specifying only variances but not covariances on this level. If this model holds, it will mean that "*there is cluster-level structure, but not substantively interesting structural model*", and we can focus our analyses on the pooled within-cluster matrix. Otherwise, it will mean that some kind of structure exists on Level 2. We can note that the independence model shows an improper solution (**Heywood case**) but we ignore this issue since it is not among the main models of interest.
+Second, we specify an **independence model on level 2**, by specifying only variances but not covariances on this level. If this model holds, it will mean that "*there is cluster-level structure, but not substantively interesting structural model*", and we can focus our analyses on the pooled within-cluster matrix. Otherwise, it will mean that some kind of structure exists on Level 2.
 ```{r }
 # one-factor within model + independence between model
-m.ind_Mood <- cfa('level: 1
+m.ind <- cfa('level: 1
                    hedTone_W =~ v1 + v2 + v3
                    Calmness_W =~ t1 + t2 + t3
                    enArousal_W =~ f1 + f2 + f3
@@ -688,7 +711,7 @@ m.ind_Mood <- cfa('level: 1
 Third, we specify a **saturated model for the between-clusters part** that fits a full covariance matrix to the family-level observations. This allows us "to examine the best possible fit given the individual-level [here, within-individual] model" ([Hox, 2010](#ref)). If this model holds, the factors at the within-level in this model correspond to *'within-only' constructs*, meaning that the construct only 'exists' at the within level, whereas lv2 variation is just 'spurious' ([Stapelton et al., 2016](#ref)). The saturated model converges with no Heywood cases.
 ```{r }
 # one-factor within model + saturated between part
-m.sat_Mood <- cfa('level: 1
+m.sat <- cfa('level: 1
                    hedTone_W =~ v1 + v2 + v3
                    Calmness_W =~ t1 + t2 + t3
                    enArousal_W =~ f1 + f2 + f3
@@ -706,22 +729,23 @@ m.sat_Mood <- cfa('level: 1
 
 <br>
 
-Finally, we evaluate the fit of these benchmark models. If the structure on level 2 holds, all models (and especially the Null and the Independence model) should be rejected. Accordingly, we can note that both the null and the independence models are rejected, whereas acceptable fit is shown by the **saturated model**. Consequently, the saturated model will be considered for evaluating the fit of the hypothesized models.
-```{r message=TRUE,warning=TRUE}
-round(fit.ind(model=c(m.null_Mood,m.ind_Mood,m.sat_Mood),
-              models.names=c("Lv2 Null","Lv2 Independence","Lv2 Saturated")),3)
+Finally, we evaluate the fit of these benchmark models. If the structure on level 2 holds, all models (and especially the Null and the Independence model) should be rejected. Accordingly, we can note that both the null and the independence models are rejected, whereas roughly acceptable fit is shown by the **saturated model**. Consequently, the saturated model will be considered for evaluating the fit of the hypothesized models.
+```{r }
+fit.ind(model=c(m.null,m.ind,m.sat),models.names=c("Lv2 Null","Lv2 Independence","Lv2 Saturated"))
 ```
 
 <br>
 
-#### 2.1.2.3. Multilevel models
+#### 2.1.2.2. Multilevel models
 
 Here, we specify the **hypothesized MCFA models** and a set of alternative models with a different number of dimensions. Note that each model is parametrized by standardizing the latent factors with `std.lv = TRUE` to avoid fixing to 1 the first indicator of each dimension since the interest is on factor loadings. Following [Jag & Jorgensen (2017)](#ref), we also evaluate **cross-level isomorphism** by specifying more restrictive models with weak and strong invariance across levels, respectively.
 
-***1) Configural invariance***
+<br>
+
+##### a) Configural invariance
 
 Here, we specify the configural-invariance model `m3x3`, assuming **3 latent variables on both levels**. We can note that the model shows an improper solution (**Heywood case**), which will be handled in the section 2.2.4 below.
-```{r message=TRUE,warning=TRUE}
+```{r }
 # hypothesized multilevel model (negative variance -> see HEYWOOD CASES)
 m3x3 <- cfa('level: 1
              hedTone_w =~ v1 + v2 + v3
@@ -736,10 +760,10 @@ m3x3 <- cfa('level: 1
 
 <br>
 
-***2) Alternative models***
+##### b) Alternative models
 
-Here, alternative models are specified with less latent factors on level 1 and/or level 2. Specifically, models with two latent variables (Positive Tone and Energetic Arousal) are justified by the strong correlation between Hedonic Tone and Calmness items, especially on level 2 (see also [Wilhelm & Schoebi, 2007](#ref); [Menghini et al., 2022](#ref)). We can note that all models show improper solutions (**Heywood cases**), which will be handled in the section 2.2.4 below.
-```{r message=TRUE,warning=TRUE}
+Here, alternative models are specified with less latent factors on level 1 and/or level 2. Specifically, models with two latent variables (Positive Tone and Energetic Arousal) are justified by the strong correlation between Hedonic Tone and Calmness items, especially on level 2 (see also [Wilhelm & Schoebi, 2007](#ref); [Menghini et al., 2022](#ref)). We can note that models `m2x3` and `m2x2` show improper solutions (**Heywood cases**), which will be handled in the section 2.2.4 below.
+```{r }
 # 3 latent on lv1, 2 latent on lv2
 m3x2 <- cfa('level: 1
              hedTone_w =~ v1 + v2 + v3
@@ -772,10 +796,10 @@ m2x2 <- cfa('level: 1
 
 <br>
 
-***3) Cross-level invariance***
+##### c) Cross-level invariance
 
 Finally, we follow [Jag & Jorgensen (2017)](#ref) by evaluating different levels of factor invariance: (1) **configural invariance**, when the same factor structure holds but factor loadings differ across levels as in model `m3x3`, (2) **weak factorial invariance**, when the factor loadings are equal across levels, and (3) **strong factorial invariance**, when the values of factor loadings and intercepts are equal across levels, and the residual variance on level 2 is zero. Here we specify the models assuming, respectively, weak and strong invariance across levels. We can note that the former model shows an improper solution (**Heywood case**), which will be handled in the section 2.2.4 below.
-```{r , echo = TRUE,warning=TRUE}
+```{r }
 # weak invariance model (negative variance -> see HEYWOOD CASES)
 m3x3.weakInv <- cfa('level: 1
                  hedTone_w =~ a*v1 + b*v2 + c*v3
@@ -810,15 +834,12 @@ m3x3.strInv <- cfa('level: 1
 
 <br>
 
-#### 2.1.2.4. Heywood cases
+#### 2.1.2.3. Heywood cases
 
-**All multilevel models** but the strong-invariance model show a negative variance estimate (improper solution, or Heywood case) at level 2. Specifically, we can note that in most models the Heywood case is related to item `t2` (i.e., the item that showed the lowest ICC in section 2.1.1), whereas in models `m2x3` it also involves item `v3`, and in model `3x2` it is related to item `f3`.
-```{r message=TRUE,warning=TRUE}
+**All multilevel models** but the strong-invariance model show a negative variance estimate (improper solution, or Heywood case) at level 2. Specifically, we can note that in most models the Heywood case is related to item `t2` (i.e., the item that showed the lowest ICC in section 2.1.1), whereas in model `m2x3` it involves item `t3`.
+```{r }
 # m3x3
 parameterestimates(m3x3)[parameterestimates(m3x3)$op=="~~" & parameterestimates(m3x3)$est<0,
-                         c("lhs","level","est","se","ci.lower","ci.upper")]
-# m3x2
-parameterestimates(m2x3)[parameterestimates(m3x2)$op=="~~" & parameterestimates(m3x2)$est<0,
                          c("lhs","level","est","se","ci.lower","ci.upper")]
 # m2x3
 parameterestimates(m2x3)[parameterestimates(m2x3)$op=="~~" & parameterestimates(m2x3)$est<0,
@@ -833,9 +854,11 @@ parameterestimates(m3x3.weakInv)[parameterestimates(m3x3.weakInv)$op=="~~" & par
 
 <br>
 
-As a strategy to solve the improper solutions, we refit the models by **fixating the residual variance** of problematic items to the 15% of the variance estimated for these items at level 2. In other words, we make the assumption that these items have a reliability around 85% (see [Joreskog & Sobrom, 1996](#ref)).
-```{r message=TRUE,warning=TRUE}
-# m3x3: fixing residual variance of item t2
+##### a) Fixating variance
+
+As a first strategy to solve the improper solutions, we refit the models by **fixating the residual variance** of problematic items to the 15% of the variance estimated for these items at level 2. In other words, we make the assumption that these items have a reliability around 85% (see [Joreskog & Sobrom, 1996](#ref)). We can see that the residual variance of both `t2` and `t3` should be fixated to solve the problem for models `m3x3` and `m2x3`, and `m3x3.weakInv`, whereas fixating item `t3` was enough to solve the problem for model `m2x2`.
+```{r }
+# m3x3: fixating residual variance of item t2 ........................................................
 m3x3.fix <- 'level: 1
              hedTone_w =~ v1 + v2 + v3
              Calmness_w =~ t1 + t2 + t3
@@ -868,20 +891,382 @@ t3varlv2 <- as.data.frame(VarCorr(fit))[1,4] # between-subjects variance of item
 m3x3.fix2 <- cfa(gsub("rho2",t2varlv2*.15,
                      gsub("rho2b",t3varlv2*.15,m3x3.fix2)),data=Mood,cluster='ID',std.lv=TRUE) # fixating rho2b
 
-# m2x3: fixing residual variance of item t2 
+# m2x3: fixating residual variance of item t2 ........................................................
 m2x3.fix <- 'level: 1
+             PosTone_w =~ v1 + v2 + v3 + t1 + t2 + t3
+             enArousal_w =~ f1 + f2 + f3
+             level: 2
+             hedTone_b =~ v1 + v2 + v3
+             Calmness_b =~ t1 + t2 + t3
+             enArousal_b =~ f1 + f2 + f3
+             t2 ~~ rho2 * t2'
+m2x3.fix <- cfa(gsub("rho2",t2varlv2*.15,m2x3.fix),data=Mood,cluster='ID',std.lv=TRUE) # fixating rho2b
+
+# same problem with item t3
+parameterestimates(m2x3.fix)[parameterestimates(m2x3.fix)$op=="~~" & parameterestimates(m2x3.fix)$est<0,c("lhs","level","est")]
+
+# m2x3: fixating also residual variance of item t3
+m2x3.fix2 <- 'level: 1
+             PosTone_w =~ v1 + v2 + v3 + t1 + t2 + t3
+             enArousal_w =~ f1 + f2 + f3
+             level: 2
+             hedTone_b =~ v1 + v2 + v3
+             Calmness_b =~ t1 + t2 + t3
+             enArousal_b =~ f1 + f2 + f3
+             t2 ~~ rho2 * t2
+             t3 ~~ rho2b * t3'
+m2x3.fix2 <- cfa(gsub("rho2",t2varlv2*.15,
+                     gsub("rho2b",t3varlv2*.15,m2x3.fix2)),data=Mood,cluster='ID',std.lv=TRUE) # fixating rho2b
+
+# m2x2: fixating residual variance of item t3 ........................................................
+m2x2.fix <- 'level: 1
+             PosTone_w =~ v1 + v2 + v3 + t1 + t2 + t3
+             enArousal_w =~ f1 + f2 + f3
+             level: 2
+             PosTone_b =~ v1 + v2 + v3 + t1 + t2 + t3
+             enArousal_b =~ f1 + f2 + f3
+             t3 ~~ rho2 * t3'
+m2x2.fix <- cfa(gsub("rho2",t3varlv2*.15,m2x2.fix),data=Mood,cluster='ID',std.lv=TRUE) # fixating rho2
+
+# m3x3.weakInv: fixating residual variance of item t2 ........................................................
+m3x3.weakInv.fix <- 'level: 1
+                     hedTone_w =~ a*v1 + b*v2 + c*v3
+                     Calmness_w =~ d*t1 + e*t2 + f*t3
+                     enArousal_w =~ g*f1 + h*f2 + i*f3
+                     level: 2
+                     hedTone_b =~ a*v1 + b*v2 + c*v3
+                     Calmness_b =~ d*t1 + e*t2 + f*t3
+                     enArousal_b =~ g*f1 + h*f2 + i*f3
+                     t2 ~~ rho2 * t2'
+m3x3.weakInv.fix <- cfa(gsub("rho2",t2varlv2*.15,m3x3.weakInv.fix),data=Mood,cluster='ID',std.lv=TRUE) # fixating rho2
+
+# same problem with item t3
+parameterestimates(m3x3.weakInv.fix)[parameterestimates(m3x3.weakInv.fix)$op=="~~" &
+                                       parameterestimates(m3x3.weakInv.fix)$est<0,c("lhs","level","est")]
+
+# m3x3.weakInv: fixating also residual variance of item t3
+m3x3.weakInv.fix2 <- 'level: 1
+                     hedTone_w =~ a*v1 + b*v2 + c*v3
+                     Calmness_w =~ d*t1 + e*t2 + f*t3
+                     enArousal_w =~ g*f1 + h*f2 + i*f3
+                     level: 2
+                     hedTone_b =~ a*v1 + b*v2 + c*v3
+                     Calmness_b =~ d*t1 + e*t2 + f*t3
+                     enArousal_b =~ g*f1 + h*f2 + i*f3
+                     t2 ~~ rho2 * t2
+                     t3 ~~ rho2b * t3'
+m3x3.weakInv.fix2 <- cfa(gsub("rho2",t2varlv2*.15,
+                             gsub("rho2b",t3varlv2*.15,m3x3.weakInv.fix2)),data=Mood,cluster='ID',std.lv=TRUE) # fixating rho2
+```
+
+<br>
+
+##### b) Sample fluctuations {.tabset .tabset-fade .tabset-pills}
+
+As a second alternative strategy, we check if the **removal of some participant** can solve the improper solution. Indeed, Heywood cases are likely due to population variances that are close to zero (but positive), such that that the negative estimates are just the result of **sample fluctuations** ([Van Driel, 1978](#ref); [Kolenikov & Bollen, 2012](#ref)). 
+
+Specifically, due to our main focus on cross-level isomorphism, we only conduct the following analysis on **models `m3x3` and `m3x3.weakInv`**. Here, we re-specify both models by excluding each participant one-by-one (i.e., **influential analysis**). Then, we repeat the procedure by removing the participant whose exclusion is associated to the highest estimated variance, until the variance becomes positive in both models.
+
+<details><summary>**show influential analysis**</summary><p>
+
+First, the parameters are estimated and plotted after the exclusion of each participant. For both models, we can note that `t2` variance remains negative in any case. The exclusion of participant `HRV036` seems to lead to the highest increase in `t2` variance considering both models.
+```{r 0,warning=FALSE,message=FALSE,eval=FALSE}
+# m3x3
+write.csv(influential.analysis(data=Mood,
+                               parameter="var"),"heywood cases/negVar.m3x3.0.csv",row.names=FALSE)
+# m3x3.weakInv
+write.csv(influential.analysis(data=Mood,
+                               m='level: 1
+                                  hedTone_w =~ a*v1 + b*v2 + c*v3
+                                  Calmness_w =~ d*t1 + e*t2 + f*t3
+                                  enArousal_w =~ g*f1 + h*f2 + i*f3
+                                  level: 2
+                                  hedTone_b =~ a*v1 + b*v2 + c*v3
+                                  Calmness_b =~ d*t1 + e*t2 + f*t3
+                                  enArousal_b =~ g*f1 + h*f2 + i*f3',
+                               parameter="var"),"heywood cases/negVar.m3x3.weakInv.0.csv",row.names=FALSE)
+```
+```{r warning=FALSE,message=FALSE}
+# t2 variance in m3x3 (above) and m3x3.weakInv (below)
+grid.arrange(plot.influential(data=read.csv("heywood cases/negVar.m3x3.0.csv"),par="var",variable="t2",level=2,
+                              threshold_upper=-.005),
+             plot.influential(data=read.csv("heywood cases/negVar.m3x3.weakInv.0.csv"),par="var",variable="t2",level=2,
+                              threshold_upper=-.003))
+# v3 variance in m3x3 (above) and m3x3.weakInv (below)
+grid.arrange(plot.influential(data=read.csv("heywood cases/negVar.m3x3.0.csv"),par="var",variable="v3",level=2,
+                              threshold_upper = .024),
+             plot.influential(data=read.csv("heywood cases/negVar.m3x3.weakInv.0.csv"),par="var",variable="v3",level=2,
+                              threshold_upper =.017))
+
+# participant HRV036
+grid.arrange(plot.traj(ema,var="HT","HRV036"),plot.traj(ema,var="CA","HRV036"),nrow=2)
+```
+
+<br>
+
+Second, we replicate the procedure by also excluding participant `HRV036`. For both models, we can note that `t2` variance remains negative in any case. The exclusion of participant `HRV098` seems to lead to the highest increase in `t2` variance considering both models.
+```{r 1,warning=FALSE,message=FALSE,eval=FALSE}
+# m3x3
+write.csv(influential.analysis(data=Mood[Mood$ID!="HRV036",],
+                               parameter="var"),"heywood cases/negVar.m3x3.1.csv",row.names=FALSE)
+# m3x3.weakInv
+write.csv(influential.analysis(data=Mood[Mood$ID!="HRV036",],
+                               m='level: 1
+                                  hedTone_w =~ a*v1 + b*v2 + c*v3
+                                  Calmness_w =~ d*t1 + e*t2 + f*t3
+                                  enArousal_w =~ g*f1 + h*f2 + i*f3
+                                  level: 2
+                                  hedTone_b =~ a*v1 + b*v2 + c*v3
+                                  Calmness_b =~ d*t1 + e*t2 + f*t3
+                                  enArousal_b =~ g*f1 + h*f2 + i*f3',
+                               parameter="var"),"heywood cases/negVar.m3x3.weakInv.1.csv",row.names=FALSE)
+```
+```{r warning=FALSE,message=FALSE}
+# t2 variance in m3x3 (above) and m3x3.weakInv (below)
+grid.arrange(plot.influential(data=read.csv("heywood cases/negVar.m3x3.1.csv"),par="var",variable="t2",level=2,
+                              threshold_upper=-.0035),
+             plot.influential(data=read.csv("heywood cases/negVar.m3x3.weakInv.1.csv"),par="var",variable="t2",level=2,
+                              threshold_upper=-.001))
+# v3 variance in m3x3 (above) and m3x3.weakInv (below)
+grid.arrange(plot.influential(data=read.csv("heywood cases/negVar.m3x3.1.csv"),par="var",variable="v3",level=2,
+                              threshold_upper = .027,threshold_lower = 0),
+             plot.influential(data=read.csv("heywood cases/negVar.m3x3.weakInv.1.csv"),par="var",variable="v3",level=2,
+                              threshold_upper =.023,threshold_lower = 0))
+
+# participant HRV098
+grid.arrange(plot.traj(ema,var="HT","HRV098"),plot.traj(ema,var="CA","HRV098"),nrow=2)
+```
+
+<br>
+
+Third, we replicate the procedure by also excluding participant `HRV098`. We can note that `t2` variance remains negative in any case for model `m3x3`, whereas the exclusion of a number of participants solves the problem for model `m3x3.weakInv`. The exclusion of participant `HRV061` seems to lead to the highest increase in `t2` variance in both models.
+```{r 2,warning=FALSE,message=FALSE,eval=FALSE}
+# m3x3
+write.csv(influential.analysis(data=Mood[!Mood$ID%in%c("HRV036","HRV098"),],
+                               parameter="var"),"heywood cases/negVar.m3x3.2.csv",row.names=FALSE)
+# m3x3.weakInv
+write.csv(influential.analysis(data=Mood[!Mood$ID%in%c("HRV036","HRV098"),],
+                               m='level: 1
+                                  hedTone_w =~ a*v1 + b*v2 + c*v3
+                                  Calmness_w =~ d*t1 + e*t2 + f*t3
+                                  enArousal_w =~ g*f1 + h*f2 + i*f3
+                                  level: 2
+                                  hedTone_b =~ a*v1 + b*v2 + c*v3
+                                  Calmness_b =~ d*t1 + e*t2 + f*t3
+                                  enArousal_b =~ g*f1 + h*f2 + i*f3',
+                               parameter="var"),"heywood cases/negVar.m3x3.weakInv.2.csv",row.names=FALSE)
+```
+```{r warning=FALSE,message=FALSE}
+# t2 variance in m3x3 (above) and m3x3.weakInv (below)
+grid.arrange(plot.influential(data=read.csv("heywood cases/negVar.m3x3.2.csv"),par="var",variable="t2",level=2,
+                              threshold_upper=-.0015),
+             plot.influential(data=read.csv("heywood cases/negVar.m3x3.weakInv.2.csv"),par="var",variable="t2",level=2,
+                              threshold_upper=0))
+
+# participant HRV061
+grid.arrange(plot.traj(ema,var="HT","HRV061"),plot.traj(ema,var="CA","HRV061"),nrow=2)
+```
+
+<br>
+
+Fourth, we replicate the procedure by also excluding participant `HRV061`. We can note that the exclusion of a number of participants solves the problem for both models, with participant `HRV012` leading to the highest decrease in `t2` variance for both models.
+```{r 3,warning=FALSE,message=FALSE,eval=FALSE}
+# m3x3
+write.csv(influential.analysis(data=Mood[!Mood$ID%in%c("HRV036","HRV098","HRV061"),],
+                               parameter="var"),"heywood cases/negVar.m3x3.3.csv",row.names=FALSE)
+# m3x3.weakInv
+write.csv(influential.analysis(data=Mood[!Mood$ID%in%c("HRV036","HRV098","HRV061"),],
+                               m='level: 1
+                                  hedTone_w =~ a*v1 + b*v2 + c*v3
+                                  Calmness_w =~ d*t1 + e*t2 + f*t3
+                                  enArousal_w =~ g*f1 + h*f2 + i*f3
+                                  level: 2
+                                  hedTone_b =~ a*v1 + b*v2 + c*v3
+                                  Calmness_b =~ d*t1 + e*t2 + f*t3
+                                  enArousal_b =~ g*f1 + h*f2 + i*f3',
+                               parameter="var"),"heywood cases/negVar.m3x3.weakInv.3.csv",row.names=FALSE)
+```
+```{r warning=FALSE,message=FALSE}
+# t2 variance in m3x3 (above) and m3x3.weakInv (below)
+grid.arrange(plot.influential(data=read.csv("heywood cases/negVar.m3x3.3.csv"),par="var",variable="t2",level=2,
+                              threshold_upper=0),
+             plot.influential(data=read.csv("heywood cases/negVar.m3x3.weakInv.3.csv"),par="var",variable="t2",level=2,
+                              threshold_upper=.003))
+
+# participant HRV012
+grid.arrange(plot.traj(ema,var="HT","HRV012"),plot.traj(ema,var="CA","HRV012"),nrow=2)
+```
+
+<br>
+
+</p></details>
+
+##### Summary of results
+
+After the **removal of 4 participants (4.12%)**, the estimated variance for item `t2` is positive in both models `m3x3` and `m3x3.weakInv`. Both models specified without participants `HRV036`, `HRV061`, `HRV098` and `HRV012` do not show any other Heywood case. However, Heywood cases are still present in all the alternative models.
+```{r noInfl4}
+# excluding 4 participants associated with Heywood cases in models m3x3 and m3x3.weak
+Mood_noInfl4 <- Mood[!Mood$ID%in%c("HRV036","HRV061","HRV098","HRV012"),]
+
+# refitting m3x3
+m3x3_noInfl4 <- cfa('level: 1
+             hedTone_w =~ v1 + v2 + v3
+             Calmness_w =~ t1 + t2 + t3
+             enArousal_w =~ f1 + f2 + f3
+             level: 2
+             hedTone_b =~ v1 + v2 + v3
+             Calmness_b =~ t1 + t2 + t3
+             enArousal_b =~ f1 + f2 + f3', 
+            data=Mood_noInfl4,cluster='ID',std.lv=TRUE)
+
+# refitting m3x3.weakInv
+m3x3.weakInv_noInfl4 <- cfa('level: 1
+                 hedTone_w =~ a*v1 + b*v2 + c*v3
+                 Calmness_w =~ d*t1 + e*t2 + f*t3
+                 enArousal_w =~ g*f1 + h*f2 + i*f3
+                 level: 2
+                 hedTone_b =~ a*v1 + b*v2 + c*v3
+                 Calmness_b =~ d*t1 + e*t2 + f*t3
+                 enArousal_b =~ g*f1 + h*f2 + i*f3', 
+                data=Mood_noInfl4,cluster='ID',std.lv=TRUE)
+
+# refitting m3x2
+m3x2_noInfl4 <- cfa('level: 1
              hedTone_w =~ v1 + v2 + v3
              Calmness_w =~ t1 + t2 + t3
              enArousal_w =~ f1 + f2 + f3
              level: 2
              PosTone_b =~ v1 + v2 + v3 + t1 + t2 + t3
-             enArousal_b =~ f1 + f2 + f3
-             t2 ~~ rho2 * t2'
-m2x3.fix <- cfa(gsub("rho2",t2varlv2*.15,m2x3.fix),data=Mood,cluster='ID',std.lv=TRUE,missing="fiml") # fixating rho2
+             enArousal_b =~ f1 + f2 + f3', 
+            data=Mood_noInfl4,cluster='ID',std.lv=TRUE)
 
+# refitting m2x3
+m2x3_noInfl4 <- cfa('level: 1
+             PosTone_w =~ v1 + v2 + v3 + t1 + t2 + t3
+             enArousal_w =~ f1 + f2 + f3
+             level: 2
+             hedTone_b =~ v1 + v2 + v3
+             Calmness_b =~ t1 + t2 + t3
+             enArousal_b =~ f1 + f2 + f3', 
+            data=Mood_noInfl4,cluster='ID',std.lv=TRUE)
 
-# ARRIVATO QUI - IN REALTà NON SI RISOLVE UN CAZZO
+# refitting m2x2
+m2x2_noInfl4 <- cfa('level: 1
+             PosTone_w =~ v1 + v2 + v3 + t1 + t2 + t3
+             enArousal_w =~ f1 + f2 + f3
+             level: 2
+             PosTone_b =~ v1 + v2 + v3 + t1 + t2 + t3
+             enArousal_b =~ f1 + f2 + f3', 
+            data=Mood_noInfl4,cluster='ID',std.lv=TRUE)
+
+# strong invariance
+m3x3.strInv_noInfl4 <- cfa('level: 1
+                    hedTone_w =~ a*v1 + b*v2 + c*v3
+                    Calmness_w =~ d*t1 + e*t2 + f*t3
+                    enArousal_w =~ g*f1 + h*f2 + i*f3
+                    level: 2
+                    hedTone_b =~ a*v1 + b*v2 + c*v3
+                    Calmness_b =~ d*t1 + e*t2 + f*t3
+                    enArousal_b =~ g*f1 + h*f2 + i*f3
+                    v1 ~~ 0*v1
+                    v2 ~~ 0*v2
+                    v3 ~~ 0*v3
+                    t1 ~~ 0*t1
+                    t2 ~~ 0*t2
+                    t3 ~~ 0*t3
+                    f1 ~~ 0*f1
+                    f2 ~~ 0*f2
+                    f3 ~~ 0*f3', 
+                   data=Mood_noInfl4,cluster='ID',std.lv=TRUE)
+
+# refitting one-factor within model + saturated between part
+m.sat_noInfl4 <- cfa('level: 1
+                   hedTone_W =~ v1 + v2 + v3
+                   Calmness_W =~ t1 + t2 + t3
+                   enArousal_W =~ f1 + f2 + f3
+                   level: 2
+                   v1 ~~ v1 + v2 + v3 + t1 + t2 + t3 + f1 + f2 + f3
+                   v2 ~~ v2 + v3 + t1 + t2 + t3 + f1 + f2 + f3
+                   v3 ~~ v3 + t1 + t2 + t3 + f1 + f2 + f3
+                   t1 ~~ t1 + t2 + t3 + f1 + f2 + f3
+                   t2 ~~ t2 + t3 + f1 + f2 + f3
+                   t3 ~~ t3 + f1 + f2 + f3
+                   f1 ~~ f1 + f2 + f3
+                   f2 ~~ f2 + f3
+                   f3 ~~ f3', data=Mood_noInfl4,cluster='ID',std.lv=TRUE)
 ```
+
+<br>
+
+#### 2.1.2.4. Model comparison
+
+Here, we compare the multilevel models specified above by considering both the **fit indices and information criteria**. Three model comparisons are performed on different subsets of the sample, in order to account for strategies used to handle the **Heywood cases** highlighted above. Across all model comparisons, we can note that both the configural model `m3x3` and the weak-invariance models `m3x3.weakInv` show acceptable fit indices, with a **better fit than the saturated** model (except for `srmr_between`), whereas all the **alternative models are rejected**, including the strong-invariance model `m3x3.strInv`. Across all model comparisons, the **weak invariance model shows the best fit** in terms of `rmsea` and the strongest evidence in terms of `BICw`. Thus, model `m3x3.weakInv` is selected as the best model.
+```{r }
+# all participants (N = 139), with lv-2 Heywood cases in m3x3, m3x3.weakInv, m2x3, and m2x2
+fit.ind(model=c(m.sat,m3x3,m3x2,m2x2,m2x3,m3x3.weakInv,m3x3.strInv),
+        models.names=c("m.sat","m3x3","m3x2","m2x2","m2x3","m3x3.weakInv","m3x3.strInv"))
+
+# all participants (N = 139), with lv-2 residual variances of problematic items fixated to the 15% of their total lv-2 variance
+fit.ind(model=c(m.sat,m3x3.fix2,m3x2,m2x2.fix,m2x3.fix2,m3x3.weakInv.fix2,m3x3.strInv),
+        models.names=c("m.sat","m3x3","m3x2","m2x2","m2x3","m3x3.weakInv","m3x3.strInv"))
+
+# excluding 4 participants (N = 135), with Heywood cases in m2x3, m2x2, and m3x2 (but not in m3x3 and m3x3.weakInv)
+fit.ind(model=c(m.sat_noInfl4,m3x3_noInfl4,m3x2_noInfl4,m2x2_noInfl4,m2x3_noInfl4,m3x3.weakInv_noInfl4,m3x3.strInv_noInfl4),
+        models.names=c("m.sat","m3x3","m3x2","m2x2","m2x3","m3x3.weakInv","m3x3.strInv"))
+```
+
+<br>
+
+#### 2.1.2.5. Factor loadings
+
+Here, we inspect the factor loadings from the selected model `m3x3.weakInv` in the subsample with N = 135 (i.e., excluding the four participants leading to Heywood cases). Both the fully standardized and the unstandardized solutions are shown. From the former, we can see that all items shows significant loadings ranging **from .62 to .83 at level 1**, and **from .85 to .99 at level 2**, respectively. Correlations between latent variables range from .21 to .73 at level 1 and from .61 to .79 at level 2, respectively
+```{r }
+# fully standardized solution (loadings)
+standardizedsolution(m3x3.weakInv_noInfl4)[standardizedsolution(m3x3.weakInv_noInfl4)$op=="=~",]
+
+# fully standardized solution (correlations)
+standardizedsolution(m3x3.weakInv_noInfl4)[standardizedsolution(m3x3.weakInv_noInfl4)$op=="~~",][c(13:15,28:30),]
+
+# unstandardized solution (loadings)
+parameterestimates(m3x3.weakInv_noInfl4)[parameterestimates(m3x3.weakInv_noInfl4)$op=="=~",]
+
+# unstandardized solution (covariances)
+parameterestimates(m3x3.weakInv_noInfl4)[parameterestimates(m3x3.weakInv_noInfl4)$op=="~~",][c(13:15,28:30),]
+```
+
+<br>
+
+#### 2.1.2.6. Level-specific reliability
+
+Here, we use the `MCFArel` function showed at the beginning of section 2 to compute indices of **level-specific composite reliability** for each subscale of the MDMQ, as recommended by [Geldhof et al. (2014)](#ref). Reliability indices are computed from the multilevel model `m3x3.weakInv` specified above, and without considering the four participants associated with Heywood cases (N = 135). We can note that all subscales and the total score show **satisfactory reliability** at both level 1 (omega ranging from .77 to .84) and level 2 (omega ranging from .94 to . 98).
+```{r }
+rbind(data.frame(measure="Hedonic Tone",
+                 omega_w=MCFArel(m3x3.weakInv_noInfl4,level=1,items=1:3,item.labels=mood[1:3]),
+                 omega_b=MCFArel(m3x3.weakInv_noInfl4,level=2,items=1:3,item.labels=mood[1:3])),
+      data.frame(measure="Calmness",
+                 omega_w=MCFArel(m3x3.weakInv_noInfl4,level=1,items=4:6,item.labels=mood[4:6]),
+                 omega_b=MCFArel(m3x3.weakInv_noInfl4,level=2,items=4:6,item.labels=mood[4:6])),
+      data.frame(measure="Energetic arousal",
+                 omega_w=MCFArel(m3x3.weakInv_noInfl4,level=1,items=7:9,item.labels=mood[8:9]),
+                 omega_b=MCFArel(m3x3.weakInv_noInfl4,level=2,items=7:9,item.labels=mood[7:9])),
+      data.frame(measure="Total score",
+                 omega_w=MCFArel(m3x3.weakInv_noInfl4,level=1,items=1:9,item.labels=mood[1:9]),
+                 omega_b=MCFArel(m3x3.weakInv_noInfl4,level=2,items=1:9,item.labels=mood[1:9])))
+```
+
+<br>
+
+#### 2.1.2.7. Aggregated scores
+
+Finally, we create the aggregated score of each mood dimension by computing the mean of the corresponding items.
+```{r }
+# aggregate scores (mean)
+ema$HT <- apply(ema[,c("v1","v2","v3")],1,mean,na.rm=TRUE) # Hedonic Tone 
+ema$CA <- apply(ema[,c("t1","t2","t3")],1,mean,na.rm=TRUE) # Calmness
+ema$EA <- apply(ema[,c("f1","f2","f3")],1,mean,na.rm=TRUE) # Energetic Arousal
+```
+
+ARRIVATO QUI
 
 <br>
 
