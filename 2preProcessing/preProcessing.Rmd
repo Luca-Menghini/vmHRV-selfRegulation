@@ -655,7 +655,7 @@ varsRecoding <- function(data){
                   "v1.male.bene","v2.insoddisfatto.soddisfatto","v3.positivo.negativo", # hedonic tone
                   "t1.rilassato.teso","t2.agitato.calmo","t3.nervoso.tranquillo", # calmness
                   "e1.stanco.sveglio","e2.pieno.privodenergia","e3.affaticato.fresco", # energetic arousal
-                  "PE","intensity.PE","NE","intensity.PE", # emotional events
+                  "PE","intensity.PE","NE","intensity.NE", # emotional events
                   "smoke","coffe","alcohol","Activity","People.rec")] # confounders
   colnames(data)[7:ncol(data)] <- c("v1","v2","v3","t1","t2","t3","f1","f2","f3", # renaming columns
                                     "PE","PE.int","NE","NE.int","smoke","coffe","alcohol","activity","people")
