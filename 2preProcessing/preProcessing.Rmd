@@ -634,6 +634,7 @@ varsRecoding <- function(data){
   colnames(data)[which(colnames(data)=="v2.soddisfatto.insoddisfatto")] <- "v2.insoddisfatto.soddisfatto" # changing wrong label
   data$t1.rilassato.teso <- 8 - data$t1.rilassato.teso # CALMNESS = positive
   data$e2.pieno.privodenergia <- 8 - data$e2.pieno.privodenergia # ENERGETIC AROUSAL = positive
+  data[!is.na(data$intensity.NE) & data$intensity.NE > 7,"intensity.NE"] <- 7 # correcting 2 wrongly recorded items (score > 7)
 
   # Recoding confounders
   data$alcohol <- as.factor(gsub("No","0",gsub("Sì","1",data$alcohol))) # alcohol (from yes/no --> 1/0)
